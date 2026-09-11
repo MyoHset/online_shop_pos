@@ -84,20 +84,44 @@ class _MobileScaffold extends StatelessWidget {
 
     return Scaffold(
       body: body,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: onDestinationSelected,
-        backgroundColor: theme.colorScheme.surface,
-        indicatorColor: theme.colorScheme.primaryContainer,
-        destinations: destinations
-            .map(
-              (d) => NavigationDestination(
-                icon: d.icon,
-                selectedIcon: d.selectedIcon,
-                label: d.label,
-              ),
-            )
-            .toList(),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: selectedIndex,
+          onTap: onDestinationSelected,
+          backgroundColor: Colors.white,
+          selectedItemColor: theme.colorScheme.onSurface,
+          unselectedItemColor: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+          elevation: 0,
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 12),
+          items: destinations
+              .map(
+                (d) => BottomNavigationBarItem(
+                  icon: Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: d.icon,
+                  ),
+                  activeIcon: Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: d.selectedIcon,
+                  ),
+                  label: d.label,
+                ),
+              )
+              .toList(),
+        ),
       ),
     );
   }
