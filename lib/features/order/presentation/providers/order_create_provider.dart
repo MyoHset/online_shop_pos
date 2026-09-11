@@ -1,0 +1,157 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/network/supabase_client_provider.dart';
+import '../../domain/repositories/order_repository.dart';
+import '../../domain/usecases/create_order.dart';
+import '../../domain/entities/order.dart';
+import 'order_list_provider.dart';
+import '../../../product/presentation/providers/product_list_provider.dart';
+
+part 'order_create_provider.g.dart';
+
+@riverpod
+CreateOrder createOrderUseCase(Ref ref) =>
+    CreateOrder(ref.watch(orderRepositoryProvider));
+
+/// Holds a pending line item the user is building before confirming.
+class PendingOrderItem {
+  const PendingOrderItem({
+    required this.variantId,
+    required this.productName,
+    required this.variantDisplayName,
+    required this.quantity,
+    required this.unitPrice,
+  });
+
+  final String variantId;
+  final String productName;
+  final String variantDisplayName;
+  final int quantity;
+  final double unitPrice;
+
+  double get subtotal => unitPrice * quantity;
+
+  PendingOrderItem copyWith({int? quantity, double? unitPrice}) =>
+      PendingOrderItem(
+        variantId: variantId,
+        productName: productName,
+        variantDisplayName: variantDisplayName,
+        quantity: quantity ?? this.quantity,
+        unitPrice: unitPrice ?? this.unitPrice,
+      );
+}
+
+/// State for the order creation flow.
+class OrderCreateState {
+  const OrderCreateState({
+    this.customerName = '',
+    this.customerPhone,
+    this.customerAddress,
+    this.items = const [],
+    this.isLoading = false,
+    this.errorMessage,
+  });
+
+  final String customerName;
+  final String? customerPhone;
+  final String? customerAddress;
+  final List<PendingOrderItem> items;
+  final bool isLoading;
+  final String? errorMessage;
+
+  double get totalAmount =>
+      items.fold(0, (sum, item) => sum + item.subtotal);
+
+  OrderCreateState copyWith({
+    String? customerName,
+    String? customerPhone,
+    String? customerAddress,
+    List<PendingOrderItem>? items,
+    bool? isLoading,
+    String? errorMessage,
+    bool clearError = false,
+  }) =>
+      OrderCreateState(
+        customerName: customerName ?? this.customerName,
+        customerPhone: customerPhone ?? this.customerPhone,
+        customerAddress: customerAddress ?? this.customerAddress,
+        items: items ?? this.items,
+        isLoading: isLoading ?? this.isLoading,
+        errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      );
+}
+
+/// Manages the order creation flow state.
+@riverpod
+class OrderCreate extends _$OrderCreate {
+  @override
+  OrderCreateState build() => const OrderCreateState();
+
+  void updateCustomerName(String v) => state = state.copyWith(customerName: v);
+  void updateCustomerPhone(String? v) =>
+      state = state.copyWith(customerPhone: v);
+  void updateCustomerAddress(String? v) =>
+      state = state.copyWith(customerAddress: v);
+
+  void addItem(PendingOrderItem item) {
+    final existing =
+        state.items.where((i) => i.variantId == item.variantId).firstOrNull;
+    if (existing != null) {
+      final updated = existing.copyWith(quantity: existing.quantity + item.quantity);
+      state = state.copyWith(
+        items: state.items
+            .map((i) => i.variantId == item.variantId ? updated : i)
+            .toList(),
+      );
+    } else {
+      state = state.copyWith(items: [...state.items, item]);
+    }
+  }
+
+  void removeItem(String variantId) {
+    state = state.copyWith(
+      items: state.items.where((i) => i.variantId != variantId).toList(),
+    );
+  }
+
+  void updateItemQuantity(String variantId, int quantity) {
+    if (quantity <= 0) {
+      removeItem(variantId);
+      return;
+    }
+    state = state.copyWith(
+      items: state.items
+          .map((i) => i.variantId == variantId ? i.copyWith(quantity: quantity) : i)
+          .toList(),
+    );
+  }
+
+  /// Submits the order. Returns the created [Order] on success, or `null` on failure.
+  Future<Order?> submit() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    final useCase = ref.read(createOrderUseCaseProvider);
+    final result = await useCase(
+      customerName: state.customerName,
+      customerPhone: state.customerPhone,
+      customerAddress: state.customerAddress,
+      items: state.items
+          .map((i) => OrderItemInput(
+                variantId: i.variantId,
+                quantity: i.quantity,
+                unitPrice: i.unitPrice,
+              ))
+          .toList(),
+    );
+    return result.fold(
+      (f) {
+        state = state.copyWith(isLoading: false, errorMessage: f.message);
+        return null;
+      },
+      (order) {
+        state = state.copyWith(isLoading: false);
+        ref.invalidate(orderListProvider);
+        ref.invalidate(productListProvider);
+        return order;
+      },
+    );
+  }
+}

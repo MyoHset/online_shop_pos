@@ -1,0 +1,198 @@
+import 'dart:io';
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/error/exceptions.dart';
+import '../../../../core/error/failures.dart';
+import '../../domain/entities/product.dart';
+import '../../domain/entities/variant.dart';
+import '../../domain/entities/variant_image.dart';
+import '../../domain/repositories/product_repository.dart';
+import '../datasources/product_remote_datasource.dart';
+
+/// Concrete implementation of [ProductRepository].
+///
+/// Catches all internal exceptions from [ProductRemoteDataSource] and
+/// maps them to the appropriate [Failure] subtype before returning.
+/// No exceptions ever cross this boundary into the domain layer.
+class ProductRepositoryImpl implements ProductRepository {
+  const ProductRepositoryImpl(this._dataSource);
+
+  final ProductRemoteDataSource _dataSource;
+
+  @override
+  Future<Either<Failure, List<Product>>> getProducts({
+    String? searchQuery,
+    String? category,
+    int page = 0,
+    int pageSize = 30,
+  }) async {
+    try {
+      final models = await _dataSource.getProducts(
+        searchQuery: searchQuery,
+        category: category,
+        page: page,
+        pageSize: pageSize,
+      );
+      return right(models.map((m) => m.toEntity()).toList());
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Product>> getProductById(String id) async {
+    try {
+      final model = await _dataSource.getProductById(id);
+      return right(model.toEntity());
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Product>> createProduct({
+    required String name,
+    String? description,
+    required double basePrice,
+    String? category,
+    String? brand,
+    String? productCode,
+  }) async {
+    try {
+      final model = await _dataSource.createProduct(
+        name: name,
+        description: description,
+        basePrice: basePrice,
+        category: category,
+        brand: brand,
+        productCode: productCode,
+      );
+      return right(model.toEntity());
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Product>> updateProduct({
+    required String id,
+    String? name,
+    String? description,
+    double? basePrice,
+    String? category,
+    String? brand,
+    String? productCode,
+    bool? isActive,
+  }) async {
+    try {
+      final model = await _dataSource.updateProduct(
+        id: id,
+        name: name,
+        description: description,
+        basePrice: basePrice,
+        category: category,
+        brand: brand,
+        productCode: productCode,
+        isActive: isActive,
+      );
+      return right(model.toEntity());
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Variant>> createVariant({
+    required String productId,
+    String? size,
+    String? color,
+    double? priceOverride,
+    required int stockQuantity,
+    int? weightGrams,
+  }) async {
+    try {
+      final model = await _dataSource.createVariant(
+        productId: productId,
+        size: size,
+        color: color,
+        priceOverride: priceOverride,
+        stockQuantity: stockQuantity,
+        weightGrams: weightGrams,
+      );
+      return right(model.toEntity());
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Variant>> updateVariant({
+    required String id,
+    String? size,
+    String? color,
+    double? priceOverride,
+    int? stockQuantity,
+    int? weightGrams,
+    bool? isActive,
+  }) async {
+    try {
+      final model = await _dataSource.updateVariant(
+        id: id,
+        size: size,
+        color: color,
+        priceOverride: priceOverride,
+        stockQuantity: stockQuantity,
+        weightGrams: weightGrams,
+        isActive: isActive,
+      );
+      return right(model.toEntity());
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, VariantImage>> uploadVariantImage({
+    required String variantId,
+    required File imageFile,
+    required bool isPrimary,
+  }) async {
+    try {
+      final model = await _dataSource.uploadVariantImage(
+        variantId: variantId,
+        imageFile: imageFile,
+        isPrimary: isPrimary,
+      );
+      return right(model.toEntity());
+    } on ImageUploadException catch (e) {
+      return left(ImageUploadFailure(e.message));
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> deleteVariantImage(String imageId) async {
+    try {
+      await _dataSource.deleteVariantImage(imageId);
+      return right(unit);
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+}
