@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/supabase_constants.dart';
 import '../../../../core/error/exceptions.dart';
@@ -24,12 +25,31 @@ class ProductRemoteDataSource {
     )
   ''';
 
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+
+  void _logCall(String fn, [Map<String, dynamic>? params]) {
+    debugPrint('[Supabase] ▶ $fn${params != null ? ' | params: $params' : ''}');
+  }
+
+  void _logError(String fn, Object error, StackTrace stack) {
+    debugPrint('[Supabase] ✖ $fn | ${error.runtimeType}: $error');
+    debugPrint('[Supabase]   StackTrace:\n$stack');
+  }
+
+  // ── Product CRUD ─────────────────────────────────────────────────────────────
+
   Future<List<ProductModel>> getProducts({
     String? searchQuery,
     String? category,
     int page = 0,
     int pageSize = 30,
   }) async {
+    _logCall('getProducts', {
+      'searchQuery': searchQuery,
+      'category': category,
+      'page': page,
+      'pageSize': pageSize,
+    });
     try {
       var query = _client
           .from(SupabaseConstants.productsTable)
@@ -49,14 +69,17 @@ class ProductRemoteDataSource {
       return (data as List)
           .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))
           .toList();
-    } on PostgrestException catch (e) {
+    } on PostgrestException catch (e, s) {
+      _logError('getProducts', e, s);
       throw ServerException(e.message);
-    } catch (e) {
+    } catch (e, s) {
+      _logError('getProducts', e, s);
       throw ServerException(e.toString());
     }
   }
 
   Future<ProductModel> getProductById(String id) async {
+    _logCall('getProductById', {'id': id});
     try {
       final data = await _client
           .from(SupabaseConstants.productsTable)
@@ -64,9 +87,11 @@ class ProductRemoteDataSource {
           .eq('id', id)
           .single();
       return ProductModel.fromJson(data);
-    } on PostgrestException catch (e) {
+    } on PostgrestException catch (e, s) {
+      _logError('getProductById', e, s);
       throw ServerException(e.message);
-    } catch (e) {
+    } catch (e, s) {
+      _logError('getProductById', e, s);
       throw ServerException(e.toString());
     }
   }
@@ -79,6 +104,14 @@ class ProductRemoteDataSource {
     String? brand,
     String? productCode,
   }) async {
+    _logCall('createProduct', {
+      'name': name,
+      'description': description,
+      'basePrice': basePrice,
+      'category': category,
+      'brand': brand,
+      'productCode': productCode,
+    });
     try {
       final data = await _client
           .from(SupabaseConstants.productsTable)
@@ -94,9 +127,11 @@ class ProductRemoteDataSource {
           .select(_productSelect)
           .single();
       return ProductModel.fromJson(data);
-    } on PostgrestException catch (e) {
+    } on PostgrestException catch (e, s) {
+      _logError('createProduct', e, s);
       throw ServerException(e.message);
-    } catch (e) {
+    } catch (e, s) {
+      _logError('createProduct', e, s);
       throw ServerException(e.toString());
     }
   }
@@ -111,6 +146,16 @@ class ProductRemoteDataSource {
     String? productCode,
     bool? isActive,
   }) async {
+    _logCall('updateProduct', {
+      'id': id,
+      'name': name,
+      'description': description,
+      'basePrice': basePrice,
+      'category': category,
+      'brand': brand,
+      'productCode': productCode,
+      'isActive': isActive,
+    });
     try {
       final updates = <String, dynamic>{
         if (name != null) 'name': name,
@@ -129,12 +174,16 @@ class ProductRemoteDataSource {
           .select(_productSelect)
           .single();
       return ProductModel.fromJson(data);
-    } on PostgrestException catch (e) {
+    } on PostgrestException catch (e, s) {
+      _logError('updateProduct', e, s);
       throw ServerException(e.message);
-    } catch (e) {
+    } catch (e, s) {
+      _logError('updateProduct', e, s);
       throw ServerException(e.toString());
     }
   }
+
+  // ── Variant CRUD ─────────────────────────────────────────────────────────────
 
   Future<VariantModel> createVariant({
     required String productId,
@@ -144,6 +193,14 @@ class ProductRemoteDataSource {
     required int stockQuantity,
     int? weightGrams,
   }) async {
+    _logCall('createVariant', {
+      'productId': productId,
+      'size': size,
+      'color': color,
+      'priceOverride': priceOverride,
+      'stockQuantity': stockQuantity,
+      'weightGrams': weightGrams,
+    });
     try {
       final data = await _client
           .from(SupabaseConstants.productVariantsTable)
@@ -160,9 +217,11 @@ class ProductRemoteDataSource {
           .select('*, variant_images(*)')
           .single();
       return VariantModel.fromJson(data);
-    } on PostgrestException catch (e) {
+    } on PostgrestException catch (e, s) {
+      _logError('createVariant', e, s);
       throw ServerException(e.message);
-    } catch (e) {
+    } catch (e, s) {
+      _logError('createVariant', e, s);
       throw ServerException(e.toString());
     }
   }
@@ -176,6 +235,15 @@ class ProductRemoteDataSource {
     int? weightGrams,
     bool? isActive,
   }) async {
+    _logCall('updateVariant', {
+      'id': id,
+      'size': size,
+      'color': color,
+      'priceOverride': priceOverride,
+      'stockQuantity': stockQuantity,
+      'weightGrams': weightGrams,
+      'isActive': isActive,
+    });
     try {
       final updates = <String, dynamic>{
         if (size != null) 'size': size,
@@ -193,18 +261,27 @@ class ProductRemoteDataSource {
           .select('*, variant_images(*)')
           .single();
       return VariantModel.fromJson(data);
-    } on PostgrestException catch (e) {
+    } on PostgrestException catch (e, s) {
+      _logError('updateVariant', e, s);
       throw ServerException(e.message);
-    } catch (e) {
+    } catch (e, s) {
+      _logError('updateVariant', e, s);
       throw ServerException(e.toString());
     }
   }
+
+  // ── Variant Images ────────────────────────────────────────────────────────────
 
   Future<VariantImageModel> uploadVariantImage({
     required String variantId,
     required File imageFile,
     required bool isPrimary,
   }) async {
+    _logCall('uploadVariantImage', {
+      'variantId': variantId,
+      'imagePath': imageFile.path,
+      'isPrimary': isPrimary,
+    });
     try {
       final fileExt = imageFile.path.split('.').last;
       final fileName =
@@ -249,16 +326,20 @@ class ProductRemoteDataSource {
           .single();
 
       return VariantImageModel.fromJson(data);
-    } on StorageException catch (e) {
+    } on StorageException catch (e, s) {
+      _logError('uploadVariantImage', e, s);
       throw ImageUploadException(e.message);
-    } on PostgrestException catch (e) {
+    } on PostgrestException catch (e, s) {
+      _logError('uploadVariantImage', e, s);
       throw ServerException(e.message);
-    } catch (e) {
+    } catch (e, s) {
+      _logError('uploadVariantImage', e, s);
       throw ServerException(e.toString());
     }
   }
 
   Future<void> deleteVariantImage(String imageId) async {
+    _logCall('deleteVariantImage', {'imageId': imageId});
     try {
       // Get the image URL first to delete from storage
       final data = await _client
@@ -284,9 +365,11 @@ class ProductRemoteDataSource {
           .from(SupabaseConstants.variantImagesTable)
           .delete()
           .eq('id', imageId);
-    } on PostgrestException catch (e) {
+    } on PostgrestException catch (e, s) {
+      _logError('deleteVariantImage', e, s);
       throw ServerException(e.message);
-    } catch (e) {
+    } catch (e, s) {
+      _logError('deleteVariantImage', e, s);
       throw ServerException(e.toString());
     }
   }

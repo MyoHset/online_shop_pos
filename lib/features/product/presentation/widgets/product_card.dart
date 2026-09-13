@@ -4,10 +4,9 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../domain/entities/product.dart';
 
-/// Card widget displaying a product in the product list.
-///
-/// Shows name, category, variant count, total stock, and a stock status badge.
-class ProductCard extends StatelessWidget {
+/// Classic minimal product row — no card box, just a clean list tile
+/// with a bottom divider. Consistent height regardless of content.
+class ProductCard extends StatefulWidget {
   const ProductCard({
     super.key,
     required this.product,
@@ -18,26 +17,99 @@ class ProductCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  State<ProductCard> createState() => _ProductCardState();
+}
 
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+class _ProductCardState extends State<ProductCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.product;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          color: _hovered ? AppColors.slate50 : Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Row(
             children: [
-              _ProductThumbnail(product: product),
-              const SizedBox(width: 16),
+              // Thumbnail — small, square
+              _Thumbnail(product: p),
+              const SizedBox(width: 14),
+
+              // Name + category
               Expanded(
-                child: _ProductCardContent(product: product, theme: theme),
+                flex: 5,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      p.name,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.slate900,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (p.category != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        p.category!,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.slate400,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
               ),
+
+              // Price
+              Expanded(
+                flex: 3,
+                child: Text(
+                  CurrencyFormatter.format(p.basePrice),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.slate700,
+                  ),
+                ),
+              ),
+
+              // Variants + stock
+              Expanded(
+                flex: 3,
+                child: Text(
+                  '${p.activeVariantCount} var · ${p.totalAvailableStock} stock',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.slate400,
+                  ),
+                ),
+              ),
+
+              // Status badge
+              _StockBadge(product: p),
+              const SizedBox(width: 8),
+
+              // Chevron
               const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.slate400,
-                size: 20,
+                Icons.chevron_right,
+                size: 16,
+                color: AppColors.slate300,
               ),
             ],
           ),
@@ -47,105 +119,37 @@ class ProductCard extends StatelessWidget {
   }
 }
 
-class _ProductThumbnail extends StatelessWidget {
-  const _ProductThumbnail({required this.product});
+class _Thumbnail extends StatelessWidget {
+  const _Thumbnail({required this.product});
 
   final Product product;
 
   @override
   Widget build(BuildContext context) {
-    final primaryImageUrl = product.variants
+    final url = product.variants
         .expand((v) => v.images)
         .where((img) => img.isPrimary)
         .firstOrNull
         ?.imageUrl;
 
     return Container(
-      width: 56,
-      height: 56,
+      width: 40,
+      height: 40,
       decoration: BoxDecoration(
         color: AppColors.slate100,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.slate200),
+        borderRadius: BorderRadius.circular(6),
       ),
       clipBehavior: Clip.antiAlias,
-      child: primaryImageUrl != null
-          ? Image.network(primaryImageUrl, fit: BoxFit.cover)
+      child: url != null
+          ? Image.network(url, fit: BoxFit.cover)
           : const Icon(Icons.inventory_2_outlined,
-              color: AppColors.slate400, size: 24),
+              color: AppColors.slate300, size: 18),
     );
   }
 }
 
-class _ProductCardContent extends StatelessWidget {
-  const _ProductCardContent({
-    required this.product,
-    required this.theme,
-  });
-
-  final Product product;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                product.name,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.slate900,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 8),
-            _StockStatusBadge(product: product),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          product.category ?? 'Uncategorised',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: AppColors.slate500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Text(
-              CurrencyFormatter.format(product.basePrice),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.slate700,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              '${product.activeVariantCount} variant${product.activeVariantCount == 1 ? '' : 's'}',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: AppColors.slate400),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              '${product.totalAvailableStock} in stock',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: AppColors.slate400),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _StockStatusBadge extends StatelessWidget {
-  const _StockStatusBadge({required this.product});
+class _StockBadge extends StatelessWidget {
+  const _StockBadge({required this.product});
 
   final Product product;
 

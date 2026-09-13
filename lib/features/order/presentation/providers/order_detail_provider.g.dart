@@ -181,7 +181,7 @@ final class OrderDetailProvider
   }
 }
 
-String _$orderDetailHash() => r'06d77edcc5445b73459b30fc1c2bfff544049ea8';
+String _$orderDetailHash() => r'f960b303c8115a5def97cea8abe0587ccb409e9a';
 
 /// Provides a single order's detail — family + autoDispose.
 

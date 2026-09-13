@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../responsive/device_type.dart';
 import '../responsive/responsive_extensions.dart';
 
@@ -20,9 +21,7 @@ class AppNavDestination {
 /// Adaptive navigation shell that swaps between:
 /// - [BottomNavigationBar] on mobile (< 600 px)
 /// - [NavigationRail] on tablet (600–1023 px)
-/// - Permanent [NavigationDrawer] sidebar on desktop (≥ 1024 px)
-///
-/// Used as the shell widget inside go_router's [ShellRoute].
+/// - Permanent sidebar on desktop (≥ 1024 px)
 class AdaptiveScaffold extends StatelessWidget {
   const AdaptiveScaffold({
     super.key,
@@ -64,7 +63,13 @@ class AdaptiveScaffold extends StatelessWidget {
   }
 }
 
-/// Mobile scaffold: body + BottomNavigationBar.
+// ── Shared animation constants ─────────────────────────────────────────────────
+
+const _kSlideDuration = Duration(milliseconds: 220);
+const _kSlideCurve = Curves.easeInOutCubic;
+
+// ── Mobile ────────────────────────────────────────────────────────────────────
+
 class _MobileScaffold extends StatelessWidget {
   const _MobileScaffold({
     required this.destinations,
@@ -80,41 +85,40 @@ class _MobileScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       body: body,
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
+          border: Border(top: BorderSide(color: AppColors.slate200)),
         ),
         child: BottomNavigationBar(
           currentIndex: selectedIndex,
           onTap: onDestinationSelected,
           backgroundColor: Colors.white,
-          selectedItemColor: theme.colorScheme.onSurface,
-          unselectedItemColor: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+          selectedItemColor: AppColors.slate900,
+          unselectedItemColor: AppColors.slate400,
           showUnselectedLabels: true,
           type: BottomNavigationBarType.fixed,
           elevation: 0,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 12),
+          selectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 11,
+            letterSpacing: 0.2,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w400,
+            fontSize: 11,
+          ),
           items: destinations
               .map(
                 (d) => BottomNavigationBarItem(
                   icon: Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
+                    padding: const EdgeInsets.only(bottom: 3),
                     child: d.icon,
                   ),
                   activeIcon: Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
+                    padding: const EdgeInsets.only(bottom: 3),
                     child: d.selectedIcon,
                   ),
                   label: d.label,
@@ -127,7 +131,8 @@ class _MobileScaffold extends StatelessWidget {
   }
 }
 
-/// Tablet scaffold: NavigationRail (collapsed) + body.
+// ── Tablet — sliding icon rail ─────────────────────────────────────────────────
+
 class _TabletScaffold extends StatelessWidget {
   const _TabletScaffold({
     required this.destinations,
@@ -141,30 +146,100 @@ class _TabletScaffold extends StatelessWidget {
   final ValueChanged<int> onDestinationSelected;
   final Widget body;
 
+  // Fixed geometry
+  static const double _iconSize = 40.0;   // per-item height in Stack
+  static const double _topOffset = 68.0;  // logo(20+32+16) = 68
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       body: Row(
         children: [
-          NavigationRail(
-            selectedIndex: selectedIndex,
-            onDestinationSelected: onDestinationSelected,
-            labelType: NavigationRailLabelType.selected,
-            backgroundColor: theme.colorScheme.surface,
-            indicatorColor: theme.colorScheme.primaryContainer,
-            destinations: destinations
-                .map(
-                  (d) => NavigationRailDestination(
-                    icon: d.icon,
-                    selectedIcon: d.selectedIcon,
-                    label: Text(d.label),
+          SizedBox(
+            width: 64,
+            child: ColoredBox(
+              color: Colors.white,
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.slate900,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.storefront,
+                        size: 18, color: Colors.white),
                   ),
-                )
-                .toList(),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1, color: AppColors.slate100),
+                  const SizedBox(height: 8),
+                  // Sliding icon area
+                  SizedBox(
+                    height: destinations.length * _iconSize,
+                    child: Stack(
+                      children: [
+                        // Sliding background pill
+                        AnimatedPositioned(
+                          duration: _kSlideDuration,
+                          curve: _kSlideCurve,
+                          top: selectedIndex * _iconSize + 2,
+                          left: 12,
+                          right: 12,
+                          height: _iconSize - 4,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.slate100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                        // Icons (foreground)
+                        Column(
+                          children: List.generate(destinations.length, (i) {
+                            final isSelected = i == selectedIndex;
+                            return Tooltip(
+                              message: destinations[i].label,
+                              preferBelow: false,
+                              child: MouseRegion(
+                                cursor: SystemMouseCursors.click,
+                                child: GestureDetector(
+                                  onTap: () => onDestinationSelected(i),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    height: _iconSize,
+                                    child: Center(
+                                      child: AnimatedSwitcher(
+                                        duration: _kSlideDuration,
+                                        child: IconTheme(
+                                          key: ValueKey(isSelected),
+                                          data: IconThemeData(
+                                            color: isSelected
+                                                ? AppColors.slate900
+                                                : AppColors.slate400,
+                                            size: 20,
+                                          ),
+                                          child: isSelected
+                                              ? destinations[i].selectedIcon
+                                              : destinations[i].icon,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const VerticalDivider(width: 1),
+          Container(width: 1, color: AppColors.slate100),
           Expanded(child: body),
         ],
       ),
@@ -172,7 +247,8 @@ class _TabletScaffold extends StatelessWidget {
   }
 }
 
-/// Desktop scaffold: Permanent expanded NavigationDrawer sidebar + body.
+// ── Desktop — sliding sidebar ──────────────────────────────────────────────────
+
 class _DesktopScaffold extends StatelessWidget {
   const _DesktopScaffold({
     required this.destinations,
@@ -186,49 +262,112 @@ class _DesktopScaffold extends StatelessWidget {
   final ValueChanged<int> onDestinationSelected;
   final Widget body;
 
-  static const double _sidebarWidth = 240;
+  static const double _sidebarWidth = 220;
+
+  // Fixed item height — must match _SidebarItem's SizedBox height
+  static const double _itemH = 40.0;
+
+  // Vertical offset to the first nav item:
+  // paddingTop(22) + logo(28) + gap(20) + divider(1) + gap(8) + menuLabel(24) = 103
+  static const double _navTop = 103.0;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
       body: Row(
         children: [
           SizedBox(
             width: _sidebarWidth,
             child: ColoredBox(
-              color: colorScheme.surface,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              color: Colors.white,
+              child: Stack(
                 children: [
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Text(
-                      'Shop POS',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.primary,
+                  // ── Sliding background pill ─────────────────────────────
+                  AnimatedPositioned(
+                    duration: _kSlideDuration,
+                    curve: _kSlideCurve,
+                    top: _navTop + selectedIndex * _itemH + 1,
+                    left: 10,
+                    right: 10,
+                    height: _itemH - 2,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.slate100,
+                        borderRadius: BorderRadius.circular(7),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  ...List.generate(destinations.length, (index) {
-                    final dest = destinations[index];
-                    final isSelected = index == selectedIndex;
-                    return _SidebarItem(
-                      destination: dest,
-                      isSelected: isSelected,
-                      onTap: () => onDestinationSelected(index),
-                    );
-                  }),
+
+                  // ── Sidebar content ────────────────────────────────────
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Wordmark
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: AppColors.slate900,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(Icons.storefront,
+                                  size: 16, color: Colors.white),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Shop POS',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.slate900,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: Divider(height: 1, color: AppColors.slate100),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Section label  (height ≈ 24px → top of items = 103)
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(20, 4, 20, 6),
+                        child: Text(
+                          'MENU',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.0,
+                            color: AppColors.slate400,
+                          ),
+                        ),
+                      ),
+
+                      // Nav items — each must be exactly _itemH px tall
+                      ...List.generate(destinations.length, (i) {
+                        return _SidebarItem(
+                          destination: destinations[i],
+                          isSelected: i == selectedIndex,
+                          itemHeight: _itemH,
+                          onTap: () => onDestinationSelected(i),
+                        );
+                      }),
+                    ],
+                  ),
                 ],
               ),
             ),
           ),
-          const VerticalDivider(width: 1),
+          Container(width: 1, color: AppColors.slate100),
           Expanded(child: body),
         ],
       ),
@@ -236,61 +375,100 @@ class _DesktopScaffold extends StatelessWidget {
   }
 }
 
-/// A single item in the desktop sidebar navigation.
-class _SidebarItem extends StatelessWidget {
+/// Single nav item — **no background** (the sliding pill is handled by parent).
+/// Must stay exactly [itemHeight] px tall.
+class _SidebarItem extends StatefulWidget {
   const _SidebarItem({
     required this.destination,
     required this.isSelected,
+    required this.itemHeight,
     required this.onTap,
   });
 
   final AppNavDestination destination;
   final bool isSelected;
+  final double itemHeight;
   final VoidCallback onTap;
 
   @override
+  State<_SidebarItem> createState() => _SidebarItemState();
+}
+
+class _SidebarItemState extends State<_SidebarItem> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isSelected = widget.isSelected;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: isSelected
-                ? colorScheme.primaryContainer
-                : Colors.transparent,
-          ),
-          child: Row(
-            children: [
-              IconTheme(
-                data: IconThemeData(
-                  color: isSelected
-                      ? colorScheme.onPrimaryContainer
-                      : colorScheme.onSurfaceVariant,
+        onTap: widget.onTap,
+        child: SizedBox(
+          height: widget.itemHeight, // exact height — must match _navTop math
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              children: [
+                // Left accent bar — slides with the pill via AnimatedOpacity
+                AnimatedOpacity(
+                  duration: _kSlideDuration,
+                  opacity: isSelected ? 1.0 : 0.0,
+                  child: Container(
+                    width: 3,
+                    height: 16,
+                    margin: const EdgeInsets.only(right: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.slate900,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-                child: isSelected
-                    ? destination.selectedIcon
-                    : destination.icon,
-              ),
-              const SizedBox(width: 16),
-              Text(
-                destination.label,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected
-                      ? colorScheme.onPrimaryContainer
-                      : colorScheme.onSurfaceVariant,
+                if (!isSelected)
+                  const SizedBox(width: 13), // keeps layout stable
+
+                // Icon
+                AnimatedSwitcher(
+                  duration: _kSlideDuration,
+                  child: IconTheme(
+                    key: ValueKey(isSelected),
+                    data: IconThemeData(
+                      color: isSelected
+                          ? AppColors.slate900
+                          : _hovered
+                              ? AppColors.slate600
+                              : AppColors.slate400,
+                      size: 18,
+                    ),
+                    child: isSelected
+                        ? widget.destination.selectedIcon
+                        : widget.destination.icon,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+
+                // Label
+                AnimatedDefaultTextStyle(
+                  duration: _kSlideDuration,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected
+                        ? AppColors.slate900
+                        : _hovered
+                            ? AppColors.slate600
+                            : AppColors.slate500,
+                    letterSpacing: -0.1,
+                  ),
+                  child: Text(widget.destination.label),
+                ),
+              ],
+            ),
           ),
         ),
       ),

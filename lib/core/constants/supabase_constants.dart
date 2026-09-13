@@ -11,7 +11,7 @@ class SupabaseConstants {
 
   /// Your Supabase project anon key.
   static const String supabaseAnonKey =
-      'sb_publishable_rSKZEIik1PO51c-qyHc5Zg_ftdI6mnv';
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqaWtqeHZzc3BvcXJ6dGV4bG13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwOTAzMDMsImV4cCI6MjEwNDY2NjMwM30.UWxrTjZNaDC3iXdw7e3K5vEHOmHIxttTg8LMMFQPuTg';
 
   // Table names
   static const String productsTable = 'products';

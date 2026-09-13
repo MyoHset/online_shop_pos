@@ -83,23 +83,23 @@ abstract final class AppTheme {
         filled: true,
         fillColor: AppColors.slate100,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30), // Pill-shaped inputs
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: AppColors.slate900, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: AppColors.danger),
         ),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         labelStyle: const TextStyle(color: AppColors.slate500),
         hintStyle: const TextStyle(color: AppColors.slate500),
       ),
@@ -107,8 +107,10 @@ abstract final class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.slate900,
           foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(52), // Taller for better touch
-          shape: const StadiumBorder(), // Fully rounded pill
+          minimumSize: const Size.fromHeight(48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
             fontSize: 15,
@@ -119,9 +121,11 @@ abstract final class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.slate900,
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size.fromHeight(48),
           side: const BorderSide(color: AppColors.slate200),
-          shape: const StadiumBorder(), // Fully rounded pill
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
             fontSize: 15,

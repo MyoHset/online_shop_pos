@@ -9,7 +9,8 @@ import '../../domain/entities/product.dart';
 import '../providers/product_list_provider.dart';
 import '../widgets/product_card.dart';
 
-/// Mobile product list view — single-column, search bar at top.
+// ── Mobile ─────────────────────────────────────────────────────────────────────
+
 class ProductListMobileView extends ConsumerWidget {
   const ProductListMobileView({super.key});
 
@@ -28,7 +29,7 @@ class ProductListMobileView extends ConsumerWidget {
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(64),
+          preferredSize: const Size.fromHeight(52),
           child: _SearchBar(
             onSearch: (q) => ref.read(productListProvider.notifier).search(q),
           ),
@@ -41,14 +42,15 @@ class ProductListMobileView extends ConsumerWidget {
           onRetry: () => ref.refresh(productListProvider.future),
         ),
         data: (products) => products.isEmpty
-            ? const _EmptyProductsView()
-            : _ProductListView(products: products),
+            ? const _EmptyView()
+            : _ProductScrollView(products: products, showColumns: false),
       ),
     );
   }
 }
 
-/// Tablet product list view — 2-column grid.
+// ── Tablet ─────────────────────────────────────────────────────────────────────
+
 class ProductListTabletView extends ConsumerWidget {
   const ProductListTabletView({super.key});
 
@@ -63,9 +65,8 @@ class ProductListTabletView extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: _SearchBar(
-              width: 280,
-              onSearch: (q) =>
-                  ref.read(productListProvider.notifier).search(q),
+              width: 260,
+              onSearch: (q) => ref.read(productListProvider.notifier).search(q),
             ),
           ),
           IconButton(
@@ -83,14 +84,17 @@ class ProductListTabletView extends ConsumerWidget {
           onRetry: () => ref.refresh(productListProvider.future),
         ),
         data: (products) => products.isEmpty
-            ? const _EmptyProductsView()
-            : _ProductGridView(products: products, crossAxisCount: 2),
+            ? const _EmptyView()
+            : _ProductScrollView(products: products, showColumns: true),
       ),
     );
   }
 }
 
-/// Desktop product list view — left panel grid + right detail panel.
+// ── Desktop ─────────────────────────────────────────────────────────────────────
+
+/// Desktop view renders inside [_DesktopScaffold]'s [Expanded] — no extra
+/// [Scaffold] wrapper needed. Returns a Column: toolbar + content area.
 class ProductListDesktopView extends ConsumerWidget {
   const ProductListDesktopView({super.key});
 
@@ -98,37 +102,104 @@ class ProductListDesktopView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsync = ref.watch(productListProvider);
 
-    return Scaffold(
-      body: Column(
-        children: [
-          _DesktopToolbar(
-            onSearch: (q) => ref.read(productListProvider.notifier).search(q),
-            onAdd: () => context.pushNamed('productNew'),
+    return Column(
+      children: [
+        // Toolbar row (fixed height)
+        _DesktopToolbarBar(
+          onSearch: (q) => ref.read(productListProvider.notifier).search(q),
+          onAdd: () => context.pushNamed('productNew'),
+        ),
+        // Content fills remaining height
+        Expanded(
+          child: productsAsync.when(
+            loading: () => const SkeletonListLoader(),
+            error: (e, _) => AppErrorWidget(
+              message: e.toString(),
+              onRetry: () => ref.refresh(productListProvider.future),
+            ),
+            data: (products) => products.isEmpty
+                ? const _EmptyView()
+                : _ProductScrollView(products: products, showColumns: true),
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: productsAsync.when(
-              loading: () => const SkeletonListLoader(),
-              error: (e, _) => AppErrorWidget(
-                message: e.toString(),
-                onRetry: () => ref.refresh(productListProvider.future),
-              ),
-              data: (products) => products.isEmpty
-                  ? const _EmptyProductsView()
-                  : _ProductGridView(
-                      products: products,
-                      crossAxisCount: 3,
-                      padding: const EdgeInsets.all(24),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Desktop AppBar toolbar ─────────────────────────────────────────────────────
+
+class _DesktopToolbarBar extends StatefulWidget {
+  const _DesktopToolbarBar({required this.onSearch, required this.onAdd});
+
+  final void Function(String) onSearch;
+  final VoidCallback onAdd;
+
+  @override
+  State<_DesktopToolbarBar> createState() => _DesktopToolbarBarState();
+}
+
+class _DesktopToolbarBarState extends State<_DesktopToolbarBar> {
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 56,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  const Text(
+                    'Products',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.slate900,
+                      letterSpacing: -0.2,
                     ),
+                  ),
+                  const SizedBox(width: 20),
+                  SizedBox(
+                    width: 260,
+                    child: TextField(
+                      onChanged: widget.onSearch,
+                      style: const TextStyle(fontSize: 13),
+                      decoration: const InputDecoration(
+                        hintText: 'Search…',
+                        prefixIcon: Icon(Icons.search,
+                            size: 17, color: AppColors.slate400),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    height: 36,
+                    child: ElevatedButton.icon(
+                      onPressed: widget.onAdd,
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Add Product',
+                          style: TextStyle(fontSize: 13)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+          const Divider(height: 1, color: AppColors.slate200),
         ],
       ),
     );
   }
 }
 
-// ── Shared sub-widgets ─────────────────────────────────────────────────────────
+// ── Search bar (mobile / tablet AppBar bottom) ─────────────────────────────────
 
 class _SearchBar extends StatefulWidget {
   const _SearchBar({required this.onSearch, this.width});
@@ -141,187 +212,159 @@ class _SearchBar extends StatefulWidget {
 }
 
 class _SearchBarState extends State<_SearchBar> {
-  final _controller = TextEditingController();
+  final _ctrl = TextEditingController();
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     Widget field = TextField(
-      controller: _controller,
-      onChanged: widget.onSearch,
+      controller: _ctrl,
+      onChanged: (v) {
+        setState(() {});
+        widget.onSearch(v);
+      },
+      style: const TextStyle(fontSize: 13),
       decoration: InputDecoration(
         hintText: 'Search products…',
-        prefixIcon: const Icon(Icons.search, size: 20),
-        suffixIcon: _controller.text.isNotEmpty
+        prefixIcon:
+            const Icon(Icons.search, size: 18, color: AppColors.slate400),
+        suffixIcon: _ctrl.text.isNotEmpty
             ? IconButton(
-                icon: const Icon(Icons.clear, size: 18),
+                icon: const Icon(Icons.clear, size: 16),
                 onPressed: () {
-                  _controller.clear();
+                  _ctrl.clear();
+                  setState(() {});
                   widget.onSearch('');
                 },
               )
             : null,
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         isDense: true,
       ),
     );
 
     if (widget.width != null) {
-      field = SizedBox(width: widget.width, child: field);
-    } else {
-      field = Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: field,
-      );
+      return SizedBox(width: widget.width, child: field);
     }
-
-    return field;
-  }
-}
-
-class _DesktopToolbar extends StatelessWidget {
-  const _DesktopToolbar({required this.onSearch, required this.onAdd});
-
-  final void Function(String) onSearch;
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Row(
-        children: [
-          Text(
-            'Products',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: AppColors.slate900,
-            ),
-          ),
-          const SizedBox(width: 24),
-          SizedBox(
-            width: 320,
-            child: TextField(
-              onChanged: onSearch,
-              decoration: const InputDecoration(
-                hintText: 'Search products…',
-                prefixIcon: Icon(Icons.search, size: 20),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                isDense: true,
-              ),
-            ),
-          ),
-          const Spacer(),
-          FilledButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('Add Product'),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.slate900,
-            ),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+      child: field,
     );
   }
 }
 
-class _ProductListView extends StatelessWidget {
-  const _ProductListView({required this.products});
+// ── Product scroll view ────────────────────────────────────────────────────────
 
-  final List<Product> products;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: products.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final product = products[index];
-        return ProductCard(
-          product: product,
-          onTap: () => context.pushNamed(
-            'productDetail',
-            pathParameters: {'id': product.id},
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ProductGridView extends StatelessWidget {
-  const _ProductGridView({
+/// Fills the available space from Scaffold.body and scrolls correctly.
+class _ProductScrollView extends StatelessWidget {
+  const _ProductScrollView({
     required this.products,
-    required this.crossAxisCount,
-    this.padding,
+    required this.showColumns,
   });
 
   final List<Product> products;
-  final int crossAxisCount;
-  final EdgeInsets? padding;
+  final bool showColumns;
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      padding: padding ?? const EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 2.4,
-      ),
-      itemCount: products.length,
-      itemBuilder: (context, index) {
-        final product = products[index];
-        return ProductCard(
-          product: product,
-          onTap: () => context.pushNamed(
-            'productDetail',
-            pathParameters: {'id': product.id},
+    return CustomScrollView(
+      slivers: [
+        // Column header (tablet / desktop only)
+        if (showColumns)
+          SliverToBoxAdapter(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  color: AppColors.slate50,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: const Row(
+                    children: [
+                      SizedBox(width: 54),
+                      Expanded(flex: 5, child: _ColHeader('Product')),
+                      Expanded(flex: 3, child: _ColHeader('Price')),
+                      Expanded(flex: 3, child: _ColHeader('Stock')),
+                      SizedBox(width: 80),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, color: AppColors.slate100),
+              ],
+            ),
           ),
-        );
-      },
+
+        // Product rows
+        SliverList.separated(
+          itemCount: products.length,
+          separatorBuilder: (_, __) =>
+              const Divider(height: 1, color: AppColors.slate100),
+          itemBuilder: (context, i) {
+            final p = products[i];
+            return ProductCard(
+              product: p,
+              onTap: () => context.pushNamed(
+                'productDetail',
+                pathParameters: {'id': p.id},
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
 
-class _EmptyProductsView extends StatelessWidget {
-  const _EmptyProductsView();
+class _ColHeader extends StatelessWidget {
+  const _ColHeader(this.label);
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return Text(
+      label.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.8,
+        color: AppColors.slate400,
+      ),
+    );
+  }
+}
+
+// ── Empty state ────────────────────────────────────────────────────────────────
+
+class _EmptyView extends StatelessWidget {
+  const _EmptyView();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.inventory_2_outlined,
-              size: 64, color: AppColors.slate300),
-          const SizedBox(height: 16),
+          Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.slate300),
+          SizedBox(height: 12),
           Text(
             'No products yet',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.slate500,
-                  fontWeight: FontWeight.w600,
-                ),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.slate500,
+            ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 6),
           Text(
             'Add your first product to get started.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.slate400,
-                ),
+            style: TextStyle(fontSize: 12, color: AppColors.slate400),
           ),
         ],
       ),

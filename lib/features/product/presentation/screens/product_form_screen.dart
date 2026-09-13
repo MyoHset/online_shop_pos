@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/validators.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../../core/responsive/responsive_extensions.dart';
 import '../providers/product_detail_provider.dart';
 import '../providers/product_form_provider.dart';
 
-/// Product create/edit form screen.
+/// Product create/edit form screen — classic minimal style.
 ///
 /// [productId] is `null` when creating a new product.
 class ProductFormScreen extends ConsumerStatefulWidget {
@@ -29,6 +28,29 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   late final TextEditingController _brandCtrl;
   late final TextEditingController _codeCtrl;
   bool _prefilled = false;
+
+  // Underline-only input decoration — shared across all fields
+  static const _underlineDecoration = InputDecorationTheme(
+    filled: false,
+    border: UnderlineInputBorder(
+      borderSide: BorderSide(color: AppColors.slate200),
+    ),
+    enabledBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: AppColors.slate200),
+    ),
+    focusedBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: AppColors.slate900, width: 1.5),
+    ),
+    errorBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: AppColors.danger),
+    ),
+    focusedErrorBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: AppColors.danger, width: 1.5),
+    ),
+    contentPadding: EdgeInsets.symmetric(vertical: 10),
+    hintStyle: TextStyle(color: AppColors.slate400, fontSize: 14),
+    errorStyle: TextStyle(fontSize: 11, height: 1.2),
+  );
 
   @override
   void initState() {
@@ -54,8 +76,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
   void _prefillIfNeeded() {
     if (_prefilled || widget.productId == null) return;
-    final productAsync =
-        ref.watch(productDetailProvider(widget.productId!));
+    final productAsync = ref.watch(productDetailProvider(widget.productId!));
     productAsync.whenData((product) {
       if (!_prefilled) {
         _prefilled = true;
@@ -102,115 +123,148 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     final isEditing = widget.productId != null;
     final maxWidth = context.responsiveValue<double>(
       mobile: double.infinity,
-      tablet: 600,
-      desktop: 640,
+      tablet: 560,
+      desktop: 600,
     );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(isEditing ? 'Edit Product' : 'New Product'),
+    return Theme(
+      // Override only input decoration for this screen
+      data: Theme.of(context).copyWith(
+        inputDecorationTheme: _underlineDecoration,
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: EdgeInsets.symmetric(
-                horizontal: context.horizontalPadding,
-                vertical: 24,
-              ),
-              children: [
-                _FormSection(
-                  title: 'Basic Info',
-                  children: [
-                    _FieldLabel(label: 'Product Name *'),
-                    TextFormField(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(isEditing ? 'Edit Product' : 'New Product'),
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, color: AppColors.slate200),
+          ),
+        ),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.horizontalPadding,
+                  vertical: 8,
+                ),
+                children: [
+                  // ── Basic Info ───────────────────────────────────────
+                  _SectionHeader(label: 'Basic Info'),
+                  _ClassicField(
+                    label: 'Product Name',
+                    required: true,
+                    child: TextFormField(
                       controller: _nameCtrl,
                       textInputAction: TextInputAction.next,
-                      decoration:
-                          const InputDecoration(hintText: 'e.g. Classic Tee'),
-                      validator: (v) => Validators.required(v, fieldName: 'Name'),
-                    ),
-                    const SizedBox(height: 16),
-                    _FieldLabel(label: 'Description'),
-                    TextFormField(
-                      controller: _descCtrl,
-                      maxLines: 3,
-                      textInputAction: TextInputAction.next,
+                      style: _fieldTextStyle,
                       decoration: const InputDecoration(
-                          hintText: 'Optional product description'),
+                        hintText: 'e.g. Classic Tee',
+                      ),
+                      validator: (v) =>
+                          Validators.required(v, fieldName: 'Name'),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                _FormSection(
-                  title: 'Pricing',
-                  children: [
-                    _FieldLabel(label: 'Base Price (MMK) *'),
-                    TextFormField(
-                      controller: _priceCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: false),
+                  ),
+                  _ClassicField(
+                    label: 'Description',
+                    child: TextFormField(
+                      controller: _descCtrl,
+                      maxLines: 2,
                       textInputAction: TextInputAction.next,
+                      style: _fieldTextStyle,
+                      decoration: const InputDecoration(
+                        hintText: 'Optional description',
+                      ),
+                    ),
+                  ),
+
+                  // ── Pricing ──────────────────────────────────────────
+                  _SectionHeader(label: 'Pricing'),
+                  _ClassicField(
+                    label: 'Base Price (MMK)',
+                    required: true,
+                    child: TextFormField(
+                      controller: _priceCtrl,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: false),
+                      textInputAction: TextInputAction.next,
+                      style: _fieldTextStyle,
                       decoration: const InputDecoration(
                         hintText: '0',
-                        prefixText: 'K ',
+                        prefixText: 'K  ',
+                        prefixStyle: TextStyle(
+                          color: AppColors.slate500,
+                          fontSize: 14,
+                        ),
                       ),
                       validator: (v) =>
                           Validators.positiveNumber(v, fieldName: 'Price'),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                _FormSection(
-                  title: 'Categorisation',
-                  children: [
-                    _FieldLabel(label: 'Category'),
-                    TextFormField(
+                  ),
+
+                  // ── Categorisation ───────────────────────────────────
+                  _SectionHeader(label: 'Categorisation'),
+                  _ClassicField(
+                    label: 'Category',
+                    child: TextFormField(
                       controller: _categoryCtrl,
                       textInputAction: TextInputAction.next,
+                      style: _fieldTextStyle,
                       decoration: const InputDecoration(
-                          hintText: 'e.g. Clothing, Accessories'),
+                        hintText: 'e.g. Clothing',
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    _FieldLabel(label: 'Brand'),
-                    TextFormField(
+                  ),
+                  _ClassicField(
+                    label: 'Brand',
+                    child: TextFormField(
                       controller: _brandCtrl,
                       textInputAction: TextInputAction.next,
-                      decoration:
-                          const InputDecoration(hintText: 'e.g. My Brand'),
+                      style: _fieldTextStyle,
+                      decoration: const InputDecoration(
+                        hintText: 'e.g. My Brand',
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    _FieldLabel(label: 'Product Code'),
-                    TextFormField(
+                  ),
+                  _ClassicField(
+                    label: 'Product Code',
+                    isLast: true,
+                    child: TextFormField(
                       controller: _codeCtrl,
                       textInputAction: TextInputAction.done,
+                      style: _fieldTextStyle,
                       decoration: const InputDecoration(
-                          hintText: 'Unique product identifier'),
+                        hintText: 'SKU / unique identifier',
+                      ),
                       validator: Validators.sku,
                     ),
-                  ],
-                ),
-                if (formState.errorMessage != null) ...[
-                  const SizedBox(height: 16),
-                  _ErrorBanner(message: formState.errorMessage!),
-                ],
-                const SizedBox(height: 32),
-                AppButton(
-                  label: isEditing ? 'Save Changes' : 'Create Product',
-                  onPressed: _submit,
-                  isLoading: formState.isLoading,
-                ),
-                if (isEditing) ...[
-                  const SizedBox(height: 12),
-                  AppButton(
-                    label: 'Cancel',
-                    variant: AppButtonVariant.ghost,
-                    onPressed: () => context.pop(),
                   ),
+
+                  // ── Error ────────────────────────────────────────────
+                  if (formState.errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    _ErrorRow(message: formState.errorMessage!),
+                  ],
+
+                  // ── Actions ──────────────────────────────────────────
+                  const SizedBox(height: 28),
+                  _SubmitButton(
+                    label: isEditing ? 'Save Changes' : 'Create Product',
+                    isLoading: formState.isLoading,
+                    onPressed: _submit,
+                  ),
+                  if (isEditing) ...[
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () => context.pop(),
+                      child: const Text('Cancel'),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -219,77 +273,154 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   }
 }
 
-class _FormSection extends StatelessWidget {
-  const _FormSection({required this.title, required this.children});
+// ── Field text style ─────────────────────────────────────────────────────────
 
-  final String title;
-  final List<Widget> children;
+const _fieldTextStyle = TextStyle(
+  fontSize: 14,
+  fontWeight: FontWeight.w400,
+  color: AppColors.slate900,
+);
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.slate700,
-              ),
-        ),
-        const SizedBox(height: 12),
-        ...children,
-      ],
-    );
-  }
-}
+// ── Section header ───────────────────────────────────────────────────────────
 
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel({required this.label});
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.label});
 
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(top: 24, bottom: 2),
       child: Text(
-        label,
+        label.toUpperCase(),
         style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: AppColors.slate600,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1.1,
+          color: AppColors.slate500,
         ),
       ),
     );
   }
 }
 
-class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.message});
+// ── Classic field row (label left, input right on wide; stacked on narrow) ───
+
+class _ClassicField extends StatelessWidget {
+  const _ClassicField({
+    required this.label,
+    required this.child,
+    this.required = false,
+    this.isLast = false,
+  });
+
+  final String label;
+  final Widget child;
+  final bool required;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Label column — fixed width
+            SizedBox(
+              width: 130,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 14),
+                child: RichText(
+                  text: TextSpan(
+                    text: label,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.slate600,
+                    ),
+                    children: required
+                        ? const [
+                            TextSpan(
+                              text: ' *',
+                              style: TextStyle(color: AppColors.danger),
+                            ),
+                          ]
+                        : [],
+                  ),
+                ),
+              ),
+            ),
+            // Input column — expands
+            Expanded(child: child),
+          ],
+        ),
+        if (!isLast)
+          const Divider(height: 1, color: AppColors.slate100),
+      ],
+    );
+  }
+}
+
+// ── Error row ────────────────────────────────────────────────────────────────
+
+class _ErrorRow extends StatelessWidget {
+  const _ErrorRow({required this.message});
 
   final String message;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.dangerBg,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline, color: AppColors.danger, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(color: AppColors.danger, fontSize: 13),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.error_outline, color: AppColors.danger, size: 15),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            message,
+            style: const TextStyle(
+              color: AppColors.danger,
+              fontSize: 13,
             ),
           ),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+// ── Submit button ─────────────────────────────────────────────────────────────
+
+class _SubmitButton extends StatelessWidget {
+  const _SubmitButton({
+    required this.label,
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 46,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        child: isLoading
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : Text(label),
       ),
     );
   }
