@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/responsive/responsive_extensions.dart';
+import '../../../../core/responsive/device_type.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_loading_widget.dart';
+import '../../../../core/widgets/app_error_widget.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/domain/entities/variant.dart';
 import '../../../product/presentation/providers/product_list_provider.dart';
+import '../../../product/presentation/widgets/product_card.dart';
 import '../providers/order_create_provider.dart';
 
-/// Multi-step order creation screen.
-///
-/// Mobile: Step 1 (Customer) → Step 2 (Items) → Step 3 (Review)
-/// Desktop: All sections visible on one page.
+/// POS style single-page order creation screen.
 class OrderCreateScreen extends ConsumerStatefulWidget {
   const OrderCreateScreen({super.key});
 
@@ -24,421 +22,129 @@ class OrderCreateScreen extends ConsumerStatefulWidget {
 }
 
 class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
-  int _step = 0;
-  final _customerFormKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
-  final _addressCtrl = TextEditingController();
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
-    _addressCtrl.dispose();
     super.dispose();
   }
 
+  void _onProductTapped(Product p, WidgetRef ref) {
+    final activeVariants = p.variants.where((v) => v.isActive && !v.isOutOfStock).toList();
+    if (activeVariants.isEmpty) return;
+    
+    if (activeVariants.length == 1) {
+      _addVariant(p, activeVariants.first, ref);
+    } else {
+      showDialog(
+        context: context,
+        builder: (ctx) => _VariantSelectionDialog(
+          product: p,
+          variants: activeVariants,
+          onSelected: (v) {
+            Navigator.pop(ctx);
+            _addVariant(p, v, ref);
+          },
+        ),
+      );
+    }
+  }
+
+  void _addVariant(Product p, Variant v, WidgetRef ref) {
+    final price = v.priceOverride ?? p.basePrice;
+    ref.read(orderCreateProvider.notifier).addItem(
+      PendingOrderItem(
+        variantId: v.id,
+        productName: p.name,
+        variantDisplayName: v.displayName,
+        quantity: 1,
+        unitPrice: price,
+      ),
+    );
+  }
+
+  Future<void> _submitOrder() async {
+    if (!(_formKey.currentState?.validate() ?? true)) return;
+    
+    final notifier = ref.read(orderCreateProvider.notifier);
+    final state = ref.read(orderCreateProvider);
+    
+    if (state.items.isEmpty) return;
+
+    notifier
+      ..updateCustomerName(_nameCtrl.text.trim())
+      ..updateCustomerPhone(_phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim());
+      
+    final order = await notifier.submit();
+    if (order != null && mounted) {
+      context.pushReplacementNamed(
+        'orderDetail',
+        pathParameters: {'id': order.id},
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDesktop = context.isDesktop;
+    final isDesktop = DeviceType.from(context) == DeviceType.desktop || DeviceType.from(context) == DeviceType.large;
+    final isTablet = DeviceType.from(context) == DeviceType.tablet;
+    final isLargeScreen = isDesktop || isTablet;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('New Order')),
-      body: isDesktop
-          ? _DesktopOrderForm(
-              customerFormKey: _customerFormKey,
-              nameCtrl: _nameCtrl,
-              phoneCtrl: _phoneCtrl,
-              addressCtrl: _addressCtrl,
-            )
-          : _MobileSteppedForm(
-              step: _step,
-              customerFormKey: _customerFormKey,
-              nameCtrl: _nameCtrl,
-              phoneCtrl: _phoneCtrl,
-              addressCtrl: _addressCtrl,
-              onNextStep: () => setState(() => _step++),
-              onPrevStep: () => setState(() => _step--),
-            ),
-    );
-  }
-}
-
-// ── Desktop: single-page layout ───────────────────────────────────────────────
-
-class _DesktopOrderForm extends ConsumerWidget {
-  const _DesktopOrderForm({
-    required this.customerFormKey,
-    required this.nameCtrl,
-    required this.phoneCtrl,
-    required this.addressCtrl,
-  });
-
-  final GlobalKey<FormState> customerFormKey;
-  final TextEditingController nameCtrl;
-  final TextEditingController phoneCtrl;
-  final TextEditingController addressCtrl;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final formState = ref.watch(orderCreateProvider);
-
-    return Row(
-      children: [
-        Expanded(
-          flex: 2,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SectionHeader(title: 'Customer Info'),
-                const SizedBox(height: 16),
-                _CustomerForm(
-                  formKey: customerFormKey,
-                  nameCtrl: nameCtrl,
-                  phoneCtrl: phoneCtrl,
-                  addressCtrl: addressCtrl,
-                ),
-                const SizedBox(height: 24),
-                _SectionHeader(title: 'Add Items'),
-                const SizedBox(height: 16),
-                _ProductPicker(),
-              ],
-            ),
-          ),
-        ),
-        const VerticalDivider(width: 1),
-        Expanded(
-          flex: 1,
-          child: _OrderSummaryPanel(
-            formKey: customerFormKey,
-            nameCtrl: nameCtrl,
-            phoneCtrl: phoneCtrl,
-            addressCtrl: addressCtrl,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Mobile: step-by-step ──────────────────────────────────────────────────────
-
-class _MobileSteppedForm extends ConsumerWidget {
-  const _MobileSteppedForm({
-    required this.step,
-    required this.customerFormKey,
-    required this.nameCtrl,
-    required this.phoneCtrl,
-    required this.addressCtrl,
-    required this.onNextStep,
-    required this.onPrevStep,
-  });
-
-  final int step;
-  final GlobalKey<FormState> customerFormKey;
-  final TextEditingController nameCtrl;
-  final TextEditingController phoneCtrl;
-  final TextEditingController addressCtrl;
-  final VoidCallback onNextStep;
-  final VoidCallback onPrevStep;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return switch (step) {
-      0 => _StepCustomerInfo(
-          formKey: customerFormKey,
-          nameCtrl: nameCtrl,
-          phoneCtrl: phoneCtrl,
-          addressCtrl: addressCtrl,
-          onNext: onNextStep,
-        ),
-      1 => _StepAddItems(onNext: onNextStep, onBack: onPrevStep),
-      _ => _StepReview(
-          formKey: customerFormKey,
-          nameCtrl: nameCtrl,
-          phoneCtrl: phoneCtrl,
-          addressCtrl: addressCtrl,
-          onBack: onPrevStep,
-        ),
-    };
-  }
-}
-
-class _StepCustomerInfo extends StatelessWidget {
-  const _StepCustomerInfo({
-    required this.formKey,
-    required this.nameCtrl,
-    required this.phoneCtrl,
-    required this.addressCtrl,
-    required this.onNext,
-  });
-
-  final GlobalKey<FormState> formKey;
-  final TextEditingController nameCtrl;
-  final TextEditingController phoneCtrl;
-  final TextEditingController addressCtrl;
-  final VoidCallback onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _StepIndicator(current: 1, total: 3),
-          const SizedBox(height: 20),
-          const _SectionHeader(title: 'Customer Info'),
-          const SizedBox(height: 16),
-          Expanded(
-            child: SingleChildScrollView(
-              child: _CustomerForm(
-                formKey: formKey,
-                nameCtrl: nameCtrl,
-                phoneCtrl: phoneCtrl,
-                addressCtrl: addressCtrl,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          AppButton(
-            label: 'Next: Add Items',
-            onPressed: () {
-              if (formKey.currentState?.validate() ?? false) onNext();
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StepAddItems extends ConsumerWidget {
-  const _StepAddItems({required this.onNext, required this.onBack});
-
-  final VoidCallback onNext;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(orderCreateProvider).items;
-
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          const _StepIndicator(current: 2, total: 3),
-          const SizedBox(height: 20),
-          const _SectionHeader(title: 'Add Items'),
-          const SizedBox(height: 16),
-          Expanded(child: _ProductPicker()),
-          if (items.isNotEmpty) ...[
-            const Divider(),
-            _CartSummaryBar(
-              itemCount: items.length,
-              total: items.fold(0, (s, i) => s + i.subtotal),
-            ),
-          ],
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  label: 'Back',
-                  variant: AppButtonVariant.secondary,
-                  onPressed: onBack,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: AppButton(
-                  label: 'Review',
-                  onPressed: items.isEmpty ? null : onNext,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StepReview extends ConsumerWidget {
-  const _StepReview({
-    required this.formKey,
-    required this.nameCtrl,
-    required this.phoneCtrl,
-    required this.addressCtrl,
-    required this.onBack,
-  });
-
-  final GlobalKey<FormState> formKey;
-  final TextEditingController nameCtrl;
-  final TextEditingController phoneCtrl;
-  final TextEditingController addressCtrl;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final formState = ref.watch(orderCreateProvider);
-    final notifier = ref.read(orderCreateProvider.notifier);
-
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          const _StepIndicator(current: 3, total: 3),
-          const SizedBox(height: 20),
-          Expanded(
-            child: _OrderSummaryPanel(
-              formKey: formKey,
-              nameCtrl: nameCtrl,
-              phoneCtrl: phoneCtrl,
-              addressCtrl: addressCtrl,
-              showBackButton: true,
-              onBack: onBack,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Shared form components ─────────────────────────────────────────────────────
-
-class _CustomerForm extends ConsumerWidget {
-  const _CustomerForm({
-    required this.formKey,
-    required this.nameCtrl,
-    required this.phoneCtrl,
-    required this.addressCtrl,
-  });
-
-  final GlobalKey<FormState> formKey;
-  final TextEditingController nameCtrl;
-  final TextEditingController phoneCtrl;
-  final TextEditingController addressCtrl;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(orderCreateProvider.notifier);
-
-    return Form(
-      key: formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _FieldLabel(label: 'Customer Name *'),
-          TextFormField(
-            controller: nameCtrl,
-            textInputAction: TextInputAction.next,
-            decoration:
-                const InputDecoration(hintText: 'Full name'),
-            onChanged: notifier.updateCustomerName,
-            validator: (v) =>
-                Validators.required(v, fieldName: 'Customer name'),
-          ),
-          const SizedBox(height: 16),
-          const _FieldLabel(label: 'Phone Number'),
-          TextFormField(
-            controller: phoneCtrl,
-            keyboardType: TextInputType.phone,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(hintText: '09xxxxxxxx'),
-            onChanged: (v) =>
-                notifier.updateCustomerPhone(v.isEmpty ? null : v),
-            validator: (v) =>
-                v != null && v.isNotEmpty ? Validators.phoneNumber(v) : null,
-          ),
-          const SizedBox(height: 16),
-          const _FieldLabel(label: 'Delivery Address'),
-          TextFormField(
-            controller: addressCtrl,
-            maxLines: 2,
-            textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(hintText: 'Optional'),
-            onChanged: (v) =>
-                notifier.updateCustomerAddress(v.isEmpty ? null : v),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProductPicker extends ConsumerStatefulWidget {
-  const _ProductPicker();
-
-  @override
-  ConsumerState<_ProductPicker> createState() => _ProductPickerState();
-}
-
-class _ProductPickerState extends ConsumerState<_ProductPicker> {
-  Product? _selectedProduct;
-
-  @override
-  Widget build(BuildContext context) {
-    final productsAsync = ref.watch(productListProvider);
-    final orderItems = ref.watch(orderCreateProvider).items;
-    final orderNotifier = ref.read(orderCreateProvider.notifier);
-
-    return productsAsync.when(
-      loading: () => const SkeletonListLoader(count: 4),
-      error: (e, _) => Center(child: Text('Failed to load products: $e')),
-      data: (products) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product list
-          SizedBox(
-            height: 200,
-            child: ListView.separated(
-              itemCount: products.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (_, i) {
-                final p = products[i];
-                final isSelected = _selectedProduct?.id == p.id;
-                return _ProductPickerTile(
-                  product: p,
-                  isSelected: isSelected,
-                  onTap: () => setState(() => _selectedProduct = p),
+      backgroundColor: AppColors.slate50,
+      appBar: AppBar(
+        title: const Text('New Order'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          if (!isLargeScreen) // On mobile, show cart button
+            IconButton(
+              icon: const Icon(Icons.shopping_cart_outlined),
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => Container(
+                    height: MediaQuery.of(context).size.height * 0.85,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                    ),
+                    child: _CartSidebar(
+                      formKey: _formKey,
+                      nameCtrl: _nameCtrl,
+                      phoneCtrl: _phoneCtrl,
+                      onSubmit: _submitOrder,
+                    ),
+                  ),
                 );
               },
             ),
-          ),
-          if (_selectedProduct != null) ...[
-            const Divider(height: 24),
-            const _FieldLabel(label: 'Select Variant'),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _selectedProduct!.variants
-                  .where((v) => v.isActive && !v.isOutOfStock)
-                  .map((v) => _VariantChip(
-                        variant: v,
-                        basePrice: _selectedProduct!.basePrice,
-                        productName: _selectedProduct!.name,
-                        onAdd: (item) {
-                          orderNotifier.addItem(item);
-                          setState(() => _selectedProduct = null);
-                        },
-                      ))
-                  .toList(),
+        ],
+      ),
+      body: Row(
+        children: [
+          // Left Side: Product Grid
+          Expanded(
+            child: _ProductGridSection(
+              onProductTapped: (p) => _onProductTapped(p, ref),
             ),
-          ],
-          if (orderItems.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            const _FieldLabel(label: 'Cart'),
-            ...orderItems.map(
-              (item) => _CartItemRow(
-                item: item,
-                onRemove: () => orderNotifier.removeItem(item.variantId),
-                onQuantityChange: (q) =>
-                    orderNotifier.updateItemQuantity(item.variantId, q),
+          ),
+          // Right Side: Cart (Desktop/Tablet Only)
+          if (isLargeScreen) ...[
+            Container(width: 1, color: AppColors.slate200),
+            SizedBox(
+              width: 360,
+              child: _CartSidebar(
+                formKey: _formKey,
+                nameCtrl: _nameCtrl,
+                phoneCtrl: _phoneCtrl,
+                onSubmit: _submitOrder,
               ),
             ),
           ],
@@ -448,50 +154,104 @@ class _ProductPickerState extends ConsumerState<_ProductPicker> {
   }
 }
 
-class _ProductPickerTile extends StatelessWidget {
-  const _ProductPickerTile({
-    required this.product,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final Product product;
-  final bool isSelected;
-  final VoidCallback onTap;
+// ── Product Grid Section ──
+class _ProductGridSection extends ConsumerWidget {
+  const _ProductGridSection({required this.onProductTapped});
+  final void Function(Product) onProductTapped;
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color:
-                isSelected ? AppColors.slate900 : AppColors.slate200,
-            width: isSelected ? 2 : 1,
-          ),
-          color: isSelected ? AppColors.slate100 : Colors.white,
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                product.name,
-                style: TextStyle(
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: AppColors.slate900,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final productsAsync = ref.watch(productListProvider);
+
+    return productsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => AppErrorWidget(
+        message: e.toString(),
+        onRetry: () => ref.refresh(productListProvider.future),
+      ),
+      data: (products) {
+        if (products.isEmpty) {
+          return const Center(child: Text('No products available.', style: TextStyle(color: AppColors.slate500)));
+        }
+        
+        return CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.all(24),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 240, // Nice grid size
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  mainAxisExtent: 140, // Height for ProductCard
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) {
+                    final product = products[i];
+                    return ProductCard(
+                      product: product,
+                      onTap: () => onProductTapped(product),
+                    );
+                  },
+                  childCount: products.length,
                 ),
               ),
             ),
-            Text(
-              '${product.totalAvailableStock} in stock',
-              style: const TextStyle(
-                  fontSize: 12, color: AppColors.slate400),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ── Variant Selection Dialog ──
+class _VariantSelectionDialog extends StatelessWidget {
+  const _VariantSelectionDialog({
+    required this.product,
+    required this.variants,
+    required this.onSelected,
+  });
+
+  final Product product;
+  final List<Variant> variants;
+  final void Function(Variant) onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        width: 400,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Select Variant', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            Text(product.name, style: const TextStyle(color: AppColors.slate500)),
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: variants.map((v) {
+                final price = v.priceOverride ?? product.basePrice;
+                return ActionChip(
+                  label: Text('${v.displayName} — ${CurrencyFormatter.format(price)}'),
+                  backgroundColor: AppColors.slate100,
+                  side: const BorderSide(color: AppColors.slate200),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  onPressed: () => onSelected(v),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
             ),
           ],
         ),
@@ -500,316 +260,161 @@ class _ProductPickerTile extends StatelessWidget {
   }
 }
 
-class _VariantChip extends StatelessWidget {
-  const _VariantChip({
-    required this.variant,
-    required this.basePrice,
-    required this.productName,
-    required this.onAdd,
-  });
-
-  final Variant variant;
-  final double basePrice;
-  final String productName;
-  final void Function(PendingOrderItem) onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final price = variant.priceOverride ?? basePrice;
-
-    return ActionChip(
-      label: Text(
-        '${variant.displayName} — ${CurrencyFormatter.format(price)}',
-        style: const TextStyle(fontSize: 12),
-      ),
-      onPressed: () => onAdd(
-        PendingOrderItem(
-          variantId: variant.id,
-          productName: productName,
-          variantDisplayName: variant.displayName,
-          quantity: 1,
-          unitPrice: price,
-        ),
-      ),
-    );
-  }
-}
-
-class _CartItemRow extends StatelessWidget {
-  const _CartItemRow({
-    required this.item,
-    required this.onRemove,
-    required this.onQuantityChange,
-  });
-
-  final PendingOrderItem item;
-  final VoidCallback onRemove;
-  final void Function(int) onQuantityChange;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.productName,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text(item.variantDisplayName,
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.slate400)),
-              ],
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove_circle_outline, size: 20),
-                onPressed: () => onQuantityChange(item.quantity - 1),
-                visualDensity: VisualDensity.compact,
-              ),
-              Text('${item.quantity}',
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline, size: 20),
-                onPressed: () => onQuantityChange(item.quantity + 1),
-                visualDensity: VisualDensity.compact,
-              ),
-            ],
-          ),
-          Text(
-            CurrencyFormatter.format(item.subtotal),
-            style: const TextStyle(
-                fontWeight: FontWeight.w600, fontSize: 13),
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            icon: const Icon(Icons.delete_outline,
-                size: 18, color: AppColors.danger),
-            onPressed: onRemove,
-            visualDensity: VisualDensity.compact,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _OrderSummaryPanel extends ConsumerWidget {
-  const _OrderSummaryPanel({
+// ── Cart Sidebar ──
+class _CartSidebar extends ConsumerWidget {
+  const _CartSidebar({
     required this.formKey,
     required this.nameCtrl,
     required this.phoneCtrl,
-    required this.addressCtrl,
-    this.showBackButton = false,
-    this.onBack,
+    required this.onSubmit,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController nameCtrl;
   final TextEditingController phoneCtrl;
-  final TextEditingController addressCtrl;
-  final bool showBackButton;
-  final VoidCallback? onBack;
+  final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final formState = ref.watch(orderCreateProvider);
     final notifier = ref.read(orderCreateProvider.notifier);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return Container(
+      color: Colors.white,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionHeader(title: 'Order Summary'),
-          const SizedBox(height: 12),
-          if (formState.items.isEmpty)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('No items added yet.',
-                    style: TextStyle(color: AppColors.slate400)),
-              ),
-            )
-          else ...[
-            ...formState.items.map(
-              (item) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                          '${item.productName} (${item.variantDisplayName}) ×${item.quantity}',
-                          style: const TextStyle(fontSize: 13)),
+          // Customer Form Section
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.slate200)),
+            ),
+            child: Form(
+              key: formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Customer', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: nameCtrl,
+                    decoration: InputDecoration(
+                      hintText: 'Full Name *',
+                      isDense: true,
+                      filled: true,
+                      fillColor: AppColors.slate50,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                     ),
-                    Text(CurrencyFormatter.format(item.subtotal),
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 13)),
-                  ],
-                ),
+                    validator: (v) => Validators.required(v, fieldName: 'Customer Name'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: phoneCtrl,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      hintText: 'Phone (Optional)',
+                      isDense: true,
+                      filled: true,
+                      fillColor: AppColors.slate50,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const Divider(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+          
+          // Cart Items Section
+          Expanded(
+            child: formState.items.isEmpty
+                ? const Center(
+                    child: Text('Cart is empty', style: TextStyle(color: AppColors.slate400)),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: formState.items.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    itemBuilder: (context, i) {
+                      final item = formState.items[i];
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(item.productName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                                Text(item.variantDisplayName, style: const TextStyle(color: AppColors.slate500, fontSize: 12)),
+                                const SizedBox(height: 4),
+                                Text(CurrencyFormatter.format(item.subtotal), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.slate900)),
+                              ],
+                            ),
+                          ),
+                          // Quantity Controls
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: AppColors.slate200),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove, size: 16),
+                                  visualDensity: VisualDensity.compact,
+                                  onPressed: () => notifier.updateItemQuantity(item.variantId, item.quantity - 1),
+                                ),
+                                Text('${item.quantity}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                                IconButton(
+                                  icon: const Icon(Icons.add, size: 16),
+                                  visualDensity: VisualDensity.compact,
+                                  onPressed: () => notifier.updateItemQuantity(item.variantId, item.quantity + 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+          ),
+
+          // Total & Checkout Section
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.05), offset: const Offset(0, -4), blurRadius: 10),
+              ],
+            ),
+            child: Column(
               children: [
-                const Text('Total',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 16)),
-                Text(
-                  CurrencyFormatter.format(formState.totalAmount),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 16),
+                if (formState.errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(formState.errorMessage!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
+                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.slate500)),
+                    Text(
+                      CurrencyFormatter.format(formState.totalAmount),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.slate900),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                AppButton(
+                  label: 'Confirm Order',
+                  isLoading: formState.isLoading,
+                  minimumWidth: double.infinity,
+                  onPressed: formState.items.isEmpty ? null : onSubmit,
                 ),
               ],
             ),
-          ],
-          if (formState.errorMessage != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.dangerBg,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                formState.errorMessage!,
-                style:
-                    const TextStyle(color: AppColors.danger, fontSize: 13),
-              ),
-            ),
-          ],
-          const SizedBox(height: 24),
-          AppButton(
-            label: 'Confirm Order',
-            isLoading: formState.isLoading,
-            onPressed: formState.items.isEmpty
-                ? null
-                : () async {
-                    if (!(formKey.currentState?.validate() ?? true)) return;
-                    notifier
-                      ..updateCustomerName(nameCtrl.text.trim())
-                      ..updateCustomerPhone(phoneCtrl.text.trim().isEmpty
-                          ? null
-                          : phoneCtrl.text.trim())
-                      ..updateCustomerAddress(
-                          addressCtrl.text.trim().isEmpty
-                              ? null
-                              : addressCtrl.text.trim());
-                    final order = await notifier.submit();
-                    if (order != null && context.mounted) {
-                      context.pushReplacementNamed(
-                        'orderDetail',
-                        pathParameters: {'id': order.id},
-                      );
-                    }
-                  },
           ),
-          if (showBackButton) ...[
-            const SizedBox(height: 12),
-            AppButton(
-              label: 'Back',
-              variant: AppButtonVariant.secondary,
-              onPressed: onBack,
-            ),
-          ],
         ],
       ),
-    );
-  }
-}
-
-// ── Utility sub-widgets ────────────────────────────────────────────────────────
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: AppColors.slate800,
-          ),
-    );
-  }
-}
-
-class _StepIndicator extends StatelessWidget {
-  const _StepIndicator({required this.current, required this.total});
-  final int current;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(total, (i) {
-        final active = i + 1 == current;
-        final done = i + 1 < current;
-        return Expanded(
-          child: Container(
-            margin: EdgeInsets.only(right: i < total - 1 ? 6 : 0),
-            height: 4,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(2),
-              color: done || active
-                  ? AppColors.slate900
-                  : AppColors.slate200,
-            ),
-          ),
-        );
-      }),
-    );
-  }
-}
-
-class _CartSummaryBar extends StatelessWidget {
-  const _CartSummaryBar({required this.itemCount, required this.total});
-  final int itemCount;
-  final double total;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.slate100,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('$itemCount item${itemCount == 1 ? '' : 's'} in cart',
-              style: const TextStyle(color: AppColors.slate600, fontSize: 13)),
-          Text(CurrencyFormatter.format(total),
-              style: const TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 14)),
-        ],
-      ),
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(label,
-          style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: AppColors.slate600)),
     );
   }
 }

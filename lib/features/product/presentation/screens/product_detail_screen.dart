@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
 import '../../domain/entities/product.dart';
@@ -47,36 +48,30 @@ class _ProductDetailView extends StatelessWidget {
       appBar: AppBar(
         title: Text(product.name),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Edit product',
-            onPressed: () => context.pushNamed(
-              'productEdit',
-              pathParameters: {'id': product.id},
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: AppButton(
+              label: 'Edit',
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              variant: AppButtonVariant.secondary,
+              onPressed: () => context.pushNamed(
+                'productEdit',
+                pathParameters: {'id': product.id},
+              ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 16),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.pushNamed(
-          'variantNew',
-          pathParameters: {'id': product.id},
-        ),
-        icon: const Icon(Icons.add),
-        label: const Text('Add Variant'),
-        backgroundColor: AppColors.slate900,
-        foregroundColor: Colors.white,
       ),
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
             child: _ProductInfoHeader(product: product),
           ),
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: _VariantsSectionHeader(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: _VariantsSectionHeader(productId: product.id),
             ),
           ),
           if (product.variants.isEmpty)
@@ -252,16 +247,32 @@ class _InfoChip extends StatelessWidget {
 }
 
 class _VariantsSectionHeader extends StatelessWidget {
-  const _VariantsSectionHeader();
+  const _VariantsSectionHeader({required this.productId});
+
+  final String productId;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      'Variants',
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: AppColors.slate800,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Variants',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.slate800,
+              ),
+        ),
+        AppButton(
+          label: 'Add Variant',
+          icon: const Icon(Icons.add, size: 18),
+          variant: AppButtonVariant.secondary,
+          onPressed: () => context.pushNamed(
+            'variantNew',
+            pathParameters: {'id': productId},
           ),
+        ),
+      ],
     );
   }
 }

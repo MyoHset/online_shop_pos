@@ -273,8 +273,14 @@ class _DesktopScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
+    // Do NOT wrap in Scaffold here. _DesktopScaffold is rendered directly by
+    // GoRouter as a page-level widget and already receives tight full-screen
+    // constraints. Using Scaffold(body: Row) would loosen those constraints
+    // before they reach Expanded(child: body), causing unbounded-height crashes
+    // deep in the StatefulNavigationShell → IndexedStack → content chain.
+    return ColoredBox(
+      color: Colors.white,
+      child: Row(
         children: [
           SizedBox(
             width: _sidebarWidth,

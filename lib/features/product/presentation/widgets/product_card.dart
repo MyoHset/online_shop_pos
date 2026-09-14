@@ -4,8 +4,31 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../domain/entities/product.dart';
 
-/// Classic minimal product row — no card box, just a clean list tile
-/// with a bottom divider. Consistent height regardless of content.
+class _StockBadge extends StatelessWidget {
+  const _StockBadge({required this.product});
+
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) {
+    if (product.isOutOfStock) {
+      return const StatusBadge.danger(
+        label: 'Out of stock',
+        size: StatusBadgeSize.small,
+      );
+    }
+    if (product.hasLowStockVariant) {
+      return const StatusBadge.warning(
+        label: 'Low stock',
+        size: StatusBadgeSize.small,
+      );
+    }
+    return const SizedBox.shrink();
+  }
+}
+
+/// Classic minimal product card — for grid layouts.
+/// Consistent with data presentation.
 class ProductCard extends StatefulWidget {
   const ProductCard({
     super.key,
@@ -34,139 +57,73 @@ class _ProductCardState extends State<ProductCard> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
-          color: _hovered ? AppColors.slate50 : Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _hovered ? AppColors.slate50 : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _hovered ? AppColors.slate300 : AppColors.slate200,
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Thumbnail — small, square
-              _Thumbnail(product: p),
-              const SizedBox(width: 14),
+              // Product Name
+              Text(
+                p.name,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.slate900,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (p.category != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  p.category!,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.slate500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
 
-              // Name + category
-              Expanded(
-                flex: 5,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      p.name,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.slate900,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+              // const Spacer(),
+
+              // Price & Badge
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    CurrencyFormatter.format(p.basePrice),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.slate900,
                     ),
-                    if (p.category != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        p.category!,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.slate400,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-              // Price
-              Expanded(
-                flex: 3,
-                child: Text(
-                  CurrencyFormatter.format(p.basePrice),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.slate700,
                   ),
-                ),
+                  _StockBadge(product: p),
+                ],
               ),
-
-              // Variants + stock
-              Expanded(
-                flex: 3,
-                child: Text(
-                  '${p.activeVariantCount} var · ${p.totalAvailableStock} stock',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.slate400,
-                  ),
+              const SizedBox(height: 4),
+              Text(
+                '${p.activeVariantCount} var · ${p.totalAvailableStock} stock',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.slate400,
                 ),
-              ),
-
-              // Status badge
-              _StockBadge(product: p),
-              const SizedBox(width: 8),
-
-              // Chevron
-              const Icon(
-                Icons.chevron_right,
-                size: 16,
-                color: AppColors.slate300,
               ),
             ],
           ),
         ),
       ),
     );
-  }
-}
-
-class _Thumbnail extends StatelessWidget {
-  const _Thumbnail({required this.product});
-
-  final Product product;
-
-  @override
-  Widget build(BuildContext context) {
-    final url = product.variants
-        .expand((v) => v.images)
-        .where((img) => img.isPrimary)
-        .firstOrNull
-        ?.imageUrl;
-
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: AppColors.slate100,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: url != null
-          ? Image.network(url, fit: BoxFit.cover)
-          : const Icon(Icons.inventory_2_outlined,
-              color: AppColors.slate300, size: 18),
-    );
-  }
-}
-
-class _StockBadge extends StatelessWidget {
-  const _StockBadge({required this.product});
-
-  final Product product;
-
-  @override
-  Widget build(BuildContext context) {
-    if (product.isOutOfStock) {
-      return const StatusBadge.danger(
-        label: 'Out of stock',
-        size: StatusBadgeSize.small,
-      );
-    }
-    if (product.hasLowStockVariant) {
-      return const StatusBadge.warning(
-        label: 'Low stock',
-        size: StatusBadgeSize.small,
-      );
-    }
-    return const SizedBox.shrink();
   }
 }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/responsive/device_type.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../domain/entities/order.dart';
 import '../providers/order_list_provider.dart';
 import '../widgets/order_card.dart';
@@ -19,11 +22,20 @@ class OrderListScreen extends StatelessWidget {
   }
 }
 
-class _OrderListTabbedView extends ConsumerWidget {
+
+class _OrderListTabbedView extends ConsumerStatefulWidget {
   const _OrderListTabbedView();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_OrderListTabbedView> createState() => _OrderListTabbedViewState();
+}
+
+class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
+  // 0: All, 1: On Process, 2: Completed
+  int _selectedFilter = 1;
+
+  @override
+  Widget build(BuildContext context) {
     final ordersAsync = ref.watch(orderListProvider);
     final theme = Theme.of(context);
     final isDesktop = DeviceType.from(context) == DeviceType.desktop ||
@@ -31,120 +43,213 @@ class _OrderListTabbedView extends ConsumerWidget {
     final crossAxisCount =
         isDesktop ? 3 : (DeviceType.from(context) == DeviceType.tablet ? 2 : 1);
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: AppColors.slate50,
-        appBar: AppBar(
-          title: Text(
-            'My Orders',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: AppColors.slate900,
-            ),
-          ),
-          centerTitle: false,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () {}, // Future: implement search
-            ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              tooltip: 'New order',
-              onPressed: () => context.pushNamed('orderNew'),
-            ),
-            const SizedBox(width: 8),
-          ],
-          bottom: TabBar(
-            tabs: const [
-              Tab(text: 'Active'),
-              Tab(text: 'Completed'),
-            ],
-            indicator: const UnderlineTabIndicator(
-              borderSide: BorderSide(width: 2, color: AppColors.slate900),
-            ),
-          ),
-        ),
-        body: ordersAsync.when(
-          loading: () => const SkeletonListLoader(),
-          error: (e, _) => AppErrorWidget(
-            message: e.toString(),
-            onRetry: () => ref.refresh(orderListProvider.future),
-          ),
-          data: (orders) {
-            final activeOrders =
-                orders.where((o) => o.status.isActive).toList();
-            final completedOrders =
-                orders.where((o) => o.status.isFinal).toList();
+    final dateStr = DateFormat('EEEE, d MMMM yyyy').format(DateTime.now());
 
-            return TabBarView(
+    return Scaffold(
+      backgroundColor: AppColors.slate50,
+      body: Column(
+        children: [
+          // ── Dashboard Header ──
+          Container(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _OrderListBody(
-                  orders: activeOrders,
-                  isActiveTab: true,
-                  crossAxisCount: crossAxisCount,
+                // Top Row: Title and Date
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Orders',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.slate900,
+                      ),
+                    ),
+                    Text(
+                      dateStr,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.slate600,
+                      ),
+                    ),
+                  ],
                 ),
-                _OrderListBody(
-                  orders: completedOrders,
-                  isActiveTab: false,
-                  crossAxisCount: crossAxisCount,
+                const SizedBox(height: 24),
+                
+                // Bottom Row: Filters and Search
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Filter Chips
+                    Row(
+                      children: [
+                        _FilterChip(
+                          label: 'All',
+                          isSelected: _selectedFilter == 0,
+                          onTap: () => setState(() => _selectedFilter = 0),
+                        ),
+                        const SizedBox(width: 8),
+                        _FilterChip(
+                          label: 'On Process',
+                          isSelected: _selectedFilter == 1,
+                          onTap: () => setState(() => _selectedFilter = 1),
+                        ),
+                        const SizedBox(width: 8),
+                        _FilterChip(
+                          label: 'Completed',
+                          isSelected: _selectedFilter == 2,
+                          onTap: () => setState(() => _selectedFilter = 2),
+                        ),
+                      ],
+                    ),
+                    
+                    // Search and Action
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.filter_list),
+                          onPressed: () {}, // Future: filter
+                        ),
+                        Container(
+                          width: 240,
+                          height: 40,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.slate200),
+                          ),
+                          child: Row(
+                            children: [
+                              const Expanded(
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    hintText: 'Search a name, order, or etc',
+                                    hintStyle: TextStyle(fontSize: 13, color: AppColors.slate400),
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    filled: false,
+                                    contentPadding: EdgeInsets.zero,
+                                    isDense: true,
+                                  ),
+                                  style: TextStyle(fontSize: 13),
+                                ),
+                              ),
+                              const Icon(Icons.search, size: 18, color: AppColors.slate400),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        AppButton(
+                          label: 'New Order',
+                          icon: const Icon(Icons.add, size: 16),
+                          variant: AppButtonVariant.primary,
+                          minimumWidth: 120,
+                          onPressed: () => context.pushNamed('orderNew'),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
-            );
-          },
-        ),
+            ),
+          ),
+          
+          // ── Grid Content ──
+          Expanded(
+            child: ordersAsync.when(
+              loading: () => const SkeletonListLoader(),
+              error: (e, _) => AppErrorWidget(
+                message: e.toString(),
+                onRetry: () => ref.refresh(orderListProvider.future),
+              ),
+              data: (orders) {
+                // Filter Logic
+                List<Order> filteredOrders;
+                if (_selectedFilter == 1) {
+                  filteredOrders = orders.where((o) => o.status.isActive).toList();
+                } else if (_selectedFilter == 2) {
+                  filteredOrders = orders.where((o) => o.status.isFinal).toList();
+                } else {
+                  filteredOrders = orders;
+                }
+
+                if (filteredOrders.isEmpty) {
+                  return _EmptyOrdersView(filterState: _selectedFilter);
+                }
+
+                return CustomScrollView(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      sliver: SliverGrid(
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 320,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          mainAxisExtent: 140, // Height for compact card
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) {
+                            return OrderCard(
+                              order: filteredOrders[i],
+                              onTap: () => context.pushNamed(
+                                'orderDetail',
+                                pathParameters: {'id': filteredOrders[i].id},
+                              ),
+                            );
+                          },
+                          childCount: filteredOrders.length,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _OrderListBody extends StatelessWidget {
-  const _OrderListBody({
-    required this.orders,
-    required this.isActiveTab,
-    required this.crossAxisCount,
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
   });
 
-  final List<Order> orders;
-  final bool isActiveTab;
-  final int crossAxisCount;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    if (orders.isEmpty) {
-      return _EmptyOrdersView(isActiveTab: isActiveTab);
-    }
-
-    if (crossAxisCount == 1) {
-      return ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        itemCount: orders.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 16),
-        itemBuilder: (context, i) => OrderCard(
-          order: orders[i],
-          onTap: () => context.pushNamed(
-            'orderDetail',
-            pathParameters: {'id': orders[i].id},
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF0F766E) : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF0F766E) : AppColors.slate200,
           ),
         ),
-      );
-    }
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(24),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 2.2,
-      ),
-      itemCount: orders.length,
-      itemBuilder: (context, i) => OrderCard(
-        order: orders[i],
-        onTap: () => context.pushNamed(
-          'orderDetail',
-          pathParameters: {'id': orders[i].id},
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : AppColors.slate600,
+          ),
         ),
       ),
     );
@@ -152,16 +257,22 @@ class _OrderListBody extends StatelessWidget {
 }
 
 class _EmptyOrdersView extends StatelessWidget {
-  const _EmptyOrdersView({required this.isActiveTab});
-  final bool isActiveTab;
+  const _EmptyOrdersView({required this.filterState});
+  final int filterState;
 
   @override
   Widget build(BuildContext context) {
-    final title =
-        isActiveTab ? "You don't have an order yet" : "No completed orders";
-    final subtitle = isActiveTab
-        ? "You don't have any active orders at this time."
-        : "You haven't completed any orders yet.";
+    final title = filterState == 1
+        ? "No active orders"
+        : filterState == 2
+            ? "No completed orders"
+            : "No orders found";
+    
+    final subtitle = filterState == 1
+        ? "You don't have any orders currently processing."
+        : filterState == 2
+            ? "You haven't completed any orders yet."
+            : "Your order list is empty.";
 
     return Center(
       child: Padding(
@@ -169,8 +280,7 @@ class _EmptyOrdersView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Clipboard illustration placeholder
-            Icon(
+            const Icon(
               Icons.content_paste_outlined,
               size: 100,
               color: AppColors.slate200,

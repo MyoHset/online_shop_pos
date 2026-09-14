@@ -43,7 +43,7 @@ class ProductListMobileView extends ConsumerWidget {
         ),
         data: (products) => products.isEmpty
             ? const _EmptyView()
-            : _ProductScrollView(products: products, showColumns: false),
+            : _ProductScrollView(products: products),
       ),
     );
   }
@@ -85,7 +85,7 @@ class ProductListTabletView extends ConsumerWidget {
         ),
         data: (products) => products.isEmpty
             ? const _EmptyView()
-            : _ProductScrollView(products: products, showColumns: true),
+            : _ProductScrollView(products: products),
       ),
     );
   }
@@ -93,8 +93,12 @@ class ProductListTabletView extends ConsumerWidget {
 
 // ── Desktop ─────────────────────────────────────────────────────────────────────
 
-/// Desktop view renders inside [_DesktopScaffold]'s [Expanded] — no extra
-/// [Scaffold] wrapper needed. Returns a Column: toolbar + content area.
+/// Desktop view uses its own inner [Scaffold].
+///
+/// [StatefulNavigationShell] renders children via [IndexedStack], which loosens
+/// constraints (0..max) regardless of what the parent passes. [Scaffold]
+/// handles layout with its own internal layout delegate, bypassing the loose-
+/// constraint problem entirely — the correct Flutter-idiomatic solution.
 class ProductListDesktopView extends ConsumerWidget {
   const ProductListDesktopView({super.key});
 
@@ -102,38 +106,35 @@ class ProductListDesktopView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsync = ref.watch(productListProvider);
 
-    return Column(
-      children: [
-        // Toolbar row (fixed height)
-        _DesktopToolbarBar(
-          onSearch: (q) => ref.read(productListProvider.notifier).search(q),
-          onAdd: () => context.pushNamed('productNew'),
+    return Scaffold(
+      appBar: _DesktopToolbarBar(
+        onSearch: (q) => ref.read(productListProvider.notifier).search(q),
+        onAdd: () => context.pushNamed('productNew'),
+      ),
+      body: productsAsync.when(
+        loading: () => const SkeletonListLoader(),
+        error: (e, _) => AppErrorWidget(
+          message: e.toString(),
+          onRetry: () => ref.refresh(productListProvider.future),
         ),
-        // Content fills remaining height
-        Expanded(
-          child: productsAsync.when(
-            loading: () => const SkeletonListLoader(),
-            error: (e, _) => AppErrorWidget(
-              message: e.toString(),
-              onRetry: () => ref.refresh(productListProvider.future),
-            ),
-            data: (products) => products.isEmpty
-                ? const _EmptyView()
-                : _ProductScrollView(products: products, showColumns: true),
-          ),
-        ),
-      ],
+        data: (products) => products.isEmpty
+            ? const _EmptyView()
+            : _ProductScrollView(products: products),
+      ),
     );
   }
 }
 
 // ── Desktop AppBar toolbar ─────────────────────────────────────────────────────
 
-class _DesktopToolbarBar extends StatefulWidget {
+class _DesktopToolbarBar extends StatefulWidget implements PreferredSizeWidget {
   const _DesktopToolbarBar({required this.onSearch, required this.onAdd});
 
   final void Function(String) onSearch;
   final VoidCallback onAdd;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(56);
 
   @override
   State<_DesktopToolbarBar> createState() => _DesktopToolbarBarState();
@@ -142,59 +143,23 @@ class _DesktopToolbarBar extends StatefulWidget {
 class _DesktopToolbarBarState extends State<_DesktopToolbarBar> {
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            height: 56,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  const Text(
-                    'Products',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.slate900,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  SizedBox(
-                    width: 260,
-                    child: TextField(
-                      onChanged: widget.onSearch,
-                      style: const TextStyle(fontSize: 13),
-                      decoration: const InputDecoration(
-                        hintText: 'Search…',
-                        prefixIcon: Icon(Icons.search,
-                            size: 17, color: AppColors.slate400),
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    height: 36,
-                    child: ElevatedButton.icon(
-                      onPressed: widget.onAdd,
-                      icon: const Icon(Icons.add, size: 16),
-                      label: const Text('Add Product',
-                          style: TextStyle(fontSize: 13)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+    return AppBar(
+      title: const Text('Products'),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: _SearchBar(
+            width: 260,
+            onSearch: widget.onSearch,
           ),
-          const Divider(height: 1, color: AppColors.slate200),
-        ],
-      ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.add),
+          tooltip: 'Add product',
+          onPressed: widget.onAdd,
+        ),
+        const SizedBox(width: 8),
+      ],
     );
   }
 }
@@ -261,81 +226,40 @@ class _SearchBarState extends State<_SearchBar> {
 
 // ── Product scroll view ────────────────────────────────────────────────────────
 
-/// Fills the available space from Scaffold.body and scrolls correctly.
 class _ProductScrollView extends StatelessWidget {
-  const _ProductScrollView({
-    required this.products,
-    required this.showColumns,
-  });
+  const _ProductScrollView({required this.products});
 
   final List<Product> products;
-  final bool showColumns;
 
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-        // Column header (tablet / desktop only)
-        if (showColumns)
-          SliverToBoxAdapter(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  color: AppColors.slate50,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  child: const Row(
-                    children: [
-                      SizedBox(width: 54),
-                      Expanded(flex: 5, child: _ColHeader('Product')),
-                      Expanded(flex: 3, child: _ColHeader('Price')),
-                      Expanded(flex: 3, child: _ColHeader('Stock')),
-                      SizedBox(width: 80),
-                    ],
+        SliverPadding(
+          padding: const EdgeInsets.all(24),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 260,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              mainAxisExtent: 135,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, i) {
+                final p = products[i];
+                return ProductCard(
+                  product: p,
+                  onTap: () => context.pushNamed(
+                    'productDetail',
+                    pathParameters: {'id': p.id},
                   ),
-                ),
-                const Divider(height: 1, color: AppColors.slate100),
-              ],
+                );
+              },
+              childCount: products.length,
             ),
           ),
-
-        // Product rows
-        SliverList.separated(
-          itemCount: products.length,
-          separatorBuilder: (_, __) =>
-              const Divider(height: 1, color: AppColors.slate100),
-          itemBuilder: (context, i) {
-            final p = products[i];
-            return ProductCard(
-              product: p,
-              onTap: () => context.pushNamed(
-                'productDetail',
-                pathParameters: {'id': p.id},
-              ),
-            );
-          },
         ),
       ],
-    );
-  }
-}
-
-class _ColHeader extends StatelessWidget {
-  const _ColHeader(this.label);
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      label.toUpperCase(),
-      style: const TextStyle(
-        fontSize: 10,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.8,
-        color: AppColors.slate400,
-      ),
     );
   }
 }

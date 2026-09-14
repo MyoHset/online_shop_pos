@@ -77,9 +77,13 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   void _prefillIfNeeded() {
     if (_prefilled || widget.productId == null) return;
     final productAsync = ref.watch(productDetailProvider(widget.productId!));
-    productAsync.whenData((product) {
-      if (!_prefilled) {
-        _prefilled = true;
+    
+    if (productAsync.hasValue && !_prefilled) {
+      _prefilled = true;
+      final product = productAsync.value!;
+      
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         ref.read(productFormProvider.notifier).prefill(product);
         _nameCtrl.text = product.name;
         _descCtrl.text = product.description ?? '';
@@ -87,8 +91,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         _categoryCtrl.text = product.category ?? '';
         _brandCtrl.text = product.brand ?? '';
         _codeCtrl.text = product.productCode ?? '';
-      }
-    });
+      });
+    }
   }
 
   Future<void> _submit() async {
