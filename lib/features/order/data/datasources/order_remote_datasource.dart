@@ -112,26 +112,23 @@ class OrderRemoteDataSource {
           .from(SupabaseConstants.orderItemsTable)
           .insert(itemRows);
 
-      // Atomically reserve stock for each item via Postgres RPC
-      for (final item in items) {
-        try {
-          await _client.rpc(
-            SupabaseConstants.reserveStockRpc,
-            params: {
-              'p_variant_id': item.variantId,
-              'p_quantity': item.quantity,
-            },
-          );
-        } on PostgrestException catch (e) {
-          // Roll back: cancel the order (best effort)
-          await _client
-              .from(SupabaseConstants.ordersTable)
-              .update({'status': OrderStatus.cancelled.name})
-              .eq('id', orderId);
-          throw StockReservationException(
-            'Stock reservation failed for variant ${item.variantId}: ${e.message}',
-          );
-        }
+      // Atomically reserve stock for the order via Postgres RPC
+      try {
+        await _client.rpc(
+          SupabaseConstants.reserveStockRpc,
+          params: {
+            'p_order_id': orderId,
+          },
+        );
+      } on PostgrestException catch (e) {
+        // Roll back: cancel the order (best effort)
+        await _client
+            .from(SupabaseConstants.ordersTable)
+            .update({'status': OrderStatus.cancelled.name})
+            .eq('id', orderId);
+        throw StockReservationException(
+          'Stock reservation failed: ${e.message}',
+        );
       }
 
       return getOrderById(orderId);
@@ -149,11 +146,16 @@ class OrderRemoteDataSource {
     required OrderStatus newStatus,
   }) async {
     try {
+      if (newStatus == OrderStatus.delivered) {
+        await confirmStockDeduction(orderId);
+      } else if (newStatus == OrderStatus.cancelled) {
+        await releaseOrderStock(orderId);
+      }
+
       final data = await _client
           .from(SupabaseConstants.ordersTable)
           .update({
             'status': newStatus.name,
-            'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('id', orderId)
           .select(_orderSelect)
@@ -168,24 +170,8 @@ class OrderRemoteDataSource {
 
   Future<OrderModel> cancelOrder(String orderId) async {
     try {
-      // Get items to release stock
-      final items = await _client
-          .from(SupabaseConstants.orderItemsTable)
-          .select('variant_id, quantity')
-          .eq('order_id', orderId);
+      await releaseOrderStock(orderId);
 
-      // Release stock for each item atomically
-      for (final item in items as List) {
-        await _client.rpc(
-          SupabaseConstants.releaseStockRpc,
-          params: {
-            'p_variant_id': item['variant_id'],
-            'p_quantity': item['quantity'],
-          },
-        );
-      }
-
-      // Update order status
       return updateOrderStatus(
         orderId: orderId,
         newStatus: OrderStatus.cancelled,
@@ -197,22 +183,29 @@ class OrderRemoteDataSource {
     }
   }
 
+  Future<void> releaseOrderStock(String orderId) async {
+    try {
+      await _client.rpc(
+        SupabaseConstants.releaseStockRpc,
+        params: {
+          'p_order_id': orderId,
+        },
+      );
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
   Future<void> confirmStockDeduction(String orderId) async {
     try {
-      final items = await _client
-          .from(SupabaseConstants.orderItemsTable)
-          .select('variant_id, quantity')
-          .eq('order_id', orderId);
-
-      for (final item in items as List) {
-        await _client.rpc(
-          SupabaseConstants.confirmStockDeductionRpc,
-          params: {
-            'p_variant_id': item['variant_id'],
-            'p_quantity': item['quantity'],
-          },
-        );
-      }
+      await _client.rpc(
+        SupabaseConstants.commitOrderStockRpc,
+        params: {
+          'p_order_id': orderId,
+        },
+      );
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {

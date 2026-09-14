@@ -77,4 +77,19 @@ class PaymentRemoteDataSource {
       throw ServerException(e.toString());
     }
   }
+
+  Future<Map<String, dynamic>> getOrderPaymentSummary(String orderId) async {
+    try {
+      final data = await _client
+          .from(SupabaseConstants.orderPaymentSummaryView)
+          .select()
+          .eq('id', orderId)
+          .single();
+      return data;
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
 }

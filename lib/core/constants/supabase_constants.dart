@@ -14,6 +14,8 @@ class SupabaseConstants {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqaWtqeHZzc3BvcXJ6dGV4bG13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwOTAzMDMsImV4cCI6MjEwNDY2NjMwM30.UWxrTjZNaDC3iXdw7e3K5vEHOmHIxttTg8LMMFQPuTg';
 
   // Table names
+  static const String shopsTable = 'shops';
+  static const String shopStaffTable = 'shop_staff';
   static const String productsTable = 'products';
   static const String productVariantsTable = 'product_variants';
   static const String variantImagesTable = 'variant_images';
@@ -21,11 +23,15 @@ class SupabaseConstants {
   static const String orderItemsTable = 'order_items';
   static const String paymentsTable = 'payments';
 
+  // Views
+  static const String variantDetailsView = 'variant_details';
+  static const String orderPaymentSummaryView = 'order_payment_summary';
+
   // Storage buckets
   static const String variantImagesBucket = 'variant-images';
 
   // RPC function names
-  static const String reserveStockRpc = 'reserve_stock';
-  static const String releaseStockRpc = 'release_stock';
-  static const String confirmStockDeductionRpc = 'confirm_stock_deduction';
+  static const String reserveStockRpc = 'reserve_order_stock';
+  static const String releaseStockRpc = 'release_order_stock';
+  static const String commitOrderStockRpc = 'commit_order_stock';
 }

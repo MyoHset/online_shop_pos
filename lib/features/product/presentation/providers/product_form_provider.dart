@@ -108,7 +108,7 @@ class ProductForm extends _$ProductForm {
           productCode: state.productCode,
           isActive: state.isActive,
         );
-        return result.fold(
+        final savedProduct = result.fold(
           (f) {
             state = state.copyWith(isLoading: false, errorMessage: f.message);
             return null;
@@ -119,6 +119,7 @@ class ProductForm extends _$ProductForm {
             return product;
           },
         );
+        return savedProduct;
       } else {
         final useCase = ref.read(createProductUseCaseProvider);
         final result = await useCase(
@@ -129,7 +130,7 @@ class ProductForm extends _$ProductForm {
           brand: state.brand,
           productCode: state.productCode,
         );
-        return result.fold(
+        final savedProduct = result.fold(
           (f) {
             state = state.copyWith(isLoading: false, errorMessage: f.message);
             return null;
@@ -140,6 +141,7 @@ class ProductForm extends _$ProductForm {
             return product;
           },
         );
+        return savedProduct;
       }
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());

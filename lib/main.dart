@@ -10,7 +10,7 @@ Future<void> main() async {
 
   await Supabase.initialize(
     url: SupabaseConstants.supabaseUrl,
-    anonKey: SupabaseConstants.supabaseAnonKey, // ignore: deprecated_member_use
+    anonKey: SupabaseConstants.supabaseAnonKey,
   );
 
   runApp(
@@ -21,16 +21,18 @@ Future<void> main() async {
 }
 
 /// Root application widget.
-class ShopPosApp extends StatelessWidget {
+class ShopPosApp extends ConsumerWidget {
   const ShopPosApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
+
     return MaterialApp.router(
       title: 'Shop POS',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      routerConfig: appRouter,
+      routerConfig: router,
     );
   }
 }
