@@ -100,7 +100,7 @@ GoRouter appRouter(Ref ref) {
   final supabase = ref.watch(supabaseClientProvider);
 
   return GoRouter(
-    initialLocation: AppRoutes.products,
+    initialLocation: AppRoutes.login,
     debugLogDiagnostics: true,
     redirect: (context, state) {
       final isLoggedIn = supabase.auth.currentUser != null;
@@ -110,10 +110,6 @@ GoRouter appRouter(Ref ref) {
 
       if (!isLoggedIn && !isAuthRoute) {
         return AppRoutes.login;
-      }
-
-      if (isLoggedIn && isAuthRoute) {
-        return AppRoutes.products;
       }
 
       return null;

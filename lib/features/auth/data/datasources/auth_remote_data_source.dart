@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/supabase_constants.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../domain/entities/staff_role.dart';
 import '../models/shop_user_model.dart';
 
@@ -35,22 +36,30 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String email,
     required String password,
   }) async {
-    final response = await _client.auth.signUp(
-      email: email,
-      password: password,
-      data: {
-        'shop_name': shopName,
-        'phone': phone,
-        'full_name': shopName,
-      },
-    );
+    try {
+      AppLogger.logEvent('RegisterShop', details: {'shopName': shopName, 'email': email});
+      final response = await _client.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'shop_name': shopName,
+          'phone': phone,
+          'full_name': shopName,
+        },
+      );
 
-    final user = response.user;
-    if (user == null) {
-      throw const AuthException('User registration failed');
+      final user = response.user;
+      if (user == null) {
+        throw const AuthException('User registration failed');
+      }
+
+      final result = await fetchStaffDetails(user.id, email);
+      AppLogger.logDataSuccess('RegisterShop', data: result.email);
+      return result;
+    } catch (e, st) {
+      AppLogger.logDataError('RegisterShop', e, stackTrace: st);
+      rethrow;
     }
-
-    return fetchStaffDetails(user.id, email);
   }
 
   @override
@@ -58,36 +67,63 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String email,
     required String password,
   }) async {
-    final response = await _client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      AppLogger.logEvent('LoginAttempt', details: {'email': email});
+      final response = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
 
-    final user = response.user;
-    if (user == null) {
-      throw const AuthException('Login failed');
+      final user = response.user;
+      if (user == null) {
+        throw const AuthException('Login failed');
+      }
+
+      final result = await fetchStaffDetails(user.id, email);
+      AppLogger.logDataSuccess('Login', data: result.email);
+      return result;
+    } catch (e, st) {
+      AppLogger.logDataError('Login', e, stackTrace: st);
+      rethrow;
     }
-
-    return fetchStaffDetails(user.id, email);
   }
 
   @override
   Future<void> logout() async {
-    await _client.auth.signOut();
+    try {
+      AppLogger.logEvent('Logout');
+      await _client.auth.signOut();
+      AppLogger.logDataSuccess('Logout');
+    } catch (e, st) {
+      AppLogger.logDataError('Logout', e, stackTrace: st);
+      rethrow;
+    }
   }
 
   @override
   Future<void> resetPassword({required String email}) async {
-    await _client.auth.resetPasswordForEmail(email);
+    try {
+      AppLogger.logEvent('ResetPassword', details: {'email': email});
+      await _client.auth.resetPasswordForEmail(email);
+      AppLogger.logDataSuccess('ResetPassword');
+    } catch (e, st) {
+      AppLogger.logDataError('ResetPassword', e, stackTrace: st);
+      rethrow;
+    }
   }
 
   @override
   Future<ShopUserModel?> getCurrentUser() async {
-    final user = _client.auth.currentUser;
-    if (user == null || user.email == null) {
+    try {
+      final user = _client.auth.currentUser;
+      if (user == null || user.email == null) {
+        return null;
+      }
+      return await fetchStaffDetails(user.id, user.email!);
+    } catch (e, st) {
+      AppLogger.logDataError('GetCurrentUser', e, stackTrace: st);
       return null;
     }
-    return fetchStaffDetails(user.id, user.email!);
   }
 
   Future<ShopUserModel> fetchStaffDetails(String userId, String email) async {

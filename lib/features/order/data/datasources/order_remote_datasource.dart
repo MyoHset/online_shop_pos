@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/supabase_constants.dart';
 import '../../../../core/error/exceptions.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../models/order_model.dart';
@@ -114,13 +115,19 @@ class OrderRemoteDataSource {
 
       // Atomically reserve stock for the order via Postgres RPC
       try {
+        final params = {'p_order_id': orderId};
         await _client.rpc(
           SupabaseConstants.reserveStockRpc,
-          params: {
-            'p_order_id': orderId,
-          },
+          params: params,
         );
-      } on PostgrestException catch (e) {
+        AppLogger.logRpcSuccess(SupabaseConstants.reserveStockRpc, params: params);
+      } on PostgrestException catch (e, st) {
+        AppLogger.logRpcError(
+          SupabaseConstants.reserveStockRpc,
+          e.message,
+          params: {'p_order_id': orderId},
+          stackTrace: st,
+        );
         // Roll back: cancel the order (best effort)
         await _client
             .from(SupabaseConstants.ordersTable)
@@ -184,31 +191,35 @@ class OrderRemoteDataSource {
   }
 
   Future<void> releaseOrderStock(String orderId) async {
+    final params = {'p_order_id': orderId};
     try {
       await _client.rpc(
         SupabaseConstants.releaseStockRpc,
-        params: {
-          'p_order_id': orderId,
-        },
+        params: params,
       );
-    } on PostgrestException catch (e) {
+      AppLogger.logRpcSuccess(SupabaseConstants.releaseStockRpc, params: params);
+    } on PostgrestException catch (e, st) {
+      AppLogger.logRpcError(SupabaseConstants.releaseStockRpc, e.message, params: params, stackTrace: st);
       throw ServerException(e.message);
-    } catch (e) {
+    } catch (e, st) {
+      AppLogger.logRpcError(SupabaseConstants.releaseStockRpc, e, params: params, stackTrace: st);
       throw ServerException(e.toString());
     }
   }
 
   Future<void> confirmStockDeduction(String orderId) async {
+    final params = {'p_order_id': orderId};
     try {
       await _client.rpc(
         SupabaseConstants.commitOrderStockRpc,
-        params: {
-          'p_order_id': orderId,
-        },
+        params: params,
       );
-    } on PostgrestException catch (e) {
+      AppLogger.logRpcSuccess(SupabaseConstants.commitOrderStockRpc, params: params);
+    } on PostgrestException catch (e, st) {
+      AppLogger.logRpcError(SupabaseConstants.commitOrderStockRpc, e.message, params: params, stackTrace: st);
       throw ServerException(e.message);
-    } catch (e) {
+    } catch (e, st) {
+      AppLogger.logRpcError(SupabaseConstants.commitOrderStockRpc, e, params: params, stackTrace: st);
       throw ServerException(e.toString());
     }
   }

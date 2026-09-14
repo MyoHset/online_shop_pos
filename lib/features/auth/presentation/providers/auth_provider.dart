@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/network/supabase_client_provider.dart';
 import '../../data/datasources/auth_remote_data_source.dart';

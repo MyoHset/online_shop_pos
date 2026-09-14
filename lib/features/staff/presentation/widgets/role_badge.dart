@@ -17,8 +17,8 @@ class RoleBadge extends StatelessWidget {
 
     switch (role) {
       case StaffRole.owner:
-        backgroundColor = Colors.purple[50]!;
-        textColor = Colors.purple[800]!;
+        backgroundColor = const Color(0xFF0F172A);
+        textColor = Colors.white;
         icon = Icons.star_outlined;
         break;
       case StaffRole.manager:
