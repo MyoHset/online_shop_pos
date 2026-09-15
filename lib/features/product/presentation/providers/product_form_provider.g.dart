@@ -129,7 +129,7 @@ final class ProductFormProvider
   }
 }
 
-String _$productFormHash() => r'b41eb4e0f10ab11fd3efb688385329991dfde157';
+String _$productFormHash() => r'ab2c6d239ab6d13fb4c15b6c51a7d82176be159f';
 
 /// Manages form state for product create/edit.
 

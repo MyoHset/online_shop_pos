@@ -103,3 +103,12 @@ Future<StaffRole> currentStaffRole(Ref ref) async {
     orElse: () => StaffRole.staff,
   );
 }
+
+@riverpod
+Future<String?> currentShopId(Ref ref) async {
+  final authState = ref.watch(authControllerProvider);
+  return authState.maybeWhen(
+    data: (user) => user?.shopId,
+    orElse: () => null,
+  );
+}

@@ -16,6 +16,7 @@ class CreateProduct {
     String? category,
     String? brand,
     String? productCode,
+    String? shopId,
   }) =>
       _repository.createProduct(
         name: name,
@@ -24,5 +25,6 @@ class CreateProduct {
         category: category,
         brand: brand,
         productCode: productCode,
+        shopId: shopId,
       );
 }

@@ -22,6 +22,7 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<Either<Failure, List<Product>>> getProducts({
     String? searchQuery,
     String? category,
+    String? shopId,
     int page = 0,
     int pageSize = 30,
   }) async {
@@ -29,6 +30,7 @@ class ProductRepositoryImpl implements ProductRepository {
       final models = await _dataSource.getProducts(
         searchQuery: searchQuery,
         category: category,
+        shopId: shopId,
         page: page,
         pageSize: pageSize,
       );
@@ -60,6 +62,7 @@ class ProductRepositoryImpl implements ProductRepository {
     String? category,
     String? brand,
     String? productCode,
+    String? shopId,
   }) async {
     try {
       final model = await _dataSource.createProduct(
@@ -69,6 +72,7 @@ class ProductRepositoryImpl implements ProductRepository {
         category: category,
         brand: brand,
         productCode: productCode,
+        shopId: shopId,
       );
       return right(model.toEntity());
     } on ServerException catch (e) {

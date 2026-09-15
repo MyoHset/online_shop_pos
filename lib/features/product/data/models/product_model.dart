@@ -11,6 +11,7 @@ abstract class ProductModel with _$ProductModel {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory ProductModel({
     required String id,
+    String? shopId,
     required String name,
     required String? description,
     required double basePrice,
@@ -29,6 +30,7 @@ abstract class ProductModel with _$ProductModel {
   /// Maps this data model to the domain [Product] entity.
   Product toEntity() => Product(
         id: id,
+        shopId: shopId,
         name: name,
         description: description,
         basePrice: basePrice,

@@ -15,6 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Product {
   String get id;
+  String? get shopId;
   String get name;
   String? get description;
   double get basePrice;
@@ -37,6 +38,7 @@ mixin _$Product {
         (other.runtimeType == runtimeType &&
             other is Product &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.shopId, shopId) || other.shopId == shopId) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.description, description) ||
                 other.description == description) &&
@@ -56,6 +58,7 @@ mixin _$Product {
   int get hashCode => Object.hash(
       runtimeType,
       id,
+      shopId,
       name,
       description,
       basePrice,
@@ -67,7 +70,7 @@ mixin _$Product {
 
   @override
   String toString() {
-    return 'Product(id: $id, name: $name, description: $description, basePrice: $basePrice, category: $category, brand: $brand, productCode: $productCode, isActive: $isActive, variants: $variants)';
+    return 'Product(id: $id, shopId: $shopId, name: $name, description: $description, basePrice: $basePrice, category: $category, brand: $brand, productCode: $productCode, isActive: $isActive, variants: $variants)';
   }
 }
 
@@ -78,6 +81,7 @@ abstract mixin class $ProductCopyWith<$Res> {
   @useResult
   $Res call(
       {String id,
+      String? shopId,
       String name,
       String? description,
       double basePrice,
@@ -101,6 +105,7 @@ class _$ProductCopyWithImpl<$Res> implements $ProductCopyWith<$Res> {
   @override
   $Res call({
     Object? id = null,
+    Object? shopId = freezed,
     Object? name = null,
     Object? description = freezed,
     Object? basePrice = null,
@@ -115,6 +120,10 @@ class _$ProductCopyWithImpl<$Res> implements $ProductCopyWith<$Res> {
           ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
+      shopId: freezed == shopId
+          ? _self.shopId
+          : shopId // ignore: cast_nullable_to_non_nullable
+              as String?,
       name: null == name
           ? _self.name
           : name // ignore: cast_nullable_to_non_nullable
@@ -246,6 +255,7 @@ extension ProductPatterns on Product {
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(
             String id,
+            String? shopId,
             String name,
             String? description,
             double basePrice,
@@ -262,6 +272,7 @@ extension ProductPatterns on Product {
       case _Product() when $default != null:
         return $default(
             _that.id,
+            _that.shopId,
             _that.name,
             _that.description,
             _that.basePrice,
@@ -292,6 +303,7 @@ extension ProductPatterns on Product {
   TResult when<TResult extends Object?>(
     TResult Function(
             String id,
+            String? shopId,
             String name,
             String? description,
             double basePrice,
@@ -307,6 +319,7 @@ extension ProductPatterns on Product {
       case _Product():
         return $default(
             _that.id,
+            _that.shopId,
             _that.name,
             _that.description,
             _that.basePrice,
@@ -336,6 +349,7 @@ extension ProductPatterns on Product {
   TResult? whenOrNull<TResult extends Object?>(
     TResult? Function(
             String id,
+            String? shopId,
             String name,
             String? description,
             double basePrice,
@@ -351,6 +365,7 @@ extension ProductPatterns on Product {
       case _Product() when $default != null:
         return $default(
             _that.id,
+            _that.shopId,
             _that.name,
             _that.description,
             _that.basePrice,
@@ -370,6 +385,7 @@ extension ProductPatterns on Product {
 class _Product extends Product {
   const _Product(
       {required this.id,
+      this.shopId,
       required this.name,
       required this.description,
       required this.basePrice,
@@ -383,6 +399,8 @@ class _Product extends Product {
 
   @override
   final String id;
+  @override
+  final String? shopId;
   @override
   final String name;
   @override
@@ -420,6 +438,7 @@ class _Product extends Product {
         (other.runtimeType == runtimeType &&
             other is _Product &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.shopId, shopId) || other.shopId == shopId) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.description, description) ||
                 other.description == description) &&
@@ -439,6 +458,7 @@ class _Product extends Product {
   int get hashCode => Object.hash(
       runtimeType,
       id,
+      shopId,
       name,
       description,
       basePrice,
@@ -450,7 +470,7 @@ class _Product extends Product {
 
   @override
   String toString() {
-    return 'Product(id: $id, name: $name, description: $description, basePrice: $basePrice, category: $category, brand: $brand, productCode: $productCode, isActive: $isActive, variants: $variants)';
+    return 'Product(id: $id, shopId: $shopId, name: $name, description: $description, basePrice: $basePrice, category: $category, brand: $brand, productCode: $productCode, isActive: $isActive, variants: $variants)';
   }
 }
 
@@ -462,6 +482,7 @@ abstract mixin class _$ProductCopyWith<$Res> implements $ProductCopyWith<$Res> {
   @useResult
   $Res call(
       {String id,
+      String? shopId,
       String name,
       String? description,
       double basePrice,
@@ -485,6 +506,7 @@ class __$ProductCopyWithImpl<$Res> implements _$ProductCopyWith<$Res> {
   @pragma('vm:prefer-inline')
   $Res call({
     Object? id = null,
+    Object? shopId = freezed,
     Object? name = null,
     Object? description = freezed,
     Object? basePrice = null,
@@ -499,6 +521,10 @@ class __$ProductCopyWithImpl<$Res> implements _$ProductCopyWith<$Res> {
           ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
+      shopId: freezed == shopId
+          ? _self.shopId
+          : shopId // ignore: cast_nullable_to_non_nullable
+              as String?,
       name: null == name
           ? _self.name
           : name // ignore: cast_nullable_to_non_nullable

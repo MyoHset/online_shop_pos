@@ -117,9 +117,22 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final user = _client.auth.currentUser;
       if (user == null || user.email == null) {
+        AppLogger.logDataSuccess('GetCurrentUser', data: 'No authenticated user');
         return null;
       }
-      return await fetchStaffDetails(user.id, user.email!);
+      final shopUser = await fetchStaffDetails(user.id, user.email!);
+      AppLogger.logDataSuccess(
+        'GetCurrentUser (App Start)',
+        data: {
+          'userId': shopUser.userId,
+          'email': shopUser.email,
+          'fullName': shopUser.fullName,
+          'shopId': shopUser.shopId,
+          'shopName': shopUser.shopName,
+          'role': shopUser.role.value,
+        },
+      );
+      return shopUser;
     } catch (e, st) {
       AppLogger.logDataError('GetCurrentUser', e, stackTrace: st);
       return null;

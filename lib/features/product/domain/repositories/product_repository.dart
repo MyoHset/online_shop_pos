@@ -14,6 +14,7 @@ abstract interface class ProductRepository {
   Future<Either<Failure, List<Product>>> getProducts({
     String? searchQuery,
     String? category,
+    String? shopId,
     int page = 0,
     int pageSize = 30,
   });
@@ -29,6 +30,7 @@ abstract interface class ProductRepository {
     String? category,
     String? brand,
     String? productCode,
+    String? shopId,
   });
 
   /// Updates an existing product's fields.

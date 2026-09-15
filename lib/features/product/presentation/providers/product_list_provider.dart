@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/network/supabase_client_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/datasources/product_remote_datasource.dart';
 import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entities/product.dart';
@@ -62,9 +63,11 @@ class ProductList extends _$ProductList {
 
   Future<List<Product>> _fetchProducts() {
     final useCase = ref.read(getProductsUseCaseProvider);
+    final shopId = ref.watch(authControllerProvider).value?.shopId;
     return useCase(
       searchQuery: _searchQuery,
       category: _selectedCategory,
+      shopId: shopId,
     ).then(
       (result) => result.fold(
         (failure) => throw Exception(failure.message),

@@ -166,7 +166,7 @@ final class ProductListProvider
   ProductList create() => ProductList();
 }
 
-String _$productListHash() => r'dad781f4584d88f0ff2d7675e286f5561b7acf71';
+String _$productListHash() => r'c7bc33164938bc052d4432fce18ed47545db39b4';
 
 /// Provides the paginated, filterable product list.
 

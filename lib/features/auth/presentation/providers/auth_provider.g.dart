@@ -124,3 +124,36 @@ final class CurrentStaffRoleProvider extends $FunctionalProvider<
 }
 
 String _$currentStaffRoleHash() => r'8703c3d7e0d76b8481745ebe245330cc930a4731';
+
+@ProviderFor(currentShopId)
+const currentShopIdProvider = CurrentShopIdProvider._();
+
+final class CurrentShopIdProvider
+    extends $FunctionalProvider<AsyncValue<String?>, String?, FutureOr<String?>>
+    with $FutureModifier<String?>, $FutureProvider<String?> {
+  const CurrentShopIdProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'currentShopIdProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentShopIdHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<String?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<String?> create(Ref ref) {
+    return currentShopId(ref);
+  }
+}
+
+String _$currentShopIdHash() => r'6c3f575ca8ba82a299dd1331d282d37682be1e97';

@@ -112,6 +112,10 @@ GoRouter appRouter(Ref ref) {
         return AppRoutes.login;
       }
 
+      if (isLoggedIn && isAuthRoute) {
+        return AppRoutes.products;
+      }
+
       return null;
     },
     routes: [

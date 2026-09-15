@@ -23,13 +23,13 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
   @override
   Future<List<StaffMemberModel>> getStaffList() async {
     try {
-      final response = await _client
-          .from(SupabaseConstants.shopStaffTable)
-          .select('*')
-          .order('full_name');
+      final response =
+          await _client.from(SupabaseConstants.shopStaffTable).select('*');
+      // .order('full_name');
 
       final list = (response as List)
-          .map((json) => StaffMemberModel.fromJson(json as Map<String, dynamic>))
+          .map(
+              (json) => StaffMemberModel.fromJson(json as Map<String, dynamic>))
           .toList();
       AppLogger.logDataSuccess('getStaffList', data: 'Count: ${list.length}');
       return list;
@@ -75,13 +75,16 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
       );
 
       if (response.status != 200 && response.status != 201) {
-        final errorMsg = response.data?['error'] ?? 'Failed to invite staff member';
-        AppLogger.logRpcError('invite-staff (EdgeFunction)', errorMsg, params: params);
+        final errorMsg =
+            response.data?['error'] ?? 'Failed to invite staff member';
+        AppLogger.logRpcError('invite-staff (EdgeFunction)', errorMsg,
+            params: params);
         throw Exception(errorMsg);
       }
       AppLogger.logRpcSuccess('invite-staff (EdgeFunction)', params: params);
     } catch (e, st) {
-      AppLogger.logRpcError('invite-staff (EdgeFunction)', e, params: params, stackTrace: st);
+      AppLogger.logRpcError('invite-staff (EdgeFunction)', e,
+          params: params, stackTrace: st);
       rethrow;
     }
   }

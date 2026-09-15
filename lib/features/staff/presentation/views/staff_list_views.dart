@@ -49,27 +49,24 @@ class StaffListTabletDesktopView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Staff Management'),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: ElevatedButton.icon(
-              onPressed: onInviteStaff,
-              icon: const Icon(Icons.person_add_outlined),
-              label: const Text('Invite Staff'),
-            ),
-          ),
+          // ElevatedButton.icon(
+          //   onPressed: onInviteStaff,
+          //   icon: const Icon(Icons.person_add_outlined),
+          //   label: const Text('Invite Staff'),
+          // ),
         ],
       ),
-      body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 800),
-          padding: const EdgeInsets.all(16.0),
-          child: ListView.builder(
+      body: Column(
+        children: [
+          Text('data - ${staffList.length}'),
+          ListView.builder(
             itemCount: staffList.length,
+            shrinkWrap: true,
             itemBuilder: (context, index) {
               return StaffCard(staff: staffList[index]);
             },
           ),
-        ),
+        ],
       ),
     );
   }

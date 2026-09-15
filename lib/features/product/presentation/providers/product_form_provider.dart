@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/usecases/create_product.dart';
 import '../../domain/usecases/update_product.dart';
@@ -122,6 +123,7 @@ class ProductForm extends _$ProductForm {
         return savedProduct;
       } else {
         final useCase = ref.read(createProductUseCaseProvider);
+        final shopId = ref.read(authControllerProvider).value?.shopId;
         final result = await useCase(
           name: state.name,
           description: state.description,
@@ -129,6 +131,7 @@ class ProductForm extends _$ProductForm {
           category: state.category,
           brand: state.brand,
           productCode: state.productCode,
+          shopId: shopId,
         );
         final savedProduct = result.fold(
           (f) {

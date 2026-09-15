@@ -41,12 +41,14 @@ class ProductRemoteDataSource {
   Future<List<ProductModel>> getProducts({
     String? searchQuery,
     String? category,
+    String? shopId,
     int page = 0,
     int pageSize = 30,
   }) async {
     _logCall('getProducts', {
       'searchQuery': searchQuery,
       'category': category,
+      'shopId': shopId,
       'page': page,
       'pageSize': pageSize,
     });
@@ -56,6 +58,9 @@ class ProductRemoteDataSource {
           .select(_productSelect)
           .eq('is_active', true);
 
+      // if (shopId != null && shopId.isNotEmpty) {
+      //   query = query.eq('shop_id', shopId);
+      // }
       if (searchQuery != null && searchQuery.isNotEmpty) {
         query = query.ilike('name', '%$searchQuery%');
       }
@@ -103,6 +108,7 @@ class ProductRemoteDataSource {
     String? category,
     String? brand,
     String? productCode,
+    String? shopId,
   }) async {
     _logCall('createProduct', {
       'name': name,
@@ -111,6 +117,7 @@ class ProductRemoteDataSource {
       'category': category,
       'brand': brand,
       'productCode': productCode,
+      'shopId': shopId,
     });
     try {
       final data = await _client
@@ -122,6 +129,7 @@ class ProductRemoteDataSource {
             'category': category,
             'brand': brand,
             'product_code': productCode,
+            if (shopId != null) 'shop_id': shopId,
             'is_active': true,
           })
           .select(_productSelect)
