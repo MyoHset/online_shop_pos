@@ -8,11 +8,13 @@ part of 'order_model.dart';
 
 _OrderModel _$OrderModelFromJson(Map<String, dynamic> json) => _OrderModel(
       id: json['id'] as String,
-      customerName: json['customer_name'] as String,
+      shopId: json['shop_id'] as String?,
+      customerName: json['customer_name'] as String?,
       customerPhone: json['customer_phone'] as String?,
       customerAddress: json['customer_address'] as String?,
       status: json['status'] as String,
       totalAmount: (json['total_amount'] as num).toDouble(),
+      orderType: json['order_type'] as String? ?? 'online',
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       orderItems: (json['order_items'] as List<dynamic>?)
@@ -24,11 +26,13 @@ _OrderModel _$OrderModelFromJson(Map<String, dynamic> json) => _OrderModel(
 Map<String, dynamic> _$OrderModelToJson(_OrderModel instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'shop_id': instance.shopId,
       'customer_name': instance.customerName,
       'customer_phone': instance.customerPhone,
       'customer_address': instance.customerAddress,
       'status': instance.status,
       'total_amount': instance.totalAmount,
+      'order_type': instance.orderType,
       'created_at': instance.createdAt.toIso8601String(),
       'updated_at': instance.updatedAt.toIso8601String(),
       'order_items': instance.orderItems,

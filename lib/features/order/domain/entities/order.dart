@@ -47,11 +47,13 @@ enum OrderStatus {
 abstract class Order with _$Order {
   const factory Order({
     required String id,
+    String? shopId,
     required String customerName,
     required String? customerPhone,
     required String? customerAddress,
     required OrderStatus status,
     required double totalAmount,
+    required String orderType,
     required DateTime createdAt,
     required DateTime updatedAt,
     @Default([]) List<OrderItem> items,

@@ -10,6 +10,7 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/order/presentation/screens/order_create_screen.dart';
 import '../../features/order/presentation/screens/order_detail_screen.dart';
 import '../../features/order/presentation/screens/order_list_screen.dart';
+import '../../features/order/presentation/screens/quick_sale_screen.dart';
 import '../../features/payment/presentation/screens/payment_entry_screen.dart';
 import '../../features/product/presentation/screens/product_detail_screen.dart';
 import '../../features/product/presentation/screens/product_form_screen.dart';
@@ -38,6 +39,8 @@ class AppRoutes {
   static const String productVariantEdit =
       '/products/:id/variants/:variantId/edit';
 
+  static const String quickSale = '/quick-sale';
+
   static const String orders = '/orders';
   static const String orderNew = '/orders/new';
   static const String orderDetail = '/orders/:id';
@@ -59,6 +62,12 @@ class _AppShell extends ConsumerWidget {
     final role = roleAsync.value ?? StaffRole.staff;
 
     final destinations = [
+      const AppNavDestination(
+        label: 'Quick Sale',
+        icon: Icon(Icons.point_of_sale_outlined),
+        selectedIcon: Icon(Icons.point_of_sale),
+        route: AppRoutes.quickSale,
+      ),
       const AppNavDestination(
         label: 'Products',
         icon: Icon(Icons.inventory_2_outlined),
@@ -113,7 +122,7 @@ GoRouter appRouter(Ref ref) {
       }
 
       if (isLoggedIn && isAuthRoute) {
-        return AppRoutes.products;
+        return AppRoutes.quickSale;
       }
 
       return null;
@@ -138,6 +147,17 @@ GoRouter appRouter(Ref ref) {
         builder: (context, state, navigationShell) =>
             _AppShell(navigationShell: navigationShell),
         branches: [
+          // ── Quick Sale branch ─────────────────────────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.quickSale,
+                name: 'quickSale',
+                builder: (context, state) => const QuickSaleScreen(),
+              ),
+            ],
+          ),
+
           // ── Products branch ──────────────────────────────────────────────
           StatefulShellBranch(
             routes: [

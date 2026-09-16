@@ -87,7 +87,7 @@ final class OrderCreateProvider
   }
 }
 
-String _$orderCreateHash() => r'90cbf7b4240bec989b70f79f1a4f490ce3596020';
+String _$orderCreateHash() => r'2ca3112ed374b17e51caaa73de3d5898fbee9020';
 
 /// Manages the order creation flow state.
 

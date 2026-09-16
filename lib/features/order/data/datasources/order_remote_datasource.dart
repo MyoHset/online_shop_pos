@@ -75,6 +75,7 @@ class OrderRemoteDataSource {
     String? customerPhone,
     String? customerAddress,
     required List<OrderItemInput> items,
+    String? shopId,
   }) async {
     try {
       // Calculate total
@@ -84,58 +85,152 @@ class OrderRemoteDataSource {
       );
 
       // Create the order
+      final orderPayload = {
+        'customer_name': customerName,
+        'customer_phone': customerPhone,
+        'customer_address': customerAddress,
+        'status': OrderStatus.pending.name,
+        'total_amount': total,
+        if (shopId != null) 'shop_id': shopId,
+      };
+      
+      AppLogger.logEvent('createOrder_request', details: {'payload': orderPayload});
+
       final orderData = await _client
           .from(SupabaseConstants.ordersTable)
-          .insert({
-            'customer_name': customerName,
-            'customer_phone': customerPhone,
-            'customer_address': customerAddress,
-            'status': OrderStatus.pending.name,
-            'total_amount': total,
-          })
+          .insert(orderPayload)
           .select()
           .single();
 
       final orderId = orderData['id'] as String;
+      AppLogger.logDataSuccess('createOrder_response', data: orderData);
 
-      // Insert order items
-      final itemRows = items
-          .map((item) => {
-                'order_id': orderId,
-                'variant_id': item.variantId,
-                'quantity': item.quantity,
-                'unit_price': item.unitPrice,
-                'subtotal': item.unitPrice * item.quantity,
-              })
-          .toList();
-
-      await _client
-          .from(SupabaseConstants.orderItemsTable)
-          .insert(itemRows);
-
-      // Atomically reserve stock for the order via Postgres RPC
       try {
+        // Insert order items
+        final itemRows = items
+            .map((item) => <String, dynamic>{
+                  'order_id': orderId,
+                  'variant_id': item.variantId,
+                  'quantity': item.quantity,
+                  'unit_price': item.unitPrice,
+                })
+            .toList();
+            
+        AppLogger.logEvent('createOrder_items_request', details: {'payload': itemRows});
+
+        final itemsResponse = await _client
+            .from(SupabaseConstants.orderItemsTable)
+            .insert(itemRows)
+            .select();
+            
+        AppLogger.logDataSuccess('createOrder_items_response', data: itemsResponse);
+
+        // Atomically reserve stock for the order via Postgres RPC
         final params = {'p_order_id': orderId};
         await _client.rpc(
           SupabaseConstants.reserveStockRpc,
           params: params,
         );
         AppLogger.logRpcSuccess(SupabaseConstants.reserveStockRpc, params: params);
-      } on PostgrestException catch (e, st) {
+      } catch (e, st) {
         AppLogger.logRpcError(
-          SupabaseConstants.reserveStockRpc,
-          e.message,
+          'createOrder_items_or_stock_failed',
+          e,
           params: {'p_order_id': orderId},
           stackTrace: st,
         );
-        // Roll back: cancel the order (best effort)
+        
+        // Roll back: delete the order completely to avoid partial records
         await _client
             .from(SupabaseConstants.ordersTable)
-            .update({'status': OrderStatus.cancelled.name})
+            .delete()
             .eq('id', orderId);
-        throw StockReservationException(
-          'Stock reservation failed: ${e.message}',
-        );
+
+        if (e is PostgrestException) {
+          throw StockReservationException(
+            'Order failed: ${e.message}',
+          );
+        }
+        rethrow;
+      }
+
+      return getOrderById(orderId);
+    } on StockReservationException catch (e, st) {
+      AppLogger.logDataError('createOrder', e, stackTrace: st);
+      rethrow;
+    } on PostgrestException catch (e, st) {
+      AppLogger.logDataError('createOrder_supabase_error', e, stackTrace: st);
+      throw ServerException(e.message);
+    } catch (e, st) {
+      AppLogger.logDataError('createOrder_unexpected_error', e, stackTrace: st);
+      throw ServerException(e.toString());
+    }
+  }
+
+  /// Creates a quick sale order, atomic stock deduction, and payment record.
+  Future<OrderModel> completeInstantSale({
+    String? customerName,
+    required List<OrderItemInput> items,
+    required String paymentMethod,
+    String? shopId,
+  }) async {
+    try {
+      final total = items.fold<double>(
+        0,
+        (sum, item) => sum + (item.unitPrice * item.quantity),
+      );
+
+      final orderPayload = {
+        if (customerName != null && customerName.isNotEmpty) 'customer_name': customerName,
+        'status': OrderStatus.pending.name,
+        'order_type': 'in_store',
+        'total_amount': total,
+        if (shopId != null) 'shop_id': shopId,
+      };
+
+      final orderData = await _client
+          .from(SupabaseConstants.ordersTable)
+          .insert(orderPayload)
+          .select()
+          .single();
+
+      final orderId = orderData['id'] as String;
+
+      try {
+        final itemRows = items
+            .map((item) => <String, dynamic>{
+                  'order_id': orderId,
+                  'variant_id': item.variantId,
+                  'quantity': item.quantity,
+                  'unit_price': item.unitPrice,
+                })
+            .toList();
+
+        await _client
+            .from(SupabaseConstants.orderItemsTable)
+            .insert(itemRows)
+            .select();
+
+        final params = {'p_order_id': orderId};
+        await _client.rpc('complete_instant_sale', params: params);
+
+        await _client.from(SupabaseConstants.paymentsTable).insert({
+          'order_id': orderId,
+          'method': paymentMethod,
+          'amount': total,
+          'status': 'paid',
+          'paid_at': DateTime.now().toUtc().toIso8601String(),
+        });
+      } catch (e) {
+        await _client
+            .from(SupabaseConstants.ordersTable)
+            .delete()
+            .eq('id', orderId);
+
+        if (e is PostgrestException) {
+          throw StockReservationException('Quick sale failed: ${e.message}');
+        }
+        rethrow;
       }
 
       return getOrderById(orderId);
@@ -147,6 +242,7 @@ class OrderRemoteDataSource {
       throw ServerException(e.toString());
     }
   }
+
 
   Future<OrderModel> updateOrderStatus({
     required String orderId,

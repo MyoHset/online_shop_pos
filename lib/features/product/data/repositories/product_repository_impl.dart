@@ -166,37 +166,4 @@ class ProductRepositoryImpl implements ProductRepository {
     }
   }
 
-  @override
-  Future<Either<Failure, VariantImage>> uploadVariantImage({
-    required String variantId,
-    required File imageFile,
-    required bool isPrimary,
-  }) async {
-    try {
-      final model = await _dataSource.uploadVariantImage(
-        variantId: variantId,
-        imageFile: imageFile,
-        isPrimary: isPrimary,
-      );
-      return right(model.toEntity());
-    } on ImageUploadException catch (e) {
-      return left(ImageUploadFailure(e.message));
-    } on ServerException catch (e) {
-      return left(ServerFailure(e.message));
-    } catch (e) {
-      return left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, Unit>> deleteVariantImage(String imageId) async {
-    try {
-      await _dataSource.deleteVariantImage(imageId);
-      return right(unit);
-    } on ServerException catch (e) {
-      return left(ServerFailure(e.message));
-    } catch (e) {
-      return left(ServerFailure(e.toString()));
-    }
-  }
 }

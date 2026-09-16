@@ -10,11 +10,13 @@ abstract class OrderModel with _$OrderModel {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory OrderModel({
     required String id,
-    required String customerName,
+    String? shopId,
+    String? customerName,
     required String? customerPhone,
     required String? customerAddress,
     required String status,
     required double totalAmount,
+    @Default('online') String orderType,
     required DateTime createdAt,
     required DateTime updatedAt,
     @Default([]) List<OrderItemModel> orderItems,
@@ -27,11 +29,13 @@ abstract class OrderModel with _$OrderModel {
 
   Order toEntity() => Order(
         id: id,
-        customerName: customerName,
+        shopId: shopId,
+        customerName: customerName ?? 'Walk-in Customer',
         customerPhone: customerPhone,
         customerAddress: customerAddress,
         status: OrderStatus.fromString(status),
         totalAmount: totalAmount,
+        orderType: orderType,
         createdAt: createdAt,
         updatedAt: updatedAt,
         items: orderItems.map((i) => i.toEntity()).toList(),

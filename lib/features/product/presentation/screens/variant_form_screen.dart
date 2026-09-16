@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,12 +9,11 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/responsive/responsive_extensions.dart';
 import '../../domain/entities/variant.dart';
 import '../../domain/usecases/create_variant.dart';
-import '../../domain/usecases/delete_variant_image.dart';
 import '../../domain/usecases/update_variant.dart';
-import '../../domain/usecases/upload_variant_image.dart';
 import '../providers/product_detail_provider.dart';
 import '../providers/product_list_provider.dart';
-import '../widgets/variant_image_grid.dart';
+import '../providers/variant_image_provider.dart';
+import '../widgets/variant_image_manager.dart';
 
 part 'variant_form_screen.g.dart';
 
@@ -28,14 +26,6 @@ CreateVariant createVariantUseCase(Ref ref) =>
 @riverpod
 UpdateVariant updateVariantUseCase(Ref ref) =>
     UpdateVariant(ref.watch(productRepositoryProvider));
-
-@riverpod
-UploadVariantImage uploadVariantImageUseCase(Ref ref) =>
-    UploadVariantImage(ref.watch(productRepositoryProvider));
-
-@riverpod
-DeleteVariantImage deleteVariantImageUseCase(Ref ref) =>
-    DeleteVariantImage(ref.watch(productRepositoryProvider));
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
@@ -66,6 +56,7 @@ class _VariantFormScreenState extends ConsumerState<VariantFormScreen> {
   String? _errorMessage;
   Variant? _existingVariant;
   bool _prefilled = false;
+  List<XFile> _pendingImages = [];
 
   @override
   void initState() {
@@ -104,6 +95,11 @@ class _VariantFormScreenState extends ConsumerState<VariantFormScreen> {
           _priceCtrl.text = variant.priceOverride?.toString() ?? '';
           _stockCtrl.text = variant.stockQuantity.toString();
           _weightCtrl.text = variant.weightGrams?.toString() ?? '';
+          
+          // Initialize image controller state with existing images
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.read(variantImageControllerProvider.notifier).initializeWith(variant.images);
+          });
         }
       }
     });
@@ -159,60 +155,24 @@ class _VariantFormScreenState extends ConsumerState<VariantFormScreen> {
         stockQuantity: stock,
         weightGrams: weight,
       );
-      result.fold(
-        (f) => setState(() {
-          _isLoading = false;
-          _errorMessage = f.message;
-        }),
-        (_) {
+      await result.fold(
+        (f) async {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = f.message;
+          });
+        },
+        (variant) async {
+          // Flush pending images if any
+          if (_pendingImages.isNotEmpty) {
+            await ref.read(variantImageControllerProvider.notifier).flushPendingImagesTo(variant.id);
+          }
           ref.invalidate(productDetailProvider(widget.productId));
           ref.invalidate(productListProvider);
           if (mounted) context.pop();
         },
       );
     }
-  }
-
-  Future<void> _pickAndUploadImage() async {
-    if (_existingVariant == null) return;
-    final picker = ImagePicker();
-    final picked =
-        await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
-    if (picked == null || !mounted) return;
-
-    setState(() => _isLoading = true);
-    final useCase = ref.read(uploadVariantImageUseCaseProvider);
-    final result = await useCase(
-      variantId: _existingVariant!.id,
-      imageFile: File(picked.path),
-      isPrimary: _existingVariant!.images.isEmpty,
-    );
-    result.fold(
-      (f) => setState(() {
-        _isLoading = false;
-        _errorMessage = f.message;
-      }),
-      (_) {
-        ref.invalidate(productDetailProvider(widget.productId));
-        setState(() => _isLoading = false);
-      },
-    );
-  }
-
-  Future<void> _deleteImage(String imageId) async {
-    setState(() => _isLoading = true);
-    final useCase = ref.read(deleteVariantImageUseCaseProvider);
-    final result = await useCase(imageId);
-    result.fold(
-      (f) => setState(() {
-        _isLoading = false;
-        _errorMessage = f.message;
-      }),
-      (_) {
-        ref.invalidate(productDetailProvider(widget.productId));
-        setState(() => _isLoading = false);
-      },
-    );
   }
 
   @override
@@ -250,12 +210,12 @@ class _VariantFormScreenState extends ConsumerState<VariantFormScreen> {
               ),
               children: [
                 if (isEditing && _existingVariant != null) ...[
-                  _SectionTitle(title: 'SKU (auto-generated)'),
+                  const _SectionTitle(title: 'SKU (auto-generated)'),
                   const SizedBox(height: 8),
                   _ReadOnlyField(value: _existingVariant!.sku),
                   const SizedBox(height: 24),
                 ],
-                _SectionTitle(title: 'Attributes'),
+                const _SectionTitle(title: 'Attributes'),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -291,7 +251,7 @@ class _VariantFormScreenState extends ConsumerState<VariantFormScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                _SectionTitle(title: 'Pricing & Stock'),
+                const _SectionTitle(title: 'Pricing & Stock'),
                 const SizedBox(height: 12),
                 const _FieldLabel(label: 'Price Override (MMK)'),
                 TextFormField(
@@ -326,16 +286,13 @@ class _VariantFormScreenState extends ConsumerState<VariantFormScreen> {
                   validator: (v) =>
                       v != null && v.isNotEmpty ? Validators.positiveInt(v) : null,
                 ),
-                if (isEditing && _existingVariant != null) ...[
-                  const SizedBox(height: 24),
-                  _SectionTitle(title: 'Images'),
-                  const SizedBox(height: 12),
-                  VariantImageGrid(
-                    images: _existingVariant!.images,
-                    onAddImage: _pickAndUploadImage,
-                    onDeleteImage: _deleteImage,
-                  ),
-                ],
+                const SizedBox(height: 24),
+                const _SectionTitle(title: 'Images'),
+                const SizedBox(height: 12),
+                VariantImageManager(
+                  variantId: widget.variantId,
+                  onPendingImagesChanged: (files) => setState(() => _pendingImages = files),
+                ),
                 if (_errorMessage != null) ...[
                   const SizedBox(height: 16),
                   _ErrorBanner(message: _errorMessage!),

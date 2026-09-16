@@ -5,6 +5,7 @@ import '../../domain/usecases/create_order.dart';
 import '../../domain/entities/order.dart';
 import 'order_list_provider.dart';
 import '../../../product/presentation/providers/product_list_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 part 'order_create_provider.g.dart';
 
@@ -125,14 +126,16 @@ class OrderCreate extends _$OrderCreate {
     );
   }
 
-  /// Submits the order. Returns the created [Order] on success, or `null` on failure.
   Future<Order?> submit() async {
     state = state.copyWith(isLoading: true, clearError: true);
     final useCase = ref.read(createOrderUseCaseProvider);
+    final shopId = ref.read(authControllerProvider).value?.shopId;
+    
     final result = await useCase(
       customerName: state.customerName,
       customerPhone: state.customerPhone,
       customerAddress: state.customerAddress,
+      shopId: shopId,
       items: state.items
           .map((i) => OrderItemInput(
                 variantId: i.variantId,

@@ -205,6 +205,7 @@ class _TabletScaffold extends StatelessWidget {
                               child: MouseRegion(
                                 cursor: SystemMouseCursors.click,
                                 child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
                                   onTap: () => onDestinationSelected(i),
                                   child: SizedBox(
                                     width: double.infinity,
@@ -412,6 +413,7 @@ class _SidebarItemState extends State<_SidebarItem> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
         child: SizedBox(
           height: widget.itemHeight, // exact height — must match _navTop math
@@ -461,7 +463,7 @@ class _SidebarItemState extends State<_SidebarItem> {
                   duration: _kSlideDuration,
                   style: TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 13,
+                    fontSize: 15,
                     fontWeight:
                         isSelected ? FontWeight.w600 : FontWeight.w400,
                     color: isSelected

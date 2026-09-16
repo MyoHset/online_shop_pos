@@ -66,13 +66,4 @@ abstract interface class ProductRepository {
     bool? isActive,
   });
 
-  /// Uploads [imageFile] to Supabase Storage and creates a [VariantImage] record.
-  Future<Either<Failure, VariantImage>> uploadVariantImage({
-    required String variantId,
-    required File imageFile,
-    required bool isPrimary,
-  });
-
-  /// Deletes a [VariantImage] record and its corresponding storage object.
-  Future<Either<Failure, Unit>> deleteVariantImage(String imageId);
 }

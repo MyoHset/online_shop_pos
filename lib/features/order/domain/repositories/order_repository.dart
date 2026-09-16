@@ -35,6 +35,15 @@ abstract interface class OrderRepository {
     String? customerPhone,
     String? customerAddress,
     required List<OrderItemInput> items,
+    String? shopId,
+  });
+
+  /// Creates a quick sale, atomic stock deduction, and payment record.
+  Future<Either<Failure, Order>> completeInstantSale({
+    String? customerName,
+    required List<OrderItemInput> items,
+    required String paymentMethod,
+    String? shopId,
   });
 
   /// Transitions [orderId] to [newStatus].

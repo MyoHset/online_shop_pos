@@ -15,11 +15,13 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Order {
   String get id;
+  String? get shopId;
   String get customerName;
   String? get customerPhone;
   String? get customerAddress;
   OrderStatus get status;
   double get totalAmount;
+  String get orderType;
   DateTime get createdAt;
   DateTime get updatedAt;
   List<OrderItem> get items;
@@ -37,6 +39,7 @@ mixin _$Order {
         (other.runtimeType == runtimeType &&
             other is Order &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.shopId, shopId) || other.shopId == shopId) &&
             (identical(other.customerName, customerName) ||
                 other.customerName == customerName) &&
             (identical(other.customerPhone, customerPhone) ||
@@ -46,6 +49,8 @@ mixin _$Order {
             (identical(other.status, status) || other.status == status) &&
             (identical(other.totalAmount, totalAmount) ||
                 other.totalAmount == totalAmount) &&
+            (identical(other.orderType, orderType) ||
+                other.orderType == orderType) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -57,18 +62,20 @@ mixin _$Order {
   int get hashCode => Object.hash(
       runtimeType,
       id,
+      shopId,
       customerName,
       customerPhone,
       customerAddress,
       status,
       totalAmount,
+      orderType,
       createdAt,
       updatedAt,
       const DeepCollectionEquality().hash(items));
 
   @override
   String toString() {
-    return 'Order(id: $id, customerName: $customerName, customerPhone: $customerPhone, customerAddress: $customerAddress, status: $status, totalAmount: $totalAmount, createdAt: $createdAt, updatedAt: $updatedAt, items: $items)';
+    return 'Order(id: $id, shopId: $shopId, customerName: $customerName, customerPhone: $customerPhone, customerAddress: $customerAddress, status: $status, totalAmount: $totalAmount, orderType: $orderType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items)';
   }
 }
 
@@ -79,11 +86,13 @@ abstract mixin class $OrderCopyWith<$Res> {
   @useResult
   $Res call(
       {String id,
+      String? shopId,
       String customerName,
       String? customerPhone,
       String? customerAddress,
       OrderStatus status,
       double totalAmount,
+      String orderType,
       DateTime createdAt,
       DateTime updatedAt,
       List<OrderItem> items});
@@ -102,11 +111,13 @@ class _$OrderCopyWithImpl<$Res> implements $OrderCopyWith<$Res> {
   @override
   $Res call({
     Object? id = null,
+    Object? shopId = freezed,
     Object? customerName = null,
     Object? customerPhone = freezed,
     Object? customerAddress = freezed,
     Object? status = null,
     Object? totalAmount = null,
+    Object? orderType = null,
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? items = null,
@@ -116,6 +127,10 @@ class _$OrderCopyWithImpl<$Res> implements $OrderCopyWith<$Res> {
           ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
+      shopId: freezed == shopId
+          ? _self.shopId
+          : shopId // ignore: cast_nullable_to_non_nullable
+              as String?,
       customerName: null == customerName
           ? _self.customerName
           : customerName // ignore: cast_nullable_to_non_nullable
@@ -136,6 +151,10 @@ class _$OrderCopyWithImpl<$Res> implements $OrderCopyWith<$Res> {
           ? _self.totalAmount
           : totalAmount // ignore: cast_nullable_to_non_nullable
               as double,
+      orderType: null == orderType
+          ? _self.orderType
+          : orderType // ignore: cast_nullable_to_non_nullable
+              as String,
       createdAt: null == createdAt
           ? _self.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -247,11 +266,13 @@ extension OrderPatterns on Order {
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(
             String id,
+            String? shopId,
             String customerName,
             String? customerPhone,
             String? customerAddress,
             OrderStatus status,
             double totalAmount,
+            String orderType,
             DateTime createdAt,
             DateTime updatedAt,
             List<OrderItem> items)?
@@ -263,11 +284,13 @@ extension OrderPatterns on Order {
       case _Order() when $default != null:
         return $default(
             _that.id,
+            _that.shopId,
             _that.customerName,
             _that.customerPhone,
             _that.customerAddress,
             _that.status,
             _that.totalAmount,
+            _that.orderType,
             _that.createdAt,
             _that.updatedAt,
             _that.items);
@@ -293,11 +316,13 @@ extension OrderPatterns on Order {
   TResult when<TResult extends Object?>(
     TResult Function(
             String id,
+            String? shopId,
             String customerName,
             String? customerPhone,
             String? customerAddress,
             OrderStatus status,
             double totalAmount,
+            String orderType,
             DateTime createdAt,
             DateTime updatedAt,
             List<OrderItem> items)
@@ -308,11 +333,13 @@ extension OrderPatterns on Order {
       case _Order():
         return $default(
             _that.id,
+            _that.shopId,
             _that.customerName,
             _that.customerPhone,
             _that.customerAddress,
             _that.status,
             _that.totalAmount,
+            _that.orderType,
             _that.createdAt,
             _that.updatedAt,
             _that.items);
@@ -337,11 +364,13 @@ extension OrderPatterns on Order {
   TResult? whenOrNull<TResult extends Object?>(
     TResult? Function(
             String id,
+            String? shopId,
             String customerName,
             String? customerPhone,
             String? customerAddress,
             OrderStatus status,
             double totalAmount,
+            String orderType,
             DateTime createdAt,
             DateTime updatedAt,
             List<OrderItem> items)?
@@ -352,11 +381,13 @@ extension OrderPatterns on Order {
       case _Order() when $default != null:
         return $default(
             _that.id,
+            _that.shopId,
             _that.customerName,
             _that.customerPhone,
             _that.customerAddress,
             _that.status,
             _that.totalAmount,
+            _that.orderType,
             _that.createdAt,
             _that.updatedAt,
             _that.items);
@@ -371,11 +402,13 @@ extension OrderPatterns on Order {
 class _Order implements Order {
   const _Order(
       {required this.id,
+      this.shopId,
       required this.customerName,
       required this.customerPhone,
       required this.customerAddress,
       required this.status,
       required this.totalAmount,
+      required this.orderType,
       required this.createdAt,
       required this.updatedAt,
       final List<OrderItem> items = const []})
@@ -383,6 +416,8 @@ class _Order implements Order {
 
   @override
   final String id;
+  @override
+  final String? shopId;
   @override
   final String customerName;
   @override
@@ -393,6 +428,8 @@ class _Order implements Order {
   final OrderStatus status;
   @override
   final double totalAmount;
+  @override
+  final String orderType;
   @override
   final DateTime createdAt;
   @override
@@ -420,6 +457,7 @@ class _Order implements Order {
         (other.runtimeType == runtimeType &&
             other is _Order &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.shopId, shopId) || other.shopId == shopId) &&
             (identical(other.customerName, customerName) ||
                 other.customerName == customerName) &&
             (identical(other.customerPhone, customerPhone) ||
@@ -429,6 +467,8 @@ class _Order implements Order {
             (identical(other.status, status) || other.status == status) &&
             (identical(other.totalAmount, totalAmount) ||
                 other.totalAmount == totalAmount) &&
+            (identical(other.orderType, orderType) ||
+                other.orderType == orderType) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -440,18 +480,20 @@ class _Order implements Order {
   int get hashCode => Object.hash(
       runtimeType,
       id,
+      shopId,
       customerName,
       customerPhone,
       customerAddress,
       status,
       totalAmount,
+      orderType,
       createdAt,
       updatedAt,
       const DeepCollectionEquality().hash(_items));
 
   @override
   String toString() {
-    return 'Order(id: $id, customerName: $customerName, customerPhone: $customerPhone, customerAddress: $customerAddress, status: $status, totalAmount: $totalAmount, createdAt: $createdAt, updatedAt: $updatedAt, items: $items)';
+    return 'Order(id: $id, shopId: $shopId, customerName: $customerName, customerPhone: $customerPhone, customerAddress: $customerAddress, status: $status, totalAmount: $totalAmount, orderType: $orderType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items)';
   }
 }
 
@@ -463,11 +505,13 @@ abstract mixin class _$OrderCopyWith<$Res> implements $OrderCopyWith<$Res> {
   @useResult
   $Res call(
       {String id,
+      String? shopId,
       String customerName,
       String? customerPhone,
       String? customerAddress,
       OrderStatus status,
       double totalAmount,
+      String orderType,
       DateTime createdAt,
       DateTime updatedAt,
       List<OrderItem> items});
@@ -486,11 +530,13 @@ class __$OrderCopyWithImpl<$Res> implements _$OrderCopyWith<$Res> {
   @pragma('vm:prefer-inline')
   $Res call({
     Object? id = null,
+    Object? shopId = freezed,
     Object? customerName = null,
     Object? customerPhone = freezed,
     Object? customerAddress = freezed,
     Object? status = null,
     Object? totalAmount = null,
+    Object? orderType = null,
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? items = null,
@@ -500,6 +546,10 @@ class __$OrderCopyWithImpl<$Res> implements _$OrderCopyWith<$Res> {
           ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
+      shopId: freezed == shopId
+          ? _self.shopId
+          : shopId // ignore: cast_nullable_to_non_nullable
+              as String?,
       customerName: null == customerName
           ? _self.customerName
           : customerName // ignore: cast_nullable_to_non_nullable
@@ -520,6 +570,10 @@ class __$OrderCopyWithImpl<$Res> implements _$OrderCopyWith<$Res> {
           ? _self.totalAmount
           : totalAmount // ignore: cast_nullable_to_non_nullable
               as double,
+      orderType: null == orderType
+          ? _self.orderType
+          : orderType // ignore: cast_nullable_to_non_nullable
+              as String,
       createdAt: null == createdAt
           ? _self.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable

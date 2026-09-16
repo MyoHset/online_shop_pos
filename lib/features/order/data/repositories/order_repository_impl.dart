@@ -49,6 +49,7 @@ class OrderRepositoryImpl implements OrderRepository {
     String? customerPhone,
     String? customerAddress,
     required List<OrderItemInput> items,
+    String? shopId,
   }) async {
     try {
       final model = await _dataSource.createOrder(
@@ -56,6 +57,31 @@ class OrderRepositoryImpl implements OrderRepository {
         customerPhone: customerPhone,
         customerAddress: customerAddress,
         items: items,
+        shopId: shopId,
+      );
+      return right(model.toEntity());
+    } on StockReservationException catch (e) {
+      return left(StockReservationFailure(e.message));
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Order>> completeInstantSale({
+    String? customerName,
+    required List<OrderItemInput> items,
+    required String paymentMethod,
+    String? shopId,
+  }) async {
+    try {
+      final model = await _dataSource.completeInstantSale(
+        customerName: customerName,
+        items: items,
+        paymentMethod: paymentMethod,
+        shopId: shopId,
       );
       return right(model.toEntity());
     } on StockReservationException catch (e) {

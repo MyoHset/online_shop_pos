@@ -1,23 +1,34 @@
-import 'dart:io';
 import 'package:fpdart/fpdart.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/error/failures.dart';
 import '../entities/variant_image.dart';
-import '../repositories/product_repository.dart';
+import '../repositories/variant_image_repository.dart';
 
 /// Uploads an image file and attaches it to a variant.
 class UploadVariantImage {
   const UploadVariantImage(this._repository);
 
-  final ProductRepository _repository;
+  final VariantImageRepository _repository;
 
   Future<Either<Failure, VariantImage>> call({
     required String variantId,
-    required File imageFile,
+    required String shopId,
+    required XFile imageFile,
     required bool isPrimary,
-  }) =>
-      _repository.uploadVariantImage(
+  }) async {
+    final uploadResult = await _repository.uploadFile(
+      imageFile,
+      variantId: variantId,
+      shopId: shopId,
+    );
+    
+    return uploadResult.fold(
+      (failure) async => left(failure),
+      (url) async => await _repository.attachImage(
         variantId: variantId,
-        imageFile: imageFile,
+        imageUrl: url,
         isPrimary: isPrimary,
-      );
+      ),
+    );
+  }
 }
