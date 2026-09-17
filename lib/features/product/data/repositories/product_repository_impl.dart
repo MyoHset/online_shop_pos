@@ -19,6 +19,18 @@ class ProductRepositoryImpl implements ProductRepository {
   final ProductRemoteDataSource _dataSource;
 
   @override
+  Future<Either<Failure, List<String>>> getCategories() async {
+    try {
+      final categories = await _dataSource.getCategories();
+      return right(categories);
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<Product>>> getProducts({
     String? searchQuery,
     String? category,

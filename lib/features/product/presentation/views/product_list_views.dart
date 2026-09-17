@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
+import '../../../../core/widgets/category_search_bar.dart';
 import '../../domain/entities/product.dart';
+import '../providers/product_categories_provider.dart';
+import '../providers/product_filter_provider.dart';
 import '../providers/product_list_provider.dart';
 import '../widgets/product_card.dart';
 
@@ -17,6 +20,8 @@ class ProductListMobileView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsync = ref.watch(productListProvider);
+    final categoriesAsync = ref.watch(productCategoriesProvider);
+    final filter = ref.watch(productFilterProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -29,9 +34,16 @@ class ProductListMobileView extends ConsumerWidget {
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(52),
-          child: _SearchBar(
-            onSearch: (q) => ref.read(productListProvider.notifier).search(q),
+          preferredSize: const Size.fromHeight(100),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: CategorySearchBar(
+              categories: categoriesAsync.value ?? [],
+              selectedCategory: filter.category,
+              searchQuery: filter.search,
+              onCategoryChanged: (c) => ref.read(productFilterProvider.notifier).setCategory(c),
+              onSearchChanged: (s) => ref.read(productFilterProvider.notifier).setSearch(s),
+            ),
           ),
         ),
       ),
@@ -57,22 +69,38 @@ class ProductListTabletView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsync = ref.watch(productListProvider);
+    final categoriesAsync = ref.watch(productCategoriesProvider);
+    final filter = ref.watch(productFilterProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Products'),
+        toolbarHeight: 90,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: _SearchBar(
-              width: 260,
-              onSearch: (q) => ref.read(productListProvider.notifier).search(q),
+            child: SizedBox(
+              width: 320,
+              child: CategorySearchBar(
+                searchWidth: 320,
+                categories: categoriesAsync.value ?? [],
+                selectedCategory: filter.category,
+                searchQuery: filter.search,
+                onCategoryChanged: (c) => ref.read(productFilterProvider.notifier).setCategory(c),
+                onSearchChanged: (s) => ref.read(productFilterProvider.notifier).setSearch(s),
+              ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Add product',
-            onPressed: () => context.pushNamed('productNew'),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: IconButton(
+                icon: const Icon(Icons.add),
+                tooltip: 'Add product',
+                onPressed: () => context.pushNamed('productNew'),
+              ),
+            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -107,10 +135,7 @@ class ProductListDesktopView extends ConsumerWidget {
     final productsAsync = ref.watch(productListProvider);
 
     return Scaffold(
-      appBar: _DesktopToolbarBar(
-        onSearch: (q) => ref.read(productListProvider.notifier).search(q),
-        onAdd: () => context.pushNamed('productNew'),
-      ),
+      appBar: const _DesktopToolbarBar(),
       body: productsAsync.when(
         loading: () => const SkeletonListLoader(),
         error: (e, _) => AppErrorWidget(
@@ -127,36 +152,45 @@ class ProductListDesktopView extends ConsumerWidget {
 
 // ── Desktop AppBar toolbar ─────────────────────────────────────────────────────
 
-class _DesktopToolbarBar extends StatefulWidget implements PreferredSizeWidget {
-  const _DesktopToolbarBar({required this.onSearch, required this.onAdd});
-
-  final void Function(String) onSearch;
-  final VoidCallback onAdd;
+class _DesktopToolbarBar extends ConsumerWidget implements PreferredSizeWidget {
+  const _DesktopToolbarBar();
 
   @override
-  Size get preferredSize => const Size.fromHeight(56);
+  Size get preferredSize => const Size.fromHeight(90);
 
   @override
-  State<_DesktopToolbarBar> createState() => _DesktopToolbarBarState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categoriesAsync = ref.watch(productCategoriesProvider);
+    final filter = ref.watch(productFilterProvider);
 
-class _DesktopToolbarBarState extends State<_DesktopToolbarBar> {
-  @override
-  Widget build(BuildContext context) {
     return AppBar(
       title: const Text('Products'),
+      toolbarHeight: 90,
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 8),
-          child: _SearchBar(
-            width: 260,
-            onSearch: widget.onSearch,
+          child: SizedBox(
+            width: 320,
+            child: CategorySearchBar(
+              searchWidth: 320,
+              categories: categoriesAsync.value ?? [],
+              selectedCategory: filter.category,
+              searchQuery: filter.search,
+              onCategoryChanged: (c) => ref.read(productFilterProvider.notifier).setCategory(c),
+              onSearchChanged: (s) => ref.read(productFilterProvider.notifier).setSearch(s),
+            ),
           ),
         ),
-        IconButton(
-          icon: const Icon(Icons.add),
-          tooltip: 'Add product',
-          onPressed: widget.onAdd,
+        Align(
+          alignment: Alignment.topCenter,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Add product',
+              onPressed: () => context.pushNamed('productNew'),
+            ),
+          ),
         ),
         const SizedBox(width: 8),
       ],
@@ -164,65 +198,7 @@ class _DesktopToolbarBarState extends State<_DesktopToolbarBar> {
   }
 }
 
-// ── Search bar (mobile / tablet AppBar bottom) ─────────────────────────────────
 
-class _SearchBar extends StatefulWidget {
-  const _SearchBar({required this.onSearch, this.width});
-
-  final void Function(String) onSearch;
-  final double? width;
-
-  @override
-  State<_SearchBar> createState() => _SearchBarState();
-}
-
-class _SearchBarState extends State<_SearchBar> {
-  final _ctrl = TextEditingController();
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    Widget field = TextField(
-      controller: _ctrl,
-      onChanged: (v) {
-        setState(() {});
-        widget.onSearch(v);
-      },
-      style: const TextStyle(fontSize: 13),
-      decoration: InputDecoration(
-        hintText: 'Search products…',
-        prefixIcon:
-            const Icon(Icons.search, size: 18, color: AppColors.slate400),
-        suffixIcon: _ctrl.text.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.clear, size: 16),
-                onPressed: () {
-                  _ctrl.clear();
-                  setState(() {});
-                  widget.onSearch('');
-                },
-              )
-            : null,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        isDense: true,
-      ),
-    );
-
-    if (widget.width != null) {
-      return SizedBox(width: widget.width, child: field);
-    }
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-      child: field,
-    );
-  }
-}
 
 // ── Product scroll view ────────────────────────────────────────────────────────
 

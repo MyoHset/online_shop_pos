@@ -1,17 +1,36 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../../core/network/supabase_client_provider.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../../domain/usecases/create_order.dart';
 import '../../domain/entities/order.dart';
 import 'order_list_provider.dart';
+import 'order_item_picker_filter_provider.dart';
 import '../../../product/presentation/providers/product_list_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../product/domain/entities/product.dart';
 
 part 'order_create_provider.g.dart';
 
 @riverpod
 CreateOrder createOrderUseCase(Ref ref) =>
     CreateOrder(ref.watch(orderRepositoryProvider));
+
+@riverpod
+Future<List<Product>> orderCreateProductList(Ref ref) async {
+  final filter = ref.watch(orderItemPickerFilterProvider);
+  final useCase = ref.read(getProductsUseCaseProvider);
+  final shopId = ref.watch(authControllerProvider).value?.shopId;
+  
+  final result = await useCase(
+    searchQuery: filter.search,
+    category: filter.category,
+    shopId: shopId,
+  );
+  
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (products) => products,
+  );
+}
 
 /// Holds a pending line item the user is building before confirming.
 class PendingOrderItem {

@@ -25,13 +25,16 @@ abstract final class AppColors {
   static const Color slate600 = Color(0xFF868E96); // Secondary text
   static const Color slate700 = Color(0xFF495057); // Primary text soft
   static const Color slate800 = Color(0xFF343A40); // Darker accents
-  static const Color slate900 = Color(0xFF111111); // True black/darkest for titles & buttons
+  static const Color slate900 = Color(0xFF000000); // True black/darkest for titles & buttons
+  
+  // ── Brand Colors ────────────────────────────────────────────────────────
+  static const Color greenNude = Color(0xFFC1EE44); // Light green brand color
 }
 
 /// Application-wide theme configuration.
 abstract final class AppTheme {
   static ThemeData get light {
-    const seedColor = Color(0xFF111111);
+    const seedColor = Color(0xFF000000);
 
     final colorScheme = ColorScheme.fromSeed(
       seedColor: seedColor,

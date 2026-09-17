@@ -58,7 +58,10 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: () => setState(() => _showCustomerField = true),
-                icon: const Icon(Icons.person_add_alt_1, size: 18),
+                icon: const Icon(
+                  Icons.person_add_alt_1,
+                  size: 18,
+                ),
                 label: const Text('Add customer name'),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.slate900,
@@ -92,7 +95,11 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
             ),
 
           // Payment Method Selector
-          const Text('Payment Method', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.slate500)),
+          const Text('Payment Method',
+              style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: AppColors.slate500)),
           const SizedBox(height: 8),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -116,10 +123,17 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.slate500)),
+              const Text('Total',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.slate500)),
               Text(
                 CurrencyFormatter.format(state.cart.total),
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.slate900),
+                style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.slate900),
               ),
             ],
           ),
@@ -129,6 +143,8 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
           AppButton(
             label: 'Complete Sale',
             isLoading: state.isLoading,
+            backgroundColor: AppColors.greenNude,
+            textColor: AppColors.slate900,
             onPressed: state.cart.isEmpty ? null : notifier.submitSale,
           ),
         ],
@@ -139,7 +155,7 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
 
 class _PaymentMethodChip extends ConsumerWidget {
   const _PaymentMethodChip(this.value, this.label);
-  
+
   final String value;
   final String label;
 
@@ -155,13 +171,13 @@ class _PaymentMethodChip extends ConsumerWidget {
       onSelected: (selected) {
         if (selected) notifier.updatePaymentMethod(value);
       },
-      selectedColor: AppColors.slate900.withValues(alpha: 0.1),
+      selectedColor: AppColors.greenNude.withValues(alpha: 0.3),
       labelStyle: TextStyle(
         color: isSelected ? AppColors.slate900 : AppColors.slate600,
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
       ),
       side: BorderSide(
-        color: isSelected ? AppColors.slate900 : AppColors.slate200,
+        color: isSelected ? Colors.transparent : AppColors.slate200,
       ),
     );
   }

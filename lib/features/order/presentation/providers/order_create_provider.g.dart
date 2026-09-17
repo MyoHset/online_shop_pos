@@ -49,7 +49,42 @@ final class CreateOrderUseCaseProvider
 }
 
 String _$createOrderUseCaseHash() =>
-    r'9dc9764568689eb0d127e347722730c47a52609f';
+    r'e52bdb5e73916a9ef819078fba0070752cf21558';
+
+@ProviderFor(orderCreateProductList)
+const orderCreateProductListProvider = OrderCreateProductListProvider._();
+
+final class OrderCreateProductListProvider extends $FunctionalProvider<
+        AsyncValue<List<Product>>, List<Product>, FutureOr<List<Product>>>
+    with $FutureModifier<List<Product>>, $FutureProvider<List<Product>> {
+  const OrderCreateProductListProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'orderCreateProductListProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$orderCreateProductListHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Product>> $createElement(
+          $ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Product>> create(Ref ref) {
+    return orderCreateProductList(ref);
+  }
+}
+
+String _$orderCreateProductListHash() =>
+    r'7eda5f161f0490bf5bcf0c7218c7ad40482e24c0';
 
 /// Manages the order creation flow state.
 

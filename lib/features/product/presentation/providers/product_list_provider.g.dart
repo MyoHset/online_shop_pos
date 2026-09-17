@@ -166,7 +166,7 @@ final class ProductListProvider
   ProductList create() => ProductList();
 }
 
-String _$productListHash() => r'c7bc33164938bc052d4432fce18ed47545db39b4';
+String _$productListHash() => r'5638b0503e83365466cc377e133c6fbb57883d42';
 
 /// Provides the paginated, filterable product list.
 
@@ -180,62 +180,6 @@ abstract class _$ProductList extends $AsyncNotifier<List<Product>> {
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<AsyncValue<List<Product>>, List<Product>>,
         AsyncValue<List<Product>>,
-        Object?,
-        Object?>;
-    element.handleValue(ref, created);
-  }
-}
-
-/// The current product list filter state (search/category).
-
-@ProviderFor(ProductListFilter)
-const productListFilterProvider = ProductListFilterProvider._();
-
-/// The current product list filter state (search/category).
-final class ProductListFilterProvider
-    extends $NotifierProvider<ProductListFilter, ProductListState> {
-  /// The current product list filter state (search/category).
-  const ProductListFilterProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'productListFilterProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
-
-  @override
-  String debugGetCreateSourceHash() => _$productListFilterHash();
-
-  @$internal
-  @override
-  ProductListFilter create() => ProductListFilter();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(ProductListState value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<ProductListState>(value),
-    );
-  }
-}
-
-String _$productListFilterHash() => r'85a0b69146aa89cde2c8960364106031d9cf9fdb';
-
-/// The current product list filter state (search/category).
-
-abstract class _$ProductListFilter extends $Notifier<ProductListState> {
-  ProductListState build();
-  @$mustCallSuper
-  @override
-  void runBuild() {
-    final created = build();
-    final ref = this.ref as $Ref<ProductListState, ProductListState>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<ProductListState, ProductListState>,
-        ProductListState,
         Object?,
         Object?>;
     element.handleValue(ref, created);

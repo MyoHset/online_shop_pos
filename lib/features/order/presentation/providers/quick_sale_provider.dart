@@ -8,12 +8,32 @@ import '../../domain/entities/order.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../../domain/usecases/complete_instant_sale.dart';
 import 'order_list_provider.dart';
+import 'quick_sale_filter_provider.dart';
+import '../../../product/domain/entities/product.dart';
 
 part 'quick_sale_provider.g.dart';
 
 @riverpod
 CompleteInstantSale completeInstantSaleUseCase(Ref ref) =>
     CompleteInstantSale(ref.watch(orderRepositoryProvider));
+
+@riverpod
+Future<List<Product>> quickSaleProductList(Ref ref) async {
+  final filter = ref.watch(quickSaleFilterProvider);
+  final useCase = ref.read(getProductsUseCaseProvider);
+  final shopId = ref.watch(authControllerProvider).value?.shopId;
+  
+  final result = await useCase(
+    searchQuery: filter.search,
+    category: filter.category,
+    shopId: shopId,
+  );
+  
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (products) => products,
+  );
+}
 
 class QuickSaleState {
   const QuickSaleState({

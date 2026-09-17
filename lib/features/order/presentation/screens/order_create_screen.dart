@@ -7,11 +7,13 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_error_widget.dart';
+import '../../../../core/widgets/category_search_bar.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/domain/entities/variant.dart';
-import '../../../product/presentation/providers/product_list_provider.dart';
+import '../../../product/presentation/providers/product_categories_provider.dart';
 import '../../../product/presentation/widgets/product_card.dart';
 import '../providers/order_create_provider.dart';
+import '../providers/order_item_picker_filter_provider.dart';
 
 /// POS style single-page order creation screen.
 class OrderCreateScreen extends ConsumerStatefulWidget {
@@ -126,6 +128,23 @@ class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
               },
             ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(100),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Builder(builder: (ctx) {
+              final categoriesAsync = ref.watch(productCategoriesProvider);
+              final filter = ref.watch(orderItemPickerFilterProvider);
+              return CategorySearchBar(
+                categories: categoriesAsync.value ?? [],
+                selectedCategory: filter.category,
+                searchQuery: filter.search,
+                onCategoryChanged: (c) => ref.read(orderItemPickerFilterProvider.notifier).setCategory(c),
+                onSearchChanged: (s) => ref.read(orderItemPickerFilterProvider.notifier).setSearch(s),
+              );
+            }),
+          ),
+        ),
       ),
       body: Row(
         children: [
@@ -161,13 +180,13 @@ class _ProductGridSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(productListProvider);
+    final productsAsync = ref.watch(orderCreateProductListProvider);
 
     return productsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => AppErrorWidget(
         message: e.toString(),
-        onRetry: () => ref.refresh(productListProvider.future),
+        onRetry: () => ref.refresh(orderCreateProductListProvider.future),
       ),
       data: (products) {
         if (products.isEmpty) {

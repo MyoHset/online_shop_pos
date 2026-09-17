@@ -38,6 +38,29 @@ class ProductRemoteDataSource {
 
   // ── Product CRUD ─────────────────────────────────────────────────────────────
 
+  Future<List<String>> getCategories() async {
+    _logCall('getCategories');
+    try {
+      final data = await _client
+          .from(SupabaseConstants.productsTable)
+          .select('category');
+      final categories = (data as List)
+          .map((e) => e['category'] as String?)
+          .where((c) => c != null && c.isNotEmpty)
+          .cast<String>()
+          .toSet()
+          .toList();
+      categories.sort();
+      return categories;
+    } on PostgrestException catch (e, s) {
+      _logError('getCategories', e, s);
+      throw ServerException(e.message);
+    } catch (e, s) {
+      _logError('getCategories', e, s);
+      throw ServerException(e.toString());
+    }
+  }
+
   Future<List<ProductModel>> getProducts({
     String? searchQuery,
     String? category,

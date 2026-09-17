@@ -18,6 +18,8 @@ class AppButton extends StatelessWidget {
     this.isLoading = false,
     this.icon,
     this.minimumWidth,
+    this.backgroundColor,
+    this.textColor,
   });
 
   final String label;
@@ -26,6 +28,8 @@ class AppButton extends StatelessWidget {
   final bool isLoading;
   final Widget? icon;
   final double? minimumWidth;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +42,8 @@ class AppButton extends StatelessWidget {
           isLoading: isLoading,
           icon: icon,
           minimumWidth: minimumWidth,
+          backgroundColor: backgroundColor,
+          textColor: textColor,
         ),
       AppButtonVariant.secondary => _SecondaryButton(
           label: label,
@@ -109,6 +115,8 @@ class _PrimaryButton extends StatelessWidget {
     required this.isLoading,
     this.icon,
     this.minimumWidth,
+    this.backgroundColor,
+    this.textColor,
   });
 
   final String label;
@@ -116,12 +124,16 @@ class _PrimaryButton extends StatelessWidget {
   final bool isLoading;
   final Widget? icon;
   final double? minimumWidth;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        foregroundColor: textColor,
         minimumSize: minimumWidth != null
             ? Size(minimumWidth!, 48)
             : const Size(0, 48),
@@ -129,7 +141,7 @@ class _PrimaryButton extends StatelessWidget {
       child: _ButtonContent(
         label: label,
         isLoading: isLoading,
-        color: Colors.white,
+        color: textColor ?? Colors.white,
         icon: icon,
       ),
     );

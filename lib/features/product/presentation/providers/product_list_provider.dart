@@ -7,6 +7,8 @@ import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../../domain/usecases/get_products.dart';
 
+import 'product_filter_provider.dart';
+
 part 'product_list_provider.g.dart';
 
 // ── Infrastructure providers ──────────────────────────────────────────────────
@@ -26,47 +28,23 @@ GetProducts getProductsUseCase(Ref ref) {
   return GetProducts(ref.watch(productRepositoryProvider));
 }
 
-// ── State ─────────────────────────────────────────────────────────────────────
-
-/// State for the product list, including search/filter state.
-class ProductListState {
-  const ProductListState({
-    this.searchQuery = '',
-    this.selectedCategory,
-  });
-
-  final String searchQuery;
-  final String? selectedCategory;
-
-  ProductListState copyWith({
-    String? searchQuery,
-    String? selectedCategory,
-    bool clearCategory = false,
-  }) =>
-      ProductListState(
-        searchQuery: searchQuery ?? this.searchQuery,
-        selectedCategory:
-            clearCategory ? null : (selectedCategory ?? this.selectedCategory),
-      );
-}
-
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 /// Provides the paginated, filterable product list.
 @riverpod
 class ProductList extends _$ProductList {
   @override
-  Future<List<Product>> build() => _fetchProducts();
+  Future<List<Product>> build() {
+    final filter = ref.watch(productFilterProvider);
+    return _fetchProducts(filter.search, filter.category);
+  }
 
-  String _searchQuery = '';
-  String? _selectedCategory;
-
-  Future<List<Product>> _fetchProducts() {
+  Future<List<Product>> _fetchProducts(String search, String? category) {
     final useCase = ref.read(getProductsUseCaseProvider);
     final shopId = ref.watch(authControllerProvider).value?.shopId;
     return useCase(
-      searchQuery: _searchQuery,
-      category: _selectedCategory,
+      searchQuery: search,
+      category: category,
       shopId: shopId,
     ).then(
       (result) => result.fold(
@@ -79,38 +57,7 @@ class ProductList extends _$ProductList {
   /// Refreshes the product list with the current filters.
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchProducts);
-  }
-
-  /// Updates the search query and reloads.
-  Future<void> search(String query) async {
-    _searchQuery = query;
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchProducts);
-  }
-
-  /// Filters by category and reloads.
-  Future<void> filterByCategory(String? category) async {
-    _selectedCategory = category;
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchProducts);
-  }
-}
-
-/// The current product list filter state (search/category).
-@riverpod
-class ProductListFilter extends _$ProductListFilter {
-  @override
-  ProductListState build() => const ProductListState();
-
-  void updateSearch(String query) {
-    state = state.copyWith(searchQuery: query);
-  }
-
-  void updateCategory(String? category) {
-    state = state.copyWith(
-      selectedCategory: category,
-      clearCategory: category == null,
-    );
+    final filter = ref.read(productFilterProvider);
+    state = await AsyncValue.guard(() => _fetchProducts(filter.search, filter.category));
   }
 }

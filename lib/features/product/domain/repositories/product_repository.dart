@@ -19,6 +19,9 @@ abstract interface class ProductRepository {
     int pageSize = 30,
   });
 
+  /// Returns a list of distinct categories for the current shop.
+  Future<Either<Failure, List<String>>> getCategories();
+
   /// Returns a single product with all its variants and variant images.
   Future<Either<Failure, Product>> getProductById(String id);
 

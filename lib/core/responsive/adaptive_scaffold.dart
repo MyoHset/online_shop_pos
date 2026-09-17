@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 import '../theme/app_theme.dart';
 import '../responsive/device_type.dart';
 import '../responsive/responsive_extensions.dart';
@@ -147,8 +148,8 @@ class _TabletScaffold extends StatelessWidget {
   final Widget body;
 
   // Fixed geometry
-  static const double _iconSize = 40.0;   // per-item height in Stack
-  static const double _topOffset = 68.0;  // logo(20+32+16) = 68
+  static const double _iconSize = 40.0; // per-item height in Stack
+  static const double _topOffset = 68.0; // logo(20+32+16) = 68
 
   @override
   Widget build(BuildContext context) {
@@ -263,14 +264,13 @@ class _DesktopScaffold extends StatelessWidget {
   final ValueChanged<int> onDestinationSelected;
   final Widget body;
 
-  static const double _sidebarWidth = 220;
+  static const double _sidebarWidth = 84;
 
   // Fixed item height — must match _SidebarItem's SizedBox height
-  static const double _itemH = 40.0;
+  static const double _itemH = 64.0;
 
   // Vertical offset to the first nav item:
-  // paddingTop(22) + logo(28) + gap(20) + divider(1) + gap(8) + menuLabel(24) = 103
-  static const double _navTop = 103.0;
+  static const double _navTop = 100.0;
 
   @override
   Widget build(BuildContext context) {
@@ -279,103 +279,90 @@ class _DesktopScaffold extends StatelessWidget {
     // constraints. Using Scaffold(body: Row) would loosen those constraints
     // before they reach Expanded(child: body), causing unbounded-height crashes
     // deep in the StatefulNavigationShell → IndexedStack → content chain.
-    return ColoredBox(
-      color: Colors.white,
-      child: Row(
+    return Material(
+      color: AppColors.slate900,
+      child: Column(
         children: [
-          SizedBox(
-            width: _sidebarWidth,
-            child: ColoredBox(
-              color: Colors.white,
-              child: Stack(
-                children: [
-                  // ── Sliding background pill ─────────────────────────────
-                  AnimatedPositioned(
-                    duration: _kSlideDuration,
-                    curve: _kSlideCurve,
-                    top: _navTop + selectedIndex * _itemH + 1,
-                    left: 10,
-                    right: 10,
-                    height: _itemH - 2,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.slate100,
-                        borderRadius: BorderRadius.circular(7),
-                      ),
-                    ),
-                  ),
-
-                  // ── Sidebar content ────────────────────────────────────
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(
+            height: 32,
+            child: WindowCaption(
+              brightness: Brightness.dark,
+              backgroundColor: Colors.transparent,
+            ),
+          ),
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: _sidebarWidth,
+                  child: Stack(
                     children: [
-                      // Wordmark
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: AppColors.slate900,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Icon(Icons.storefront,
-                                  size: 16, color: Colors.white),
-                            ),
-                            const SizedBox(width: 10),
-                            const Text(
-                              'Shop POS',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.slate900,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20),
-                        child: Divider(height: 1, color: AppColors.slate100),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Section label  (height ≈ 24px → top of items = 103)
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(20, 4, 20, 6),
-                        child: Text(
-                          'MENU',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.0,
-                            color: AppColors.slate400,
+                      // ── Sliding background pill ─────────────────────────────
+                      AnimatedPositioned(
+                        duration: _kSlideDuration,
+                        curve: _kSlideCurve,
+                        top: _navTop + selectedIndex * _itemH + 8,
+                        left: 12,
+                        right: 12,
+                        height: _itemH - 16,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.greenNude,
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),
 
-                      // Nav items — each must be exactly _itemH px tall
-                      ...List.generate(destinations.length, (i) {
-                        return _SidebarItem(
-                          destination: destinations[i],
-                          isSelected: i == selectedIndex,
-                          itemHeight: _itemH,
-                          onTap: () => onDestinationSelected(i),
-                        );
-                      }),
+                      // ── Sidebar content ────────────────────────────────────
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Wordmark
+                          Padding(
+                            padding: const EdgeInsets.only(top: 24),
+                            child: Center(
+                              child: Icon(
+                                Icons.storefront,
+                                size: 32,
+                                color: AppColors.greenNude,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 44),
+
+                          // Nav items — each must be exactly _itemH px tall
+                          ...List.generate(destinations.length, (i) {
+                            return _SidebarItem(
+                              destination: destinations[i],
+                              isSelected: i == selectedIndex,
+                              itemHeight: _itemH,
+                              onTap: () => onDestinationSelected(i),
+                            );
+                          }),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 5, bottom: 10, right: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.slate50,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(22),
+                        bottomLeft: Radius.circular(16),
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: body,
+                  ),
+                ),
+              ],
             ),
           ),
-          Container(width: 1, color: AppColors.slate100),
-          Expanded(child: body),
         ],
       ),
     );
@@ -408,74 +395,38 @@ class _SidebarItemState extends State<_SidebarItem> {
   Widget build(BuildContext context) {
     final isSelected = widget.isSelected;
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onTap,
-        child: SizedBox(
-          height: widget.itemHeight, // exact height — must match _navTop math
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Row(
-              children: [
-                // Left accent bar — slides with the pill via AnimatedOpacity
-                AnimatedOpacity(
-                  duration: _kSlideDuration,
-                  opacity: isSelected ? 1.0 : 0.0,
-                  child: Container(
-                    width: 3,
-                    height: 16,
-                    margin: const EdgeInsets.only(right: 10),
-                    decoration: BoxDecoration(
-                      color: AppColors.slate900,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                if (!isSelected)
-                  const SizedBox(width: 13), // keeps layout stable
-
-                // Icon
-                AnimatedSwitcher(
-                  duration: _kSlideDuration,
-                  child: IconTheme(
-                    key: ValueKey(isSelected),
-                    data: IconThemeData(
-                      color: isSelected
-                          ? AppColors.slate900
-                          : _hovered
-                              ? AppColors.slate600
-                              : AppColors.slate400,
-                      size: 18,
-                    ),
-                    child: isSelected
-                        ? widget.destination.selectedIcon
-                        : widget.destination.icon,
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Label
-                AnimatedDefaultTextStyle(
-                  duration: _kSlideDuration,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 15,
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.w400,
+    return Tooltip(
+      message: widget.destination.label,
+      preferBelow: false,
+      waitDuration: const Duration(milliseconds: 300),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: SizedBox(
+            height: widget.itemHeight, // exact height — must match _navTop math
+            width: double.infinity,
+            child: Center(
+              child: AnimatedSwitcher(
+                duration: _kSlideDuration,
+                child: IconTheme(
+                  key: ValueKey(isSelected),
+                  data: IconThemeData(
                     color: isSelected
                         ? AppColors.slate900
                         : _hovered
-                            ? AppColors.slate600
-                            : AppColors.slate500,
-                    letterSpacing: -0.1,
+                            ? Colors.white
+                            : AppColors.slate400,
+                    size: 24,
                   ),
-                  child: Text(widget.destination.label),
+                  child: isSelected
+                      ? widget.destination.selectedIcon
+                      : widget.destination.icon,
                 ),
-              ],
+              ),
             ),
           ),
         ),

@@ -54,6 +54,41 @@ final class CompleteInstantSaleUseCaseProvider extends $FunctionalProvider<
 String _$completeInstantSaleUseCaseHash() =>
     r'8d89701691f2b87a66b89d43723d1869f25f92cd';
 
+@ProviderFor(quickSaleProductList)
+const quickSaleProductListProvider = QuickSaleProductListProvider._();
+
+final class QuickSaleProductListProvider extends $FunctionalProvider<
+        AsyncValue<List<Product>>, List<Product>, FutureOr<List<Product>>>
+    with $FutureModifier<List<Product>>, $FutureProvider<List<Product>> {
+  const QuickSaleProductListProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'quickSaleProductListProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$quickSaleProductListHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Product>> $createElement(
+          $ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Product>> create(Ref ref) {
+    return quickSaleProductList(ref);
+  }
+}
+
+String _$quickSaleProductListHash() =>
+    r'b69ef8d24785eb418c0d2410be5ea6593ba2c7d3';
+
 @ProviderFor(QuickSale)
 const quickSaleProvider = QuickSaleProvider._();
 
@@ -86,7 +121,7 @@ final class QuickSaleProvider
   }
 }
 
-String _$quickSaleHash() => r'8a9af9c22c3cdcdc9c2bf3d02d14872b92460805';
+String _$quickSaleHash() => r'ff359d2ef427bb27e5cd69b70de1b2c6f9bace2b';
 
 abstract class _$QuickSale extends $Notifier<QuickSaleState> {
   QuickSaleState build();
