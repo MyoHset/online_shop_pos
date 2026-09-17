@@ -13,6 +13,7 @@ class CategorySearchBar extends StatelessWidget {
     required this.onBrandChanged,
     required this.onSearchChanged,
     this.searchWidth,
+    this.showSearchField = true,
     super.key,
   });
 
@@ -25,6 +26,7 @@ class CategorySearchBar extends StatelessWidget {
   final ValueChanged<String?> onBrandChanged;
   final ValueChanged<String> onSearchChanged;
   final double? searchWidth;
+  final bool showSearchField;
 
   @override
   Widget build(BuildContext context) {
@@ -32,12 +34,14 @@ class CategorySearchBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        SearchTextField(
-          value: searchQuery,
-          onChanged: onSearchChanged,
-          width: searchWidth,
-        ),
-        const SizedBox(height: 8),
+        if (showSearchField) ...[
+          SearchTextField(
+            value: searchQuery,
+            onChanged: onSearchChanged,
+            width: searchWidth,
+          ),
+          const SizedBox(height: 8),
+        ],
         FilterChipList(
           label: 'Category',
           options: categories,

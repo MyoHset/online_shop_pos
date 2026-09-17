@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/category_search_bar.dart';
+import '../../../../core/widgets/search_text_field.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/domain/entities/variant.dart';
 import '../../../product/presentation/providers/product_brands_provider.dart';
@@ -29,7 +30,8 @@ class QuickSaleScreen extends ConsumerWidget {
     }
 
     final device = DeviceType.from(context);
-    final isDesktop = device == DeviceType.desktop || device == DeviceType.large;
+    final isDesktop =
+        device == DeviceType.desktop || device == DeviceType.large;
     final isTablet = device == DeviceType.tablet;
     final isLargeScreen = isDesktop || isTablet;
 
@@ -37,9 +39,22 @@ class QuickSaleScreen extends ConsumerWidget {
       backgroundColor: AppColors.slate50,
       appBar: AppBar(
         title: const Text('Quick Sale'),
+        centerTitle: false,
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
+          if (isDesktop)
+            Consumer(builder: (context, ref, child) {
+              final filter = ref.watch(quickSaleFilterProvider);
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: SearchTextField(
+                  value: filter.search,
+                  onChanged: (s) => ref.read(quickSaleFilterProvider.notifier).setSearch(s),
+                  width: 300,
+                ),
+              );
+            }),
           if (!isLargeScreen)
             IconButton(
               icon: Badge(
@@ -49,43 +64,59 @@ class QuickSaleScreen extends ConsumerWidget {
               ),
               onPressed: () => _showMobileCart(context),
             ),
+          const SizedBox(width: 16),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(170),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: AppColors.slate200, height: 1),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Top Search and Filter Bar
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Builder(builder: (ctx) {
               final categoriesAsync = ref.watch(productCategoriesProvider);
               final brandsAsync = ref.watch(productBrandsProvider);
               final filter = ref.watch(quickSaleFilterProvider);
               return CategorySearchBar(
+                showSearchField: !isDesktop,
                 categories: categoriesAsync.value ?? [],
                 brands: brandsAsync.value ?? [],
                 selectedCategory: filter.category,
                 selectedBrand: filter.brand,
                 searchQuery: filter.search,
-                onCategoryChanged: (c) => ref.read(quickSaleFilterProvider.notifier).setCategory(c),
-                onBrandChanged: (b) => ref.read(quickSaleFilterProvider.notifier).setBrand(b),
-                onSearchChanged: (s) => ref.read(quickSaleFilterProvider.notifier).setSearch(s),
+                onCategoryChanged: (c) =>
+                    ref.read(quickSaleFilterProvider.notifier).setCategory(c),
+                onBrandChanged: (b) =>
+                    ref.read(quickSaleFilterProvider.notifier).setBrand(b),
+                onSearchChanged: (s) =>
+                    ref.read(quickSaleFilterProvider.notifier).setSearch(s),
               );
             }),
           ),
-        ),
-      ),
-      body: Row(
-        children: [
-          // Left Side: Product Grid
+          Container(height: 1, color: AppColors.slate200),
+          // Main Content
           Expanded(
-            child: _ProductGrid(isDesktop: isDesktop),
-          ),
-          // Right Side: Cart (Desktop/Tablet Only)
-          if (isLargeScreen) ...[
-            Container(width: 1, color: AppColors.slate200),
-            SizedBox(
-              width: isDesktop ? 400 : 320,
-              child: const _CartSidebar(),
+            child: Row(
+              children: [
+                // Left Side: Product Grid
+                Expanded(
+                  child: _ProductGrid(isDesktop: isDesktop),
+                ),
+                // Right Side: Cart (Desktop/Tablet Only)
+                if (isLargeScreen) ...[
+                  Container(width: 1, color: AppColors.slate200),
+                  SizedBox(
+                    width: isDesktop ? 400 : 320,
+                    child: const _CartSidebar(),
+                  ),
+                ],
+              ],
             ),
-          ],
+          ),
         ],
       ),
     );
@@ -102,12 +133,17 @@ class QuickSaleScreen extends ConsumerWidget {
           color: AppColors.slate50,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        child:  Column(
+        child: Column(
           children: [
             Padding(
               padding: EdgeInsets.all(16.0),
               child: Center(
-                child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.slate300, borderRadius: BorderRadius.circular(2))),
+                child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: AppColors.slate300,
+                        borderRadius: BorderRadius.circular(2))),
               ),
             ),
             Expanded(child: _CartSidebar()),
@@ -123,9 +159,10 @@ class _ProductGrid extends ConsumerWidget {
   final bool isDesktop;
 
   void _onProductTapped(BuildContext context, WidgetRef ref, Product p) {
-    final activeVariants = p.variants.where((v) => v.isActive && !v.isOutOfStock).toList();
+    final activeVariants =
+        p.variants.where((v) => v.isActive && !v.isOutOfStock).toList();
     if (activeVariants.isEmpty) return;
-    
+
     if (activeVariants.length == 1) {
       _addVariantToCart(ref, p, activeVariants.first);
     } else {
@@ -146,15 +183,15 @@ class _ProductGrid extends ConsumerWidget {
   void _addVariantToCart(WidgetRef ref, Product p, Variant v) {
     final price = v.priceOverride ?? p.basePrice;
     ref.read(quickSaleProvider.notifier).addToCart(
-      CartItem(
-        variantId: v.id,
-        productName: p.name,
-        variantDisplayName: v.displayName,
-        unitPrice: price,
-        quantity: 1,
-        availableStock: v.availableStock,
-      ),
-    );
+          CartItem(
+            variantId: v.id,
+            productName: p.name,
+            variantDisplayName: v.displayName,
+            unitPrice: price,
+            quantity: 1,
+            availableStock: v.availableStock,
+          ),
+        );
   }
 
   @override
@@ -169,9 +206,11 @@ class _ProductGrid extends ConsumerWidget {
       ),
       data: (products) {
         if (products.isEmpty) {
-          return const Center(child: Text('No products available.', style: TextStyle(color: AppColors.slate500)));
+          return const Center(
+              child: Text('No products available.',
+                  style: TextStyle(color: AppColors.slate500)));
         }
-        
+
         return CustomScrollView(
           slivers: [
             SliverPadding(
@@ -218,9 +257,12 @@ class _CartSidebar extends ConsumerWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.shopping_cart_outlined, size: 64, color: AppColors.slate300),
+                      Icon(Icons.shopping_cart_outlined,
+                          size: 64, color: AppColors.slate300),
                       SizedBox(height: 16),
-                      Text('Cart is empty', style: TextStyle(color: AppColors.slate500, fontSize: 16)),
+                      Text('Cart is empty',
+                          style: TextStyle(
+                              color: AppColors.slate500, fontSize: 16)),
                     ],
                   ),
                 )
@@ -230,8 +272,10 @@ class _CartSidebar extends ConsumerWidget {
                     final item = state.cart.items[i];
                     return CartLineItem(
                       item: item,
-                      onIncrement: () => notifier.updateQuantity(item.variantId, item.quantity + 1),
-                      onDecrement: () => notifier.updateQuantity(item.variantId, item.quantity - 1),
+                      onIncrement: () => notifier.updateQuantity(
+                          item.variantId, item.quantity + 1),
+                      onDecrement: () => notifier.updateQuantity(
+                          item.variantId, item.quantity - 1),
                     );
                   },
                 ),
@@ -293,7 +337,8 @@ class _VariantSelectionDialog extends StatelessWidget {
                     splashColor: AppColors.slate100,
                     highlightColor: AppColors.slate50,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 16),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         border: Border.all(color: AppColors.slate200),
@@ -334,12 +379,14 @@ class _VariantSelectionDialog extends StatelessWidget {
                 onPressed: () => Navigator.pop(context),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.slate700,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+                child: const Text('Cancel',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),
           ],
