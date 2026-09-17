@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/category_search_bar.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/domain/entities/variant.dart';
+import '../../../product/presentation/providers/product_brands_provider.dart';
 import '../../../product/presentation/providers/product_categories_provider.dart';
 import '../../../product/presentation/widgets/product_card.dart';
 import '../providers/order_create_provider.dart';
@@ -129,17 +130,21 @@ class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
             ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(100),
+          preferredSize: const Size.fromHeight(170),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Builder(builder: (ctx) {
               final categoriesAsync = ref.watch(productCategoriesProvider);
+              final brandsAsync = ref.watch(productBrandsProvider);
               final filter = ref.watch(orderItemPickerFilterProvider);
               return CategorySearchBar(
                 categories: categoriesAsync.value ?? [],
+                brands: brandsAsync.value ?? [],
                 selectedCategory: filter.category,
+                selectedBrand: filter.brand,
                 searchQuery: filter.search,
                 onCategoryChanged: (c) => ref.read(orderItemPickerFilterProvider.notifier).setCategory(c),
+                onBrandChanged: (b) => ref.read(orderItemPickerFilterProvider.notifier).setBrand(b),
                 onSearchChanged: (s) => ref.read(orderItemPickerFilterProvider.notifier).setSearch(s),
               );
             }),
@@ -207,9 +212,12 @@ class _ProductGridSection extends ConsumerWidget {
                 delegate: SliverChildBuilderDelegate(
                   (context, i) {
                     final product = products[i];
-                    return ProductCard(
+                    return _InCartBadgeWrapper(
                       product: product,
-                      onTap: () => onProductTapped(product),
+                      child: ProductCard(
+                        product: product,
+                        onTap: () => onProductTapped(product),
+                      ),
                     );
                   },
                   childCount: products.length,
@@ -219,6 +227,49 @@ class _ProductGridSection extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+}
+
+// ── In Cart Badge Wrapper ──
+class _InCartBadgeWrapper extends ConsumerWidget {
+  const _InCartBadgeWrapper({
+    required this.product,
+    required this.child,
+  });
+
+  final Product product;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formState = ref.watch(orderCreateProvider);
+    // Check if any item in cart matches any variant of this product
+    final inCart = formState.items.any((item) => product.variants.any((v) => v.id == item.variantId));
+
+    if (!inCart) return child;
+
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          top: 8,
+          right: 8,
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: AppColors.success,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: const Icon(
+              Icons.check,
+              size: 16,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -49,7 +49,7 @@ final class CreateOrderUseCaseProvider
 }
 
 String _$createOrderUseCaseHash() =>
-    r'e52bdb5e73916a9ef819078fba0070752cf21558';
+    r'9dc9764568689eb0d127e347722730c47a52609f';
 
 @ProviderFor(orderCreateProductList)
 const orderCreateProductListProvider = OrderCreateProductListProvider._();
@@ -84,7 +84,7 @@ final class OrderCreateProductListProvider extends $FunctionalProvider<
 }
 
 String _$orderCreateProductListHash() =>
-    r'7eda5f161f0490bf5bcf0c7218c7ad40482e24c0';
+    r'd4e29ba192b5efa0e1bd8ca0587baa092df8dc6d';
 
 /// Manages the order creation flow state.
 

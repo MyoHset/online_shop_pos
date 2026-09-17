@@ -31,9 +31,22 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Future<Either<Failure, List<String>>> getBrands() async {
+    try {
+      final brands = await _dataSource.getBrands();
+      return right(brands);
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<Product>>> getProducts({
     String? searchQuery,
     String? category,
+    String? brand,
     String? shopId,
     int page = 0,
     int pageSize = 30,
@@ -42,6 +55,7 @@ class ProductRepositoryImpl implements ProductRepository {
       final models = await _dataSource.getProducts(
         searchQuery: searchQuery,
         category: category,
+        brand: brand,
         shopId: shopId,
         page: page,
         pageSize: pageSize,

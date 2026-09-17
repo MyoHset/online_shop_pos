@@ -15,6 +15,7 @@ const productFilterProvider = ProductFilterProvider._();
 final class ProductFilterProvider extends $NotifierProvider<
     ProductFilter,
     ({
+      String? brand,
       String? category,
       String search,
     })> {
@@ -39,6 +40,7 @@ final class ProductFilterProvider extends $NotifierProvider<
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(
       ({
+        String? brand,
         String? category,
         String search,
       }) value) {
@@ -46,6 +48,7 @@ final class ProductFilterProvider extends $NotifierProvider<
       origin: this,
       providerOverride: $SyncValueProvider<
           ({
+            String? brand,
             String? category,
             String search,
           })>(value),
@@ -53,14 +56,16 @@ final class ProductFilterProvider extends $NotifierProvider<
   }
 }
 
-String _$productFilterHash() => r'2d15a9a79d6d0fcc4ac81edab14c1a16ba0e6d5a';
+String _$productFilterHash() => r'3048bfd8cd6688e858eb9ac8fc7a3aae7c8122ab';
 
 abstract class _$ProductFilter extends $Notifier<
     ({
+      String? brand,
       String? category,
       String search,
     })> {
   ({
+    String? brand,
     String? category,
     String search,
   }) build();
@@ -70,24 +75,29 @@ abstract class _$ProductFilter extends $Notifier<
     final created = build();
     final ref = this.ref as $Ref<
         ({
+          String? brand,
           String? category,
           String search,
         }),
         ({
+          String? brand,
           String? category,
           String search,
         })>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<
             ({
+              String? brand,
               String? category,
               String search,
             }),
             ({
+              String? brand,
               String? category,
               String search,
             })>,
         ({
+          String? brand,
           String? category,
           String search,
         }),

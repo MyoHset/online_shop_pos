@@ -7,6 +7,7 @@ import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
 import '../../../../core/widgets/category_search_bar.dart';
 import '../../domain/entities/product.dart';
+import '../providers/product_brands_provider.dart';
 import '../providers/product_categories_provider.dart';
 import '../providers/product_filter_provider.dart';
 import '../providers/product_list_provider.dart';
@@ -21,6 +22,7 @@ class ProductListMobileView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsync = ref.watch(productListProvider);
     final categoriesAsync = ref.watch(productCategoriesProvider);
+    final brandsAsync = ref.watch(productBrandsProvider);
     final filter = ref.watch(productFilterProvider);
 
     return Scaffold(
@@ -34,14 +36,17 @@ class ProductListMobileView extends ConsumerWidget {
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(100),
+          preferredSize: const Size.fromHeight(170),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: CategorySearchBar(
               categories: categoriesAsync.value ?? [],
+              brands: brandsAsync.value ?? [],
               selectedCategory: filter.category,
+              selectedBrand: filter.brand,
               searchQuery: filter.search,
               onCategoryChanged: (c) => ref.read(productFilterProvider.notifier).setCategory(c),
+              onBrandChanged: (b) => ref.read(productFilterProvider.notifier).setBrand(b),
               onSearchChanged: (s) => ref.read(productFilterProvider.notifier).setSearch(s),
             ),
           ),
@@ -70,6 +75,7 @@ class ProductListTabletView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsync = ref.watch(productListProvider);
     final categoriesAsync = ref.watch(productCategoriesProvider);
+    final brandsAsync = ref.watch(productBrandsProvider);
     final filter = ref.watch(productFilterProvider);
 
     return Scaffold(
@@ -84,9 +90,12 @@ class ProductListTabletView extends ConsumerWidget {
               child: CategorySearchBar(
                 searchWidth: 320,
                 categories: categoriesAsync.value ?? [],
+                brands: brandsAsync.value ?? [],
                 selectedCategory: filter.category,
+                selectedBrand: filter.brand,
                 searchQuery: filter.search,
                 onCategoryChanged: (c) => ref.read(productFilterProvider.notifier).setCategory(c),
+                onBrandChanged: (b) => ref.read(productFilterProvider.notifier).setBrand(b),
                 onSearchChanged: (s) => ref.read(productFilterProvider.notifier).setSearch(s),
               ),
             ),
@@ -161,6 +170,7 @@ class _DesktopToolbarBar extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(productCategoriesProvider);
+    final brandsAsync = ref.watch(productBrandsProvider);
     final filter = ref.watch(productFilterProvider);
 
     return AppBar(
@@ -174,9 +184,12 @@ class _DesktopToolbarBar extends ConsumerWidget implements PreferredSizeWidget {
             child: CategorySearchBar(
               searchWidth: 320,
               categories: categoriesAsync.value ?? [],
+              brands: brandsAsync.value ?? [],
               selectedCategory: filter.category,
+              selectedBrand: filter.brand,
               searchQuery: filter.search,
               onCategoryChanged: (c) => ref.read(productFilterProvider.notifier).setCategory(c),
+              onBrandChanged: (b) => ref.read(productFilterProvider.notifier).setBrand(b),
               onSearchChanged: (s) => ref.read(productFilterProvider.notifier).setSearch(s),
             ),
           ),

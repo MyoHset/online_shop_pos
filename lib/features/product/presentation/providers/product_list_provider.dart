@@ -36,15 +36,16 @@ class ProductList extends _$ProductList {
   @override
   Future<List<Product>> build() {
     final filter = ref.watch(productFilterProvider);
-    return _fetchProducts(filter.search, filter.category);
+    return _fetchProducts(filter.search, filter.category, filter.brand);
   }
 
-  Future<List<Product>> _fetchProducts(String search, String? category) {
+  Future<List<Product>> _fetchProducts(String search, String? category, String? brand) {
     final useCase = ref.read(getProductsUseCaseProvider);
     final shopId = ref.watch(authControllerProvider).value?.shopId;
     return useCase(
       searchQuery: search,
       category: category,
+      brand: brand,
       shopId: shopId,
     ).then(
       (result) => result.fold(
@@ -58,6 +59,6 @@ class ProductList extends _$ProductList {
   Future<void> refresh() async {
     state = const AsyncLoading();
     final filter = ref.read(productFilterProvider);
-    state = await AsyncValue.guard(() => _fetchProducts(filter.search, filter.category));
+    state = await AsyncValue.guard(() => _fetchProducts(filter.search, filter.category, filter.brand));
   }
 }

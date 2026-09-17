@@ -26,6 +26,7 @@ Future<List<Product>> quickSaleProductList(Ref ref) async {
   final result = await useCase(
     searchQuery: filter.search,
     category: filter.category,
+    brand: filter.brand,
     shopId: shopId,
   );
   

@@ -87,7 +87,7 @@ final class QuickSaleProductListProvider extends $FunctionalProvider<
 }
 
 String _$quickSaleProductListHash() =>
-    r'b69ef8d24785eb418c0d2410be5ea6593ba2c7d3';
+    r'045d02a39789f210643525b1a24f4dc466947920';
 
 @ProviderFor(QuickSale)
 const quickSaleProvider = QuickSaleProvider._();

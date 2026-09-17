@@ -15,6 +15,7 @@ const quickSaleFilterProvider = QuickSaleFilterProvider._();
 final class QuickSaleFilterProvider extends $NotifierProvider<
     QuickSaleFilter,
     ({
+      String? brand,
       String? category,
       String search,
     })> {
@@ -39,6 +40,7 @@ final class QuickSaleFilterProvider extends $NotifierProvider<
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(
       ({
+        String? brand,
         String? category,
         String search,
       }) value) {
@@ -46,6 +48,7 @@ final class QuickSaleFilterProvider extends $NotifierProvider<
       origin: this,
       providerOverride: $SyncValueProvider<
           ({
+            String? brand,
             String? category,
             String search,
           })>(value),
@@ -53,14 +56,16 @@ final class QuickSaleFilterProvider extends $NotifierProvider<
   }
 }
 
-String _$quickSaleFilterHash() => r'7b78e7926ce35fb1ae448ce99b8e228a84c89deb';
+String _$quickSaleFilterHash() => r'2a97ef1152ffc608fd56aa23361de8e939a1cd3d';
 
 abstract class _$QuickSaleFilter extends $Notifier<
     ({
+      String? brand,
       String? category,
       String search,
     })> {
   ({
+    String? brand,
     String? category,
     String search,
   }) build();
@@ -70,24 +75,29 @@ abstract class _$QuickSaleFilter extends $Notifier<
     final created = build();
     final ref = this.ref as $Ref<
         ({
+          String? brand,
           String? category,
           String search,
         }),
         ({
+          String? brand,
           String? category,
           String search,
         })>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<
             ({
+              String? brand,
               String? category,
               String search,
             }),
             ({
+              String? brand,
               String? category,
               String search,
             })>,
         ({
+          String? brand,
           String? category,
           String search,
         }),

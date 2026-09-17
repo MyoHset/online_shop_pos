@@ -7,6 +7,7 @@ import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/category_search_bar.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/domain/entities/variant.dart';
+import '../../../product/presentation/providers/product_brands_provider.dart';
 import '../../../product/presentation/providers/product_categories_provider.dart';
 import '../../domain/entities/cart_item.dart';
 import '../providers/quick_sale_filter_provider.dart';
@@ -50,17 +51,21 @@ class QuickSaleScreen extends ConsumerWidget {
             ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(100),
+          preferredSize: const Size.fromHeight(170),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Builder(builder: (ctx) {
               final categoriesAsync = ref.watch(productCategoriesProvider);
+              final brandsAsync = ref.watch(productBrandsProvider);
               final filter = ref.watch(quickSaleFilterProvider);
               return CategorySearchBar(
                 categories: categoriesAsync.value ?? [],
+                brands: brandsAsync.value ?? [],
                 selectedCategory: filter.category,
+                selectedBrand: filter.brand,
                 searchQuery: filter.search,
                 onCategoryChanged: (c) => ref.read(quickSaleFilterProvider.notifier).setCategory(c),
+                onBrandChanged: (b) => ref.read(quickSaleFilterProvider.notifier).setBrand(b),
                 onSearchChanged: (s) => ref.read(quickSaleFilterProvider.notifier).setSearch(s),
               );
             }),

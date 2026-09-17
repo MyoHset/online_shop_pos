@@ -42,13 +42,12 @@ class ProductRemoteDataSource {
     _logCall('getCategories');
     try {
       final data = await _client
-          .from(SupabaseConstants.productsTable)
+          .from('product_categories')
           .select('category');
       final categories = (data as List)
           .map((e) => e['category'] as String?)
           .where((c) => c != null && c.isNotEmpty)
           .cast<String>()
-          .toSet()
           .toList();
       categories.sort();
       return categories;
@@ -61,9 +60,32 @@ class ProductRemoteDataSource {
     }
   }
 
+  Future<List<String>> getBrands() async {
+    _logCall('getBrands');
+    try {
+      final data = await _client
+          .from('product_brands')
+          .select('brand');
+      final brands = (data as List)
+          .map((e) => e['brand'] as String?)
+          .where((b) => b != null && b.isNotEmpty)
+          .cast<String>()
+          .toList();
+      brands.sort();
+      return brands;
+    } on PostgrestException catch (e, s) {
+      _logError('getBrands', e, s);
+      throw ServerException(e.message);
+    } catch (e, s) {
+      _logError('getBrands', e, s);
+      throw ServerException(e.toString());
+    }
+  }
+
   Future<List<ProductModel>> getProducts({
     String? searchQuery,
     String? category,
+    String? brand,
     String? shopId,
     int page = 0,
     int pageSize = 30,
@@ -71,6 +93,7 @@ class ProductRemoteDataSource {
     _logCall('getProducts', {
       'searchQuery': searchQuery,
       'category': category,
+      'brand': brand,
       'shopId': shopId,
       'page': page,
       'pageSize': pageSize,
@@ -89,6 +112,9 @@ class ProductRemoteDataSource {
       }
       if (category != null && category.isNotEmpty) {
         query = query.eq('category', category);
+      }
+      if (brand != null && brand.isNotEmpty) {
+        query = query.eq('brand', brand);
       }
 
       final data = await query

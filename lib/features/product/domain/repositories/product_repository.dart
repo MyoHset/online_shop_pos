@@ -14,6 +14,7 @@ abstract interface class ProductRepository {
   Future<Either<Failure, List<Product>>> getProducts({
     String? searchQuery,
     String? category,
+    String? brand,
     String? shopId,
     int page = 0,
     int pageSize = 30,
@@ -21,6 +22,9 @@ abstract interface class ProductRepository {
 
   /// Returns a list of distinct categories for the current shop.
   Future<Either<Failure, List<String>>> getCategories();
+
+  /// Returns a list of distinct brands for the current shop.
+  Future<Either<Failure, List<String>>> getBrands();
 
   /// Returns a single product with all its variants and variant images.
   Future<Either<Failure, Product>> getProductById(String id);

@@ -12,6 +12,7 @@ class GetProducts {
   Future<Either<Failure, List<Product>>> call({
     String? searchQuery,
     String? category,
+    String? brand,
     String? shopId,
     int page = 0,
     int pageSize = 30,
@@ -19,6 +20,7 @@ class GetProducts {
       _repository.getProducts(
         searchQuery: searchQuery,
         category: category,
+        brand: brand,
         shopId: shopId,
         page: page,
         pageSize: pageSize,

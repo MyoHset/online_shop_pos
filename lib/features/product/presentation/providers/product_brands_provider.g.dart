@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'product_categories_provider.dart';
+part of 'product_brands_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,25 +9,25 @@ part of 'product_categories_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(productCategories)
-const productCategoriesProvider = ProductCategoriesProvider._();
+@ProviderFor(productBrands)
+const productBrandsProvider = ProductBrandsProvider._();
 
-final class ProductCategoriesProvider extends $FunctionalProvider<
+final class ProductBrandsProvider extends $FunctionalProvider<
         AsyncValue<List<String>>, List<String>, FutureOr<List<String>>>
     with $FutureModifier<List<String>>, $FutureProvider<List<String>> {
-  const ProductCategoriesProvider._()
+  const ProductBrandsProvider._()
       : super(
           from: null,
           argument: null,
           retry: null,
-          name: r'productCategoriesProvider',
+          name: r'productBrandsProvider',
           isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
 
   @override
-  String debugGetCreateSourceHash() => _$productCategoriesHash();
+  String debugGetCreateSourceHash() => _$productBrandsHash();
 
   @$internal
   @override
@@ -37,8 +37,8 @@ final class ProductCategoriesProvider extends $FunctionalProvider<
 
   @override
   FutureOr<List<String>> create(Ref ref) {
-    return productCategories(ref);
+    return productBrands(ref);
   }
 }
 
-String _$productCategoriesHash() => r'bf0e481a93caedcb034f6ed65a66a9cd405e4607';
+String _$productBrandsHash() => r'3dd59997097ac3e9d9159d84d8f3275af507c996';

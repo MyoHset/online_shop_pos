@@ -15,6 +15,7 @@ const orderItemPickerFilterProvider = OrderItemPickerFilterProvider._();
 final class OrderItemPickerFilterProvider extends $NotifierProvider<
     OrderItemPickerFilter,
     ({
+      String? brand,
       String? category,
       String search,
     })> {
@@ -39,6 +40,7 @@ final class OrderItemPickerFilterProvider extends $NotifierProvider<
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(
       ({
+        String? brand,
         String? category,
         String search,
       }) value) {
@@ -46,6 +48,7 @@ final class OrderItemPickerFilterProvider extends $NotifierProvider<
       origin: this,
       providerOverride: $SyncValueProvider<
           ({
+            String? brand,
             String? category,
             String search,
           })>(value),
@@ -54,14 +57,16 @@ final class OrderItemPickerFilterProvider extends $NotifierProvider<
 }
 
 String _$orderItemPickerFilterHash() =>
-    r'c179b19045c528a6997069c45dd8356b6df830cd';
+    r'c62732c2dd933dec73170d847178bf70de2f4b83';
 
 abstract class _$OrderItemPickerFilter extends $Notifier<
     ({
+      String? brand,
       String? category,
       String search,
     })> {
   ({
+    String? brand,
     String? category,
     String search,
   }) build();
@@ -71,24 +76,29 @@ abstract class _$OrderItemPickerFilter extends $Notifier<
     final created = build();
     final ref = this.ref as $Ref<
         ({
+          String? brand,
           String? category,
           String search,
         }),
         ({
+          String? brand,
           String? category,
           String search,
         })>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<
             ({
+              String? brand,
               String? category,
               String search,
             }),
             ({
+              String? brand,
               String? category,
               String search,
             })>,
         ({
+          String? brand,
           String? category,
           String search,
         }),

@@ -23,6 +23,7 @@ Future<List<Product>> orderCreateProductList(Ref ref) async {
   final result = await useCase(
     searchQuery: filter.search,
     category: filter.category,
+    brand: filter.brand,
     shopId: shopId,
   );
   
