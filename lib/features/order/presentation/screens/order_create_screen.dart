@@ -8,6 +8,7 @@ import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/category_search_bar.dart';
+import '../../../../core/widgets/search_text_field.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/domain/entities/variant.dart';
 import '../../../product/presentation/providers/product_brands_provider.dart';
@@ -104,6 +105,7 @@ class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
+          if (isDesktop) const _DesktopSearchAction(),
           if (!isLargeScreen) // On mobile, show cart button
             IconButton(
               icon: const Icon(Icons.shopping_cart_outlined),
@@ -128,16 +130,25 @@ class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
                 );
               },
             ),
+          const SizedBox(width: 16),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(170),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: AppColors.slate200, height: 1),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Top Search and Filter Bar
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Builder(builder: (ctx) {
               final categoriesAsync = ref.watch(productCategoriesProvider);
               final brandsAsync = ref.watch(productBrandsProvider);
               final filter = ref.watch(orderItemPickerFilterProvider);
               return CategorySearchBar(
+                showSearchField: !isDesktop,
                 categories: categoriesAsync.value ?? [],
                 brands: brandsAsync.value ?? [],
                 selectedCategory: filter.category,
@@ -149,9 +160,10 @@ class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
               );
             }),
           ),
-        ),
-      ),
-      body: Row(
+          Container(height: 1, color: AppColors.slate200),
+          // Main Content
+          Expanded(
+            child: Row(
         children: [
           // Left Side: Product Grid
           Expanded(
@@ -172,6 +184,62 @@ class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
               ),
             ),
           ],
+        ],
+      ),
+    ),
+  ],
+),
+    );
+  }
+}
+
+class _DesktopSearchAction extends ConsumerStatefulWidget {
+  const _DesktopSearchAction();
+
+  @override
+  ConsumerState<_DesktopSearchAction> createState() => _DesktopSearchActionState();
+}
+
+class _DesktopSearchActionState extends ConsumerState<_DesktopSearchAction> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final filter = ref.watch(orderItemPickerFilterProvider);
+
+    if (!_expanded) {
+      return IconButton(
+        icon: const Icon(Icons.search),
+        tooltip: 'Search',
+        onPressed: () {
+          setState(() {
+            _expanded = true;
+          });
+        },
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SearchTextField(
+            value: filter.search,
+            onChanged: (s) => ref.read(orderItemPickerFilterProvider.notifier).setSearch(s),
+            width: 300,
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.close),
+            tooltip: 'Close Search',
+            onPressed: () {
+              ref.read(orderItemPickerFilterProvider.notifier).setSearch('');
+              setState(() {
+                _expanded = false;
+              });
+            },
+          ),
         ],
       ),
     );
@@ -204,10 +272,10 @@ class _ProductGridSection extends ConsumerWidget {
               padding: const EdgeInsets.all(24),
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 240, // Nice grid size
+                  maxCrossAxisExtent: 220, // Nice grid size
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  mainAxisExtent: 140, // Height for ProductCard
+                  mainAxisExtent: 220, // Height for ProductCard
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, i) {
@@ -289,38 +357,93 @@ class _VariantSelectionDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        width: 400,
+        width: 420,
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Select Variant', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            Text(product.name, style: const TextStyle(color: AppColors.slate500)),
+            Text(
+              'Select Variant',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.slate900,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              product.name,
+              style: const TextStyle(color: AppColors.slate500, fontSize: 14),
+            ),
             const SizedBox(height: 24),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: variants.map((v) {
-                final price = v.priceOverride ?? product.basePrice;
-                return ActionChip(
-                  label: Text('${v.displayName} — ${CurrencyFormatter.format(price)}'),
-                  backgroundColor: AppColors.slate100,
-                  side: const BorderSide(color: AppColors.slate200),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  onPressed: () => onSelected(v),
-                );
-              }).toList(),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 400),
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: variants.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final v = variants[index];
+                  final price = v.priceOverride ?? product.basePrice;
+                  return InkWell(
+                    onTap: () => onSelected(v),
+                    borderRadius: BorderRadius.circular(12),
+                    splashColor: AppColors.slate100,
+                    highlightColor: AppColors.slate50,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: AppColors.slate200),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              v.displayName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                color: AppColors.slate800,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            CurrencyFormatter.format(price),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: AppColors.slate900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
             const SizedBox(height: 24),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.slate700,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Cancel',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),
           ],

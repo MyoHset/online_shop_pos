@@ -22,12 +22,12 @@ class OrderListScreen extends StatelessWidget {
   }
 }
 
-
 class _OrderListTabbedView extends ConsumerStatefulWidget {
   const _OrderListTabbedView();
 
   @override
-  ConsumerState<_OrderListTabbedView> createState() => _OrderListTabbedViewState();
+  ConsumerState<_OrderListTabbedView> createState() =>
+      _OrderListTabbedViewState();
 }
 
 class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
@@ -78,7 +78,7 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Bottom Row: Filters and Search
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -105,7 +105,7 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
                         ),
                       ],
                     ),
-                    
+
                     // Search and Action
                     Row(
                       children: [
@@ -128,7 +128,9 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
                                 child: TextField(
                                   decoration: InputDecoration(
                                     hintText: 'Search a name, order, or etc',
-                                    hintStyle: TextStyle(fontSize: 13, color: AppColors.slate400),
+                                    hintStyle: TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.slate400),
                                     border: InputBorder.none,
                                     enabledBorder: InputBorder.none,
                                     focusedBorder: InputBorder.none,
@@ -139,7 +141,8 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
                                   style: TextStyle(fontSize: 13),
                                 ),
                               ),
-                              const Icon(Icons.search, size: 18, color: AppColors.slate400),
+                              const Icon(Icons.search,
+                                  size: 18, color: AppColors.slate400),
                             ],
                           ),
                         ),
@@ -158,7 +161,7 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
               ],
             ),
           ),
-          
+
           // ── Grid Content ──
           Expanded(
             child: ordersAsync.when(
@@ -171,9 +174,11 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
                 // Filter Logic
                 List<Order> filteredOrders;
                 if (_selectedFilter == 1) {
-                  filteredOrders = orders.where((o) => o.status.isActive).toList();
+                  filteredOrders =
+                      orders.where((o) => o.status.isActive).toList();
                 } else if (_selectedFilter == 2) {
-                  filteredOrders = orders.where((o) => o.status.isFinal).toList();
+                  filteredOrders =
+                      orders.where((o) => o.status.isFinal).toList();
                 } else {
                   filteredOrders = orders;
                 }
@@ -185,9 +190,11 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
                 return CustomScrollView(
                   slivers: [
                     SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 8),
                       sliver: SliverGrid(
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        gridDelegate:
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 320,
                           mainAxisSpacing: 16,
                           crossAxisSpacing: 16,
@@ -237,10 +244,11 @@ class _FilterChip extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F766E) : Colors.white,
+          color:
+              isSelected ? AppColors.greenNude.withOpacity(0.8) : Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? const Color(0xFF0F766E) : AppColors.slate200,
+            color: isSelected ? AppColors.greenNude : AppColors.slate200,
           ),
         ),
         child: Text(
@@ -248,7 +256,7 @@ class _FilterChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.slate600,
+            color: isSelected ? Colors.black : AppColors.slate600,
           ),
         ),
       ),
@@ -267,7 +275,7 @@ class _EmptyOrdersView extends StatelessWidget {
         : filterState == 2
             ? "No completed orders"
             : "No orders found";
-    
+
     final subtitle = filterState == 1
         ? "You don't have any orders currently processing."
         : filterState == 2

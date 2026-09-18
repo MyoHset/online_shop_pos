@@ -43,18 +43,7 @@ class QuickSaleScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          if (isDesktop)
-            Consumer(builder: (context, ref, child) {
-              final filter = ref.watch(quickSaleFilterProvider);
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: SearchTextField(
-                  value: filter.search,
-                  onChanged: (s) => ref.read(quickSaleFilterProvider.notifier).setSearch(s),
-                  width: 300,
-                ),
-              );
-            }),
+          if (isDesktop) const _DesktopSearchAction(),
           if (!isLargeScreen)
             IconButton(
               icon: Badge(
@@ -149,6 +138,59 @@ class QuickSaleScreen extends ConsumerWidget {
             Expanded(child: _CartSidebar()),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _DesktopSearchAction extends ConsumerStatefulWidget {
+  const _DesktopSearchAction();
+
+  @override
+  ConsumerState<_DesktopSearchAction> createState() => _DesktopSearchActionState();
+}
+
+class _DesktopSearchActionState extends ConsumerState<_DesktopSearchAction> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final filter = ref.watch(quickSaleFilterProvider);
+
+    if (!_expanded) {
+      return IconButton(
+        icon: const Icon(Icons.search),
+        tooltip: 'Search',
+        onPressed: () {
+          setState(() {
+            _expanded = true;
+          });
+        },
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SearchTextField(
+            value: filter.search,
+            onChanged: (s) => ref.read(quickSaleFilterProvider.notifier).setSearch(s),
+            width: 300,
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.close),
+            tooltip: 'Close Search',
+            onPressed: () {
+              ref.read(quickSaleFilterProvider.notifier).setSearch('');
+              setState(() {
+                _expanded = false;
+              });
+            },
+          ),
+        ],
       ),
     );
   }

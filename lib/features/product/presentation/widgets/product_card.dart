@@ -4,32 +4,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../domain/entities/product.dart';
 
-class _StockBadge extends StatelessWidget {
-  const _StockBadge({required this.product});
-
-  final Product product;
-
-  @override
-  Widget build(BuildContext context) {
-    if (product.isOutOfStock) {
-      return const StatusBadge.danger(
-        label: 'Out of stock',
-        size: StatusBadgeSize.small,
-      );
-    }
-    if (product.hasLowStockVariant) {
-      return const StatusBadge.warning(
-        label: 'Low stock',
-        size: StatusBadgeSize.small,
-      );
-    }
-    return const SizedBox.shrink();
-  }
-}
-
-/// Classic minimal product card — for grid layouts.
-/// Consistent with data presentation.
-class ProductCard extends StatefulWidget {
+class ProductCard extends StatelessWidget {
   const ProductCard({
     super.key,
     required this.product,
@@ -40,84 +15,92 @@ class ProductCard extends StatefulWidget {
   final VoidCallback onTap;
 
   @override
-  State<ProductCard> createState() => _ProductCardState();
-}
-
-class _ProductCardState extends State<ProductCard> {
-  bool _hovered = false;
-
-  @override
   Widget build(BuildContext context) {
-    final p = widget.product;
+    // Determine total available stock across variants
+    final availableStock = product.variants
+        .where((v) => v.isActive)
+        .fold(0, (sum, v) => sum + v.availableStock);
+    final isOutOfStock = availableStock <= 0;
+    
+    // Find price range or base price
+    final prices = product.variants
+        .where((v) => v.isActive && v.priceOverride != null)
+        .map((v) => v.priceOverride!)
+        .toList();
+    final priceStr = prices.isEmpty
+        ? CurrencyFormatter.format(product.basePrice)
+        : (prices.length == 1 
+            ? CurrencyFormatter.format(prices.first) 
+            : '${CurrencyFormatter.format(product.basePrice)} - ${CurrencyFormatter.format(prices.reduce((a, b) => a > b ? a : b))}');
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: _hovered ? AppColors.slate50 : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _hovered ? AppColors.slate300 : AppColors.slate200,
-              width: 1,
-            ),
-          ),
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppColors.slate200),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Opacity(
+          opacity: isOutOfStock ? 0.5 : 1.0,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Product Name
-              Text(
-                p.name,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.slate900,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (p.category != null) ...[
-                const SizedBox(height: 2),
-                Text(
-                  p.category!,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.slate500,
+              // Product Image (placeholder for now)
+              Expanded(
+                flex: 3,
+                child: Container(
+                  color: AppColors.slate100,
+                  child: const Center(
+                    child: Icon(Icons.image_outlined, color: AppColors.slate300, size: 40),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-
-              // const Spacer(),
-
-              // Price & Badge
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    CurrencyFormatter.format(p.basePrice),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.slate900,
-                    ),
-                  ),
-                  _StockBadge(product: p),
-                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                '${p.activeVariantCount} var · ${p.totalAvailableStock} stock',
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.slate400,
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        product.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            priceStr,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700, 
+                              color: AppColors.slate900,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isOutOfStock ? AppColors.danger.withValues(alpha: 0.1) : AppColors.success.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              isOutOfStock ? 'Out' : '$availableStock left',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isOutOfStock ? AppColors.danger : AppColors.success,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

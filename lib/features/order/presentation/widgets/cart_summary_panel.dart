@@ -171,7 +171,7 @@ class _PaymentMethodChip extends ConsumerWidget {
       onSelected: (selected) {
         if (selected) notifier.updatePaymentMethod(value);
       },
-      selectedColor: AppColors.greenNude.withValues(alpha: 0.3),
+      selectedColor: AppColors.greenNude,
       labelStyle: TextStyle(
         color: isSelected ? AppColors.slate900 : AppColors.slate600,
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
