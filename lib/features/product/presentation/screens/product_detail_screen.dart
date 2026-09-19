@@ -1,3 +1,6 @@
+import '../../../../core/widgets/permission_gate.dart';
+import '../../../auth/domain/entities/staff_role.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +12,9 @@ import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
 import '../../domain/entities/product.dart';
 import '../providers/product_detail_provider.dart';
+import '../providers/stock_matrix_provider.dart';
 import '../widgets/variant_row.dart';
+import '../widgets/stock_matrix/stock_matrix_table.dart';
 
 /// Product detail screen — full variant list with stock, price, and images.
 /// Responsive: on desktop, opened as a side panel by the list screen; on
@@ -37,72 +42,128 @@ class ProductDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ProductDetailView extends StatelessWidget {
+class _ProductDetailView extends ConsumerWidget {
   const _ProductDetailView({required this.product});
 
   final Product product;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(product.name),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: AppButton(
-              label: 'Edit',
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              variant: AppButtonVariant.secondary,
-              onPressed: () => context.pushNamed(
-                'productEdit',
-                pathParameters: {'id': product.id},
+  Widget build(BuildContext context, WidgetRef ref) {
+    final roleAsync = ref.watch(currentStaffRoleProvider);
+    final canManageProducts = roleAsync.value?.canManageProducts == true;
+
+    return DefaultTabController(
+      length: canManageProducts ? 2 : 1,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(product.name),
+          actions: [
+            PermissionGate(
+              permission: (role) => role.canManageProducts,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: AppButton(
+                  label: 'Edit',
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () => context.pushNamed(
+                    'productEdit',
+                    pathParameters: {'id': product.id},
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-        ],
-      ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: _ProductInfoHeader(product: product),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: _VariantsSectionHeader(productId: product.id),
-            ),
-          ),
-          if (product.variants.isEmpty)
-            const SliverToBoxAdapter(child: _EmptyVariantsView())
-          else
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-              sliver: SliverList.separated(
-                itemCount: product.variants.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final variant = product.variants[index];
-                  return VariantRow(
-                    variant: variant,
-                    basePrice: product.basePrice,
-                    onEdit: () => context.pushNamed(
-                      'variantEdit',
-                      pathParameters: {
-                        'id': product.id,
-                        'variantId': variant.id,
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
-        ],
+            const SizedBox(width: 16),
+          ],
+          bottom: canManageProducts
+              ? const TabBar(
+                  tabs: [
+                    Tab(text: 'Overview'),
+                    Tab(text: 'Stock Matrix'),
+                  ],
+                )
+              : null,
+        ),
+        body: TabBarView(
+          children: [
+            _ProductOverviewTab(product: product),
+            if (canManageProducts)
+              _StockMatrixTab(productId: product.id),
+          ],
+        ),
       ),
     );
   }
 }
+
+class _ProductOverviewTab extends StatelessWidget {
+  const _ProductOverviewTab({required this.product});
+  final Product product;
+  
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: _ProductInfoHeader(product: product),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: _VariantsSectionHeader(productId: product.id),
+          ),
+        ),
+        if (product.variants.isEmpty)
+          const SliverToBoxAdapter(child: _EmptyVariantsView())
+        else
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+            sliver: SliverList.separated(
+              itemCount: product.variants.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final variant = product.variants[index];
+                return VariantRow(
+                  variant: variant,
+                  basePrice: product.basePrice,
+                  onEdit: () => context.pushNamed(
+                    'variantEdit',
+                    pathParameters: {
+                      'id': product.id,
+                      'variantId': variant.id,
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _StockMatrixTab extends ConsumerWidget {
+  const _StockMatrixTab({required this.productId});
+  final String productId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final matrix = ref.watch(stockMatrixProvider(productId));
+
+    if (matrix == null) {
+      return const Center(child: Text('Loading matrix...'));
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 24.0),
+      child: StockMatrixTable(
+        productId: productId,
+        matrix: matrix,
+      ),
+    );
+  }
+}
+
 
 class _ProductInfoHeader extends StatelessWidget {
   const _ProductInfoHeader({required this.product});

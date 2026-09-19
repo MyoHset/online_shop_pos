@@ -32,7 +32,8 @@ class FilterChipList extends StatelessWidget {
                   'All',
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: selected == null ? FontWeight.w600 : FontWeight.w500,
+                    fontWeight:
+                        selected == null ? FontWeight.w600 : FontWeight.w500,
                     color: AppColors.slate900,
                   ),
                 ),
@@ -43,11 +44,14 @@ class FilterChipList extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                   side: BorderSide(
-                    color: selected == null ? AppColors.greenNude : AppColors.slate200,
+                    color: selected == null
+                        ? AppColors.greenNude
+                        : AppColors.slate200,
                     width: 1,
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 onSelected: (_) => onSelected(null),
               ),
             ),
@@ -60,7 +64,8 @@ class FilterChipList extends StatelessWidget {
                     option,
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: AppColors.slate900,
                     ),
                   ),
@@ -71,11 +76,13 @@ class FilterChipList extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
                     side: BorderSide(
-                      color: isSelected ? AppColors.greenNude : AppColors.slate200,
+                      color:
+                          isSelected ? AppColors.greenNude : AppColors.slate200,
                       width: 1,
                     ),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   onSelected: (_) => onSelected(isSelected ? null : option),
                 ),
               );
