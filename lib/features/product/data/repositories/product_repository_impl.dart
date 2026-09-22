@@ -4,6 +4,7 @@ import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/entities/variant.dart';
+import '../../domain/entities/variant_detail.dart';
 import '../../domain/entities/variant_image.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../datasources/product_remote_datasource.dart';
@@ -35,6 +36,40 @@ class ProductRepositoryImpl implements ProductRepository {
     try {
       final brands = await _dataSource.getBrands();
       return right(brands);
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<String>>> getSizes() async {
+    try {
+      final sizes = await _dataSource.getSizes();
+      return right(sizes);
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<VariantDetail>>> browseForCustomer({
+    String? category,
+    String? brand,
+    String? size,
+    int limit = 30,
+  }) async {
+    try {
+      final models = await _dataSource.browseForCustomer(
+        category: category,
+        brand: brand,
+        size: size,
+        limit: limit,
+      );
+      return right(models.map((m) => m.toEntity()).toList());
     } on ServerException catch (e) {
       return left(ServerFailure(e.message));
     } catch (e) {

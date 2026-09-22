@@ -13,6 +13,8 @@ import '../../features/order/presentation/screens/order_detail_screen.dart';
 import '../../features/order/presentation/screens/order_list_screen.dart';
 import '../../features/order/presentation/screens/quick_sale_screen.dart';
 import '../../features/payment/presentation/screens/payment_entry_screen.dart';
+import '../../features/product/presentation/screens/browse_for_customer_screen.dart';
+import '../../features/product/presentation/screens/present_mode_screen.dart';
 import '../../features/product/presentation/screens/product_detail_screen.dart';
 import '../../features/product/presentation/screens/product_form_screen.dart';
 import '../../features/product/presentation/screens/product_list_screen.dart';
@@ -41,6 +43,8 @@ class AppRoutes {
   static const String productVariantNew = '/products/:id/variants/new';
   static const String productVariantEdit =
       '/products/:id/variants/:variantId/edit';
+
+  static const String browseForCustomer = '/browse-for-customer';
 
   static const String quickSale = '/quick-sale';
 
@@ -151,6 +155,18 @@ GoRouter appRouter(Ref ref) {
         path: AppRoutes.forgotPassword,
         name: 'forgotPassword',
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.browseForCustomer,
+        name: 'browseForCustomer',
+        builder: (context, state) => const BrowseForCustomerScreen(),
+        routes: [
+          GoRoute(
+            path: 'present',
+            name: 'presentMode',
+            builder: (context, state) => const PresentModeScreen(),
+          ),
+        ],
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

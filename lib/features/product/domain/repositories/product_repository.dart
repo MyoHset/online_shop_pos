@@ -4,6 +4,7 @@ import '../../../../core/error/failures.dart';
 import '../entities/product.dart';
 import '../entities/variant.dart';
 import '../entities/variant_image.dart';
+import '../entities/variant_detail.dart';
 
 /// Abstract repository interface for product and variant operations.
 ///
@@ -25,6 +26,17 @@ abstract interface class ProductRepository {
 
   /// Returns a list of distinct brands for the current shop.
   Future<Either<Failure, List<String>>> getBrands();
+
+  /// Returns a list of distinct sizes for the current shop.
+  Future<Either<Failure, List<String>>> getSizes();
+
+  /// Returns a curated list of in-stock variants for customer browsing.
+  Future<Either<Failure, List<VariantDetail>>> browseForCustomer({
+    String? category,
+    String? brand,
+    String? size,
+    int limit = 30,
+  });
 
   /// Returns a single product with all its variants and variant images.
   Future<Either<Failure, Product>> getProductById(String id);

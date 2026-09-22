@@ -35,6 +35,11 @@ class ProductListMobileView extends ConsumerWidget {
         actions: [
           const _SearchAction(),
           IconButton(
+            icon: const Icon(Icons.storefront),
+            tooltip: 'Browse for Customer',
+            onPressed: () => context.push('/browse-for-customer'),
+          ),
+          IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add product',
             onPressed: () => context.pushNamed('productNew'),
@@ -101,6 +106,11 @@ class ProductListTabletView extends ConsumerWidget {
         elevation: 0,
         actions: [
           const _SearchAction(),
+          IconButton(
+            icon: const Icon(Icons.storefront),
+            tooltip: 'Browse for Customer',
+            onPressed: () => context.push('/browse-for-customer'),
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add product',
@@ -175,6 +185,11 @@ class ProductListDesktopView extends ConsumerWidget {
         elevation: 0,
         actions: [
           const _SearchAction(),
+          IconButton(
+            icon: const Icon(Icons.storefront),
+            tooltip: 'Browse for Customer',
+            onPressed: () => context.push('/browse-for-customer'),
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add product',

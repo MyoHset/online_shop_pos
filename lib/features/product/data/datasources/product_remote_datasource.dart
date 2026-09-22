@@ -6,6 +6,7 @@ import '../../../../core/error/exceptions.dart';
 import '../models/product_model.dart';
 import '../models/variant_image_model.dart';
 import '../models/variant_model.dart';
+import '../models/variant_detail_model.dart';
 
 /// Remote data source for all product/variant Supabase operations.
 ///
@@ -82,6 +83,28 @@ class ProductRemoteDataSource {
     }
   }
 
+  Future<List<String>> getSizes() async {
+    _logCall('getSizes');
+    try {
+      final data = await _client
+          .from('product_sizes')
+          .select('size');
+      final sizes = (data as List)
+          .map((e) => e['size'] as String?)
+          .where((b) => b != null && b.isNotEmpty)
+          .cast<String>()
+          .toList();
+      sizes.sort();
+      return sizes;
+    } on PostgrestException catch (e, s) {
+      _logError('getSizes', e, s);
+      throw ServerException(e.message);
+    } catch (e, s) {
+      _logError('getSizes', e, s);
+      throw ServerException(e.toString());
+    }
+  }
+
   Future<List<ProductModel>> getProducts({
     String? searchQuery,
     String? category,
@@ -128,6 +151,50 @@ class ProductRemoteDataSource {
       throw ServerException(e.message);
     } catch (e, s) {
       _logError('getProducts', e, s);
+      throw ServerException(e.toString());
+    }
+  }
+
+  Future<List<VariantDetailModel>> browseForCustomer({
+    String? category,
+    String? brand,
+    String? size,
+    int limit = 30,
+  }) async {
+    _logCall('browseForCustomer', {
+      'category': category,
+      'brand': brand,
+      'size': size,
+      'limit': limit,
+    });
+    try {
+      var query = _client
+          .from('variant_details')
+          .select('*')
+          .gt('available_stock', 0);
+
+      if (category != null && category.isNotEmpty) {
+        query = query.eq('category', category);
+      }
+      if (brand != null && brand.isNotEmpty) {
+        query = query.eq('brand', brand);
+      }
+      if (size != null && size.isNotEmpty) {
+        query = query.eq('size', size);
+      }
+
+      final data = await query
+          .order('final_price', ascending: false)
+          .limit(limit);
+
+      return (data as List)
+          .map((json) => VariantDetailModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on PostgrestException catch (e, s) {
+      _logError('browseForCustomer', e, s);
+      throw ServerException(e.message);
+    } catch (e, s) {
+      _logError('browseForCustomer', e, s);
       throw ServerException(e.toString());
     }
   }
