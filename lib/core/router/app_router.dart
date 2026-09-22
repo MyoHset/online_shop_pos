@@ -7,6 +7,7 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/dashboard/presentation/screens/dashboard_home_screen.dart';
 import '../../features/order/presentation/screens/order_create_screen.dart';
 import '../../features/order/presentation/screens/order_detail_screen.dart';
 import '../../features/order/presentation/screens/order_list_screen.dart';
@@ -30,6 +31,8 @@ class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
+
+  static const String dashboard = '/';
 
   static const String products = '/products';
   static const String productNew = '/products/new';
@@ -67,6 +70,12 @@ class _AppShell extends ConsumerWidget {
         icon: Icon(Icons.point_of_sale_outlined),
         selectedIcon: Icon(Icons.point_of_sale),
         route: AppRoutes.quickSale,
+      ),
+      const AppNavDestination(
+        label: 'Dashboard',
+        icon: Icon(Icons.dashboard_outlined),
+        selectedIcon: Icon(Icons.dashboard),
+        route: AppRoutes.dashboard,
       ),
       const AppNavDestination(
         label: 'Products',
@@ -154,6 +163,17 @@ GoRouter appRouter(Ref ref) {
                 path: AppRoutes.quickSale,
                 name: 'quickSale',
                 builder: (context, state) => const QuickSaleScreen(),
+              ),
+            ],
+          ),
+
+          // ── Dashboard branch ─────────────────────────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.dashboard,
+                name: 'dashboard',
+                builder: (context, state) => const DashboardHomeScreen(),
               ),
             ],
           ),
