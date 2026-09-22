@@ -4,43 +4,42 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/responsive/device_type.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../domain/entities/order.dart';
 import '../providers/order_list_provider.dart';
 import '../widgets/order_card.dart';
+import '../widgets/order_status_badge.dart';
 
-/// Order list screen — minimalist design with Active / Completed tabs.
+/// Order list screen — Comprehensive Dashboard / Report UI.
 class OrderListScreen extends StatelessWidget {
   const OrderListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const _OrderListTabbedView();
+    return const _OrderListReportView();
   }
 }
 
-class _OrderListTabbedView extends ConsumerStatefulWidget {
-  const _OrderListTabbedView();
+class _OrderListReportView extends ConsumerStatefulWidget {
+  const _OrderListReportView();
 
   @override
-  ConsumerState<_OrderListTabbedView> createState() =>
-      _OrderListTabbedViewState();
+  ConsumerState<_OrderListReportView> createState() => _OrderListReportViewState();
 }
 
-class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
-  // 0: All, 1: On Process, 2: Completed
-  int _selectedFilter = 1;
+class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
+  int _selectedFilter = 0; // 0: All, 1: On Process, 2: Completed
+  String _searchQuery = '';
+  bool _sortNewestFirst = true;
 
   @override
   Widget build(BuildContext context) {
     final ordersAsync = ref.watch(orderListProvider);
     final theme = Theme.of(context);
-    final isDesktop = DeviceType.from(context) == DeviceType.desktop ||
-        DeviceType.from(context) == DeviceType.large;
-    final crossAxisCount =
-        isDesktop ? 3 : (DeviceType.from(context) == DeviceType.tablet ? 2 : 1);
+    final isDesktop = DeviceType.from(context) == DeviceType.desktop || DeviceType.from(context) == DeviceType.large || DeviceType.from(context) == DeviceType.tablet;
 
     final dateStr = DateFormat('EEEE, d MMMM yyyy').format(DateTime.now());
 
@@ -60,7 +59,7 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'Orders',
+                      'Order Report',
                       style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: AppColors.slate900,
@@ -78,40 +77,19 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
                 ),
                 const SizedBox(height: 24),
 
-                // Bottom Row: Filters and Search
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Bottom Row: Filters and Search (Responsive wrapping)
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.spaceBetween,
                   children: [
-                    // Filter Chips
-                    Row(
+                    // Search and Filter Group
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        _FilterChip(
-                          label: 'All',
-                          isSelected: _selectedFilter == 0,
-                          onTap: () => setState(() => _selectedFilter = 0),
-                        ),
-                        const SizedBox(width: 8),
-                        _FilterChip(
-                          label: 'On Process',
-                          isSelected: _selectedFilter == 1,
-                          onTap: () => setState(() => _selectedFilter = 1),
-                        ),
-                        const SizedBox(width: 8),
-                        _FilterChip(
-                          label: 'Completed',
-                          isSelected: _selectedFilter == 2,
-                          onTap: () => setState(() => _selectedFilter = 2),
-                        ),
-                      ],
-                    ),
-
-                    // Search and Action
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.filter_list),
-                          onPressed: () {}, // Future: filter
-                        ),
+                        // Search Bar
                         Container(
                           width: 240,
                           height: 40,
@@ -123,34 +101,103 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
                           ),
                           child: Row(
                             children: [
-                              const Expanded(
+                              const Icon(Icons.search, size: 18, color: AppColors.slate400),
+                              const SizedBox(width: 8),
+                              Expanded(
                                 child: TextField(
-                                  decoration: InputDecoration(
-                                    hintText: 'Search a name, order, or etc',
-                                    hintStyle: TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors.slate400),
+                                  onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+                                  decoration: const InputDecoration(
+                                    hintText: 'Search order or customer',
+                                    hintStyle: TextStyle(fontSize: 13, color: AppColors.slate400),
                                     border: InputBorder.none,
-                                    enabledBorder: InputBorder.none,
-                                    focusedBorder: InputBorder.none,
-                                    filled: false,
-                                    contentPadding: EdgeInsets.zero,
                                     isDense: true,
+                                    contentPadding: EdgeInsets.zero,
                                   ),
-                                  style: TextStyle(fontSize: 13),
+                                  style: const TextStyle(fontSize: 13),
                                 ),
                               ),
-                              const Icon(Icons.search,
-                                  size: 18, color: AppColors.slate400),
                             ],
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        
+                        // Status Filter Dropdown
+                        Container(
+                          height: 40,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.slate200),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<int>(
+                              value: _selectedFilter,
+                              icon: const Icon(Icons.keyboard_arrow_down, size: 18),
+                              style: const TextStyle(fontSize: 13, color: AppColors.slate700, fontWeight: FontWeight.w500),
+                              items: const [
+                                DropdownMenuItem(value: 0, child: Text('All Statuses')),
+                                DropdownMenuItem(value: 1, child: Text('Active (On Process)')),
+                                DropdownMenuItem(value: 2, child: Text('Completed')),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) setState(() => _selectedFilter = val);
+                              },
+                            ),
+                          ),
+                        ),
+                        
+                        // Date Sort Toggle
+                        InkWell(
+                          onTap: () => setState(() => _sortNewestFirst = !_sortNewestFirst),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            height: 40,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.slate200),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.sort, size: 16, color: AppColors.slate600),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _sortNewestFirst ? 'Newest First' : 'Oldest First',
+                                  style: const TextStyle(fontSize: 13, color: AppColors.slate700, fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        // Refresh Button
+                        IconButton(
+                          icon: const Icon(Icons.refresh, color: AppColors.slate500),
+                          onPressed: () => ref.refresh(orderListProvider.future),
+                          tooltip: 'Refresh',
+                        ),
+                      ],
+                    ),
+
+                    // Actions
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        AppButton(
+                          label: 'Export CSV',
+                          icon: const Icon(Icons.download, size: 16),
+                          variant: AppButtonVariant.secondary,
+                          onPressed: () {
+                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exporting to CSV...')));
+                          },
+                        ),
                         AppButton(
                           label: 'New Order',
                           icon: const Icon(Icons.add, size: 16),
                           variant: AppButtonVariant.primary,
-                          minimumWidth: 120,
                           onPressed: () => context.pushNamed('orderNew'),
                         ),
                       ],
@@ -161,7 +208,7 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
             ),
           ),
 
-          // ── Grid Content ──
+          // ── Data Content ──
           Expanded(
             child: ordersAsync.when(
               loading: () => const SkeletonListLoader(),
@@ -173,48 +220,103 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
                 // Filter Logic
                 List<Order> filteredOrders;
                 if (_selectedFilter == 1) {
-                  filteredOrders =
-                      orders.where((o) => o.status.isActive).toList();
+                  filteredOrders = orders.where((o) => o.status.isActive).toList();
                 } else if (_selectedFilter == 2) {
-                  filteredOrders =
-                      orders.where((o) => o.status.isFinal).toList();
+                  filteredOrders = orders.where((o) => o.status.isFinal).toList();
                 } else {
-                  filteredOrders = orders;
+                  filteredOrders = orders.toList();
                 }
+
+                if (_searchQuery.isNotEmpty) {
+                  filteredOrders = filteredOrders.where((o) {
+                    final cName = o.customerName.toLowerCase();
+                    final id = o.id.toLowerCase();
+                    return cName.contains(_searchQuery) || id.contains(_searchQuery);
+                  }).toList();
+                }
+
+                // Sort Logic
+                filteredOrders.sort((a, b) {
+                  if (_sortNewestFirst) {
+                    return b.createdAt.compareTo(a.createdAt);
+                  } else {
+                    return a.createdAt.compareTo(b.createdAt);
+                  }
+                });
 
                 if (filteredOrders.isEmpty) {
-                  return _EmptyOrdersView(filterState: _selectedFilter);
+                  return const _EmptyOrdersView();
                 }
 
-                return CustomScrollView(
-                  slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 8),
-                      sliver: SliverGrid(
-                        gridDelegate:
-                            const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 320,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          mainAxisExtent: 140, // Height for compact card
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, i) {
-                            return OrderCard(
-                              order: filteredOrders[i],
-                              onTap: () => context.pushNamed(
-                                'orderDetail',
-                                pathParameters: {'id': filteredOrders[i].id},
-                              ),
-                            );
-                          },
-                          childCount: filteredOrders.length,
+                if (isDesktop) {
+                  // Tabular Report View for Desktop
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.slate200),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            headingRowColor: WidgetStateProperty.all(AppColors.slate50),
+                            dataRowMaxHeight: 64,
+                            columns: const [
+                              DataColumn(label: Text('Order ID', style: TextStyle(fontWeight: FontWeight.w600))),
+                              DataColumn(label: Text('Date & Time', style: TextStyle(fontWeight: FontWeight.w600))),
+                              DataColumn(label: Text('Customer', style: TextStyle(fontWeight: FontWeight.w600))),
+                              DataColumn(label: Text('Items', style: TextStyle(fontWeight: FontWeight.w600))),
+                              DataColumn(label: Text('Total', style: TextStyle(fontWeight: FontWeight.w600))),
+                              DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.w600))),
+                              DataColumn(label: Text('Action', style: TextStyle(fontWeight: FontWeight.w600))),
+                            ],
+                            rows: filteredOrders.map((o) {
+                              final date = DateFormat('MMM d, yyyy HH:mm').format(o.createdAt);
+                              final itemCount = o.items.fold(0, (sum, item) => sum + item.quantity);
+                              
+                              return DataRow(
+                                cells: [
+                                  DataCell(Text('#${o.id.substring(0, 8)}', style: const TextStyle(fontWeight: FontWeight.w500, color: AppColors.slate900))),
+                                  DataCell(Text(date, style: const TextStyle(color: AppColors.slate600))),
+                                  DataCell(Text(o.customerName.isEmpty ? 'Walk-in Customer' : o.customerName, style: const TextStyle(color: AppColors.slate800))),
+                                  DataCell(Text('$itemCount items', style: const TextStyle(color: AppColors.slate600))),
+                                  DataCell(Text(CurrencyFormatter.format(o.totalAmount), style: const TextStyle(fontWeight: FontWeight.w600))),
+                                  DataCell(OrderStatusBadge(status: o.status)),
+                                  DataCell(
+                                    AppButton(
+                                      label: 'View',
+                                      variant: AppButtonVariant.secondary,
+                                      onPressed: () => context.pushNamed('orderDetail', pathParameters: {'id': o.id}),
+                                    )
+                                  ),
+                                ]
+                              );
+                            }).toList(),
+                          ),
                         ),
                       ),
                     ),
-                  ],
-                );
+                  );
+                } else {
+                  // Fallback for mobile: standard ListView builder
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredOrders.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, i) {
+                      final o = filteredOrders[i];
+                      return OrderCard(
+                        order: o,
+                        onTap: () => context.pushNamed('orderDetail', pathParameters: {'id': o.id}),
+                      );
+                    },
+                  );
+                }
               },
             ),
           ),
@@ -224,63 +326,11 @@ class _OrderListTabbedViewState extends ConsumerState<_OrderListTabbedView> {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color:
-              isSelected ? AppColors.greenNude.withOpacity(0.8) : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? AppColors.greenNude : AppColors.slate200,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.black : AppColors.slate600,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _EmptyOrdersView extends StatelessWidget {
-  const _EmptyOrdersView({required this.filterState});
-  final int filterState;
+  const _EmptyOrdersView();
 
   @override
   Widget build(BuildContext context) {
-    final title = filterState == 1
-        ? "No active orders"
-        : filterState == 2
-            ? "No completed orders"
-            : "No orders found";
-
-    final subtitle = filterState == 1
-        ? "You don't have any orders currently processing."
-        : filterState == 2
-            ? "You haven't completed any orders yet."
-            : "Your order list is empty.";
-
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -293,9 +343,9 @@ class _EmptyOrdersView extends StatelessWidget {
               color: AppColors.slate200,
             ),
             const SizedBox(height: 32),
-            Text(
-              title,
-              style: const TextStyle(
+            const Text(
+              'No orders found',
+              style: TextStyle(
                 color: AppColors.slate900,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -303,9 +353,9 @@ class _EmptyOrdersView extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: const TextStyle(
+            const Text(
+              'Try adjusting your search or filter criteria.',
+              style: TextStyle(
                 color: AppColors.slate400,
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
