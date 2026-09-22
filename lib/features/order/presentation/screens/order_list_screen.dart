@@ -8,6 +8,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_data_table.dart';
 import '../../domain/entities/order.dart';
 import '../providers/order_list_provider.dart';
 import '../widgets/order_card.dart';
@@ -261,21 +262,18 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            headingRowColor: WidgetStateProperty.all(AppColors.slate50),
-                            dataRowMaxHeight: 64,
-                            columns: const [
-                              DataColumn(label: Text('Order ID', style: TextStyle(fontWeight: FontWeight.w600))),
-                              DataColumn(label: Text('Date & Time', style: TextStyle(fontWeight: FontWeight.w600))),
-                              DataColumn(label: Text('Customer', style: TextStyle(fontWeight: FontWeight.w600))),
-                              DataColumn(label: Text('Items', style: TextStyle(fontWeight: FontWeight.w600))),
-                              DataColumn(label: Text('Total', style: TextStyle(fontWeight: FontWeight.w600))),
-                              DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.w600))),
-                              DataColumn(label: Text('Action', style: TextStyle(fontWeight: FontWeight.w600))),
-                            ],
-                            rows: filteredOrders.map((o) {
+                        child: AppDataTable(
+                          minWidth: 900,
+                          columns: const [
+                            DataColumn(label: Text('Order ID', style: TextStyle(fontWeight: FontWeight.w600))),
+                            DataColumn(label: Text('Date & Time', style: TextStyle(fontWeight: FontWeight.w600))),
+                            DataColumn(label: Text('Customer', style: TextStyle(fontWeight: FontWeight.w600))),
+                            DataColumn(label: Text('Items', style: TextStyle(fontWeight: FontWeight.w600))),
+                            DataColumn(label: Text('Total', style: TextStyle(fontWeight: FontWeight.w600))),
+                            DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.w600))),
+                            DataColumn(label: Text('Action', style: TextStyle(fontWeight: FontWeight.w600))),
+                          ],
+                          rows: filteredOrders.map((o) {
                               final date = DateFormat('MMM d, yyyy HH:mm').format(o.createdAt);
                               final itemCount = o.items.fold(0, (sum, item) => sum + item.quantity);
                               
@@ -300,7 +298,6 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                           ),
                         ),
                       ),
-                    ),
                   );
                 } else {
                   // Fallback for mobile: standard ListView builder
