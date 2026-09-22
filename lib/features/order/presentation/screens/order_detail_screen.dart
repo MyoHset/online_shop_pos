@@ -65,29 +65,64 @@ class _OrderDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        ListView(
-          padding: const EdgeInsets.only(bottom: 120),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 800;
+
+        Widget content;
+        if (isWide) {
+          content = Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 5,
+                child: ListView(
+                  padding: const EdgeInsets.only(bottom: 120),
+                  children: [
+                    _OrderItemsSection(order: order),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: ListView(
+                  padding: const EdgeInsets.only(bottom: 120, top: 16),
+                  children: [
+                    HorizontalStatusTracker(status: order.status),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Divider(height: 32),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: VerticalStatusTimeline(order: order),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        } else {
+          content = ListView(
+            padding: const EdgeInsets.only(bottom: 120),
+            children: [
+              _OrderItemsSection(order: order),
+              HorizontalStatusTracker(status: order.status),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                child: Divider(height: 32),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: VerticalStatusTimeline(order: order),
+              ),
+            ],
+          );
+        }
+
+        return Stack(
           children: [
-            // Order Items Comprehensive List
-            _OrderItemsSection(order: order),
-
-            // Horizontal Progress
-            HorizontalStatusTracker(status: order.status),
-            
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: Divider(height: 32),
-            ),
-
-            // Vertical Timeline
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: VerticalStatusTimeline(order: order),
-            ),
-          ],
-        ),
+            content,
 
         // Admin Bottom Action Bar
         Positioned(
@@ -135,6 +170,8 @@ class _OrderDetailBody extends StatelessWidget {
           ),
         ),
       ],
+    );
+      },
     );
   }
 
