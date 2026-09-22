@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_data_table.dart';
+import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/order.dart';
 import '../providers/order_list_provider.dart';
 import '../widgets/order_card.dart';
@@ -28,7 +29,8 @@ class _OrderListReportView extends ConsumerStatefulWidget {
   const _OrderListReportView();
 
   @override
-  ConsumerState<_OrderListReportView> createState() => _OrderListReportViewState();
+  ConsumerState<_OrderListReportView> createState() =>
+      _OrderListReportViewState();
 }
 
 class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
@@ -40,12 +42,15 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
   Widget build(BuildContext context) {
     final ordersAsync = ref.watch(orderListProvider);
     final theme = Theme.of(context);
-    final isDesktop = DeviceType.from(context) == DeviceType.desktop || DeviceType.from(context) == DeviceType.large || DeviceType.from(context) == DeviceType.tablet;
+    final isDesktop = DeviceType.from(context) == DeviceType.desktop ||
+        DeviceType.from(context) == DeviceType.large ||
+        DeviceType.from(context) == DeviceType.tablet;
 
     final dateStr = DateFormat('EEEE, d MMMM yyyy').format(DateTime.now());
 
     return Scaffold(
       backgroundColor: AppColors.slate50,
+      appBar: const CustomAppBar(titleText: 'Order Management'),
       body: Column(
         children: [
           // ── Dashboard Header ──
@@ -102,14 +107,18 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.search, size: 18, color: AppColors.slate400),
+                              const Icon(Icons.search,
+                                  size: 18, color: AppColors.slate400),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: TextField(
-                                  onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+                                  onChanged: (val) => setState(
+                                      () => _searchQuery = val.toLowerCase()),
                                   decoration: const InputDecoration(
                                     hintText: 'Search order or customer',
-                                    hintStyle: TextStyle(fontSize: 13, color: AppColors.slate400),
+                                    hintStyle: TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.slate400),
                                     border: InputBorder.none,
                                     isDense: true,
                                     contentPadding: EdgeInsets.zero,
@@ -120,7 +129,7 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                             ],
                           ),
                         ),
-                        
+
                         // Status Filter Dropdown
                         Container(
                           height: 40,
@@ -133,23 +142,33 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<int>(
                               value: _selectedFilter,
-                              icon: const Icon(Icons.keyboard_arrow_down, size: 18),
-                              style: const TextStyle(fontSize: 13, color: AppColors.slate700, fontWeight: FontWeight.w500),
+                              icon: const Icon(Icons.keyboard_arrow_down,
+                                  size: 18),
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.slate700,
+                                  fontWeight: FontWeight.w500),
                               items: const [
-                                DropdownMenuItem(value: 0, child: Text('All Statuses')),
-                                DropdownMenuItem(value: 1, child: Text('Active (On Process)')),
-                                DropdownMenuItem(value: 2, child: Text('Completed')),
+                                DropdownMenuItem(
+                                    value: 0, child: Text('All Statuses')),
+                                DropdownMenuItem(
+                                    value: 1,
+                                    child: Text('Active (On Process)')),
+                                DropdownMenuItem(
+                                    value: 2, child: Text('Completed')),
                               ],
                               onChanged: (val) {
-                                if (val != null) setState(() => _selectedFilter = val);
+                                if (val != null)
+                                  setState(() => _selectedFilter = val);
                               },
                             ),
                           ),
                         ),
-                        
+
                         // Date Sort Toggle
                         InkWell(
-                          onTap: () => setState(() => _sortNewestFirst = !_sortNewestFirst),
+                          onTap: () => setState(
+                              () => _sortNewestFirst = !_sortNewestFirst),
                           borderRadius: BorderRadius.circular(8),
                           child: Container(
                             height: 40,
@@ -162,21 +181,29 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.sort, size: 16, color: AppColors.slate600),
+                                const Icon(Icons.sort,
+                                    size: 16, color: AppColors.slate600),
                                 const SizedBox(width: 6),
                                 Text(
-                                  _sortNewestFirst ? 'Newest First' : 'Oldest First',
-                                  style: const TextStyle(fontSize: 13, color: AppColors.slate700, fontWeight: FontWeight.w500),
+                                  _sortNewestFirst
+                                      ? 'Newest First'
+                                      : 'Oldest First',
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.slate700,
+                                      fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
                           ),
                         ),
-                        
+
                         // Refresh Button
                         IconButton(
-                          icon: const Icon(Icons.refresh, color: AppColors.slate500),
-                          onPressed: () => ref.refresh(orderListProvider.future),
+                          icon: const Icon(Icons.refresh,
+                              color: AppColors.slate500),
+                          onPressed: () =>
+                              ref.refresh(orderListProvider.future),
                           tooltip: 'Refresh',
                         ),
                       ],
@@ -192,7 +219,9 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                           icon: const Icon(Icons.download, size: 16),
                           variant: AppButtonVariant.secondary,
                           onPressed: () {
-                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exporting to CSV...')));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Exporting to CSV...')));
                           },
                         ),
                         AppButton(
@@ -221,9 +250,11 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                 // Filter Logic
                 List<Order> filteredOrders;
                 if (_selectedFilter == 1) {
-                  filteredOrders = orders.where((o) => o.status.isActive).toList();
+                  filteredOrders =
+                      orders.where((o) => o.status.isActive).toList();
                 } else if (_selectedFilter == 2) {
-                  filteredOrders = orders.where((o) => o.status.isFinal).toList();
+                  filteredOrders =
+                      orders.where((o) => o.status.isFinal).toList();
                 } else {
                   filteredOrders = orders.toList();
                 }
@@ -232,7 +263,8 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                   filteredOrders = filteredOrders.where((o) {
                     final cName = o.customerName.toLowerCase();
                     final id = o.id.toLowerCase();
-                    return cName.contains(_searchQuery) || id.contains(_searchQuery);
+                    return cName.contains(_searchQuery) ||
+                        id.contains(_searchQuery);
                   }).toList();
                 }
 
@@ -263,41 +295,77 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: AppDataTable(
-                          minWidth: 900,
+                          // minWidth: 900,
                           columns: const [
-                            DataColumn(label: Text('Order ID', style: TextStyle(fontWeight: FontWeight.w600))),
-                            DataColumn(label: Text('Date & Time', style: TextStyle(fontWeight: FontWeight.w600))),
-                            DataColumn(label: Text('Customer', style: TextStyle(fontWeight: FontWeight.w600))),
-                            DataColumn(label: Text('Items', style: TextStyle(fontWeight: FontWeight.w600))),
-                            DataColumn(label: Text('Total', style: TextStyle(fontWeight: FontWeight.w600))),
-                            DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.w600))),
-                            DataColumn(label: Text('Action', style: TextStyle(fontWeight: FontWeight.w600))),
+                            DataColumn(
+                                label: Text('Order ID',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w600))),
+                            DataColumn(
+                                label: Text('Date & Time',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w600))),
+                            DataColumn(
+                                label: Text('Customer',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w600))),
+                            DataColumn(
+                                label: Text('Items',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w600))),
+                            DataColumn(
+                                label: Text('Total',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w600))),
+                            DataColumn(
+                                label: Text('Status',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w600))),
+                            DataColumn(
+                                label: Text('Action',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w600))),
                           ],
                           rows: filteredOrders.map((o) {
-                              final date = DateFormat('MMM d, yyyy HH:mm').format(o.createdAt);
-                              final itemCount = o.items.fold(0, (sum, item) => sum + item.quantity);
-                              
-                              return DataRow(
-                                cells: [
-                                  DataCell(Text('#${o.id.substring(0, 8)}', style: const TextStyle(fontWeight: FontWeight.w500, color: AppColors.slate900))),
-                                  DataCell(Text(date, style: const TextStyle(color: AppColors.slate600))),
-                                  DataCell(Text(o.customerName.isEmpty ? 'Walk-in Customer' : o.customerName, style: const TextStyle(color: AppColors.slate800))),
-                                  DataCell(Text('$itemCount items', style: const TextStyle(color: AppColors.slate600))),
-                                  DataCell(Text(CurrencyFormatter.format(o.totalAmount), style: const TextStyle(fontWeight: FontWeight.w600))),
-                                  DataCell(OrderStatusBadge(status: o.status)),
-                                  DataCell(
-                                    AppButton(
-                                      label: 'View',
-                                      variant: AppButtonVariant.secondary,
-                                      onPressed: () => context.pushNamed('orderDetail', pathParameters: {'id': o.id}),
-                                    )
-                                  ),
-                                ]
-                              );
-                            }).toList(),
-                          ),
+                            final date = DateFormat('MMM d, yyyy HH:mm')
+                                .format(o.createdAt);
+                            final itemCount = o.items
+                                .fold(0, (sum, item) => sum + item.quantity);
+
+                            return DataRow(cells: [
+                              DataCell(Text('#${o.id.substring(0, 8)}',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.slate900))),
+                              DataCell(Text(date,
+                                  style: const TextStyle(
+                                      color: AppColors.slate600))),
+                              DataCell(Text(
+                                  o.customerName.isEmpty
+                                      ? 'Walk-in Customer'
+                                      : o.customerName,
+                                  style: const TextStyle(
+                                      color: AppColors.slate800))),
+                              DataCell(Text('$itemCount items',
+                                  style: const TextStyle(
+                                      color: AppColors.slate600))),
+                              DataCell(Text(
+                                  CurrencyFormatter.format(o.totalAmount),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600))),
+                              DataCell(OrderStatusBadge(status: o.status)),
+                              DataCell(AppButton(
+                                label: 'View',
+                                variant: AppButtonVariant.secondary,
+                                onPressed: () => context.pushNamed(
+                                    'orderDetail',
+                                    pathParameters: {'id': o.id}),
+                              )),
+                            ]);
+                          }).toList(),
                         ),
                       ),
+                    ),
                   );
                 } else {
                   // Fallback for mobile: standard ListView builder
@@ -309,7 +377,8 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                       final o = filteredOrders[i];
                       return OrderCard(
                         order: o,
-                        onTap: () => context.pushNamed('orderDetail', pathParameters: {'id': o.id}),
+                        onTap: () => context.pushNamed('orderDetail',
+                            pathParameters: {'id': o.id}),
                       );
                     },
                   );
