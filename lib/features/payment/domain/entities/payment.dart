@@ -16,9 +16,16 @@ enum PaymentMethod {
         PaymentMethod.bankTransfer => 'Bank Transfer',
       };
 
+  String get value => switch (this) {
+        PaymentMethod.cod => 'cod',
+        PaymentMethod.kbzPay => 'kbz_pay',
+        PaymentMethod.wavePay => 'wave_pay',
+        PaymentMethod.bankTransfer => 'bank_transfer',
+      };
+
   static PaymentMethod fromString(String value) =>
       PaymentMethod.values.firstWhere(
-        (m) => m.name == value,
+        (m) => m.value == value || m.name == value,
         orElse: () => PaymentMethod.cod,
       );
 }

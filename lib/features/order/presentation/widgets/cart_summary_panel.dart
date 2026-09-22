@@ -104,14 +104,14 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: [
+              children: const [
                 _PaymentMethodChip('cod', 'Cash / COD'),
-                const SizedBox(width: 8),
-                _PaymentMethodChip('kbzPay', 'KBZPay'),
-                const SizedBox(width: 8),
-                _PaymentMethodChip('wavePay', 'WavePay'),
-                const SizedBox(width: 8),
-                _PaymentMethodChip('bankTransfer', 'Bank Transfer'),
+                SizedBox(width: 8),
+                _PaymentMethodChip('kbz_pay', 'KBZPay'),
+                SizedBox(width: 8),
+                _PaymentMethodChip('wave_pay', 'WavePay'),
+                SizedBox(width: 8),
+                _PaymentMethodChip('bank_transfer', 'Bank Transfer'),
               ],
             ),
           ),

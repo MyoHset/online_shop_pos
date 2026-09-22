@@ -50,7 +50,26 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
 
     return Scaffold(
       backgroundColor: AppColors.slate50,
-      appBar: const CustomAppBar(titleText: 'Order Management'),
+      appBar: CustomAppBar(
+        title: Text(
+          'Order Report',
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.slate900,
+          ),
+        ),
+        actions: [
+          Text(
+            dateStr,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.slate600,
+            ),
+          ),
+          const SizedBox(width: 16),
+        ],
+      ),
       body: Column(
         children: [
           // ── Dashboard Header ──
@@ -60,28 +79,20 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Top Row: Title and Date
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Order Report',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.slate900,
-                      ),
-                    ),
-                    Text(
-                      dateStr,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.slate600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //   crossAxisAlignment: CrossAxisAlignment.end,
+                //   children: [
+                //     Text(
+                //       'Order Report',
+                //       style: theme.textTheme.headlineMedium?.copyWith(
+                //         fontWeight: FontWeight.w800,
+                //         color: AppColors.slate900,
+                //       ),
+                //     ),
+                //   ],
+                // ),
+                // const SizedBox(height: 24),
 
                 // Bottom Row: Filters and Search (Responsive wrapping)
                 Wrap(

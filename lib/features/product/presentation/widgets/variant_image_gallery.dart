@@ -11,7 +11,8 @@ class VariantImageGallery extends ConsumerStatefulWidget {
   final String variantId;
 
   @override
-  ConsumerState<VariantImageGallery> createState() => _VariantImageGalleryState();
+  ConsumerState<VariantImageGallery> createState() =>
+      _VariantImageGalleryState();
 }
 
 class _VariantImageGalleryState extends ConsumerState<VariantImageGallery> {
@@ -55,7 +56,7 @@ class _VariantImageGalleryState extends ConsumerState<VariantImageGallery> {
             child: ProductImagePlaceholder(),
           );
         }
-        
+
         final isMobile = context.isMobile;
 
         if (isMobile) {
@@ -72,8 +73,11 @@ class _VariantImageGalleryState extends ConsumerState<VariantImageGallery> {
                       images[index].imageUrl,
                       fit: BoxFit.cover,
                       loadingBuilder: (context, child, progress) =>
-                          progress == null ? child : const ProductImageLoadingIndicator(),
-                      errorBuilder: (_, __, ___) => const ProductImagePlaceholder(),
+                          progress == null
+                              ? child
+                              : const ProductImageLoadingIndicator(),
+                      errorBuilder: (_, __, ___) =>
+                          const ProductImagePlaceholder(),
                     );
                   },
                 ),
@@ -93,7 +97,7 @@ class _VariantImageGalleryState extends ConsumerState<VariantImageGallery> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: _selectedIndex == index
-                                ? AppColors.slate900
+                                ? AppColors.greenNude
                                 : Colors.white.withAlpha(128),
                           ),
                         ),
@@ -115,8 +119,9 @@ class _VariantImageGalleryState extends ConsumerState<VariantImageGallery> {
                 child: Image.network(
                   images[_selectedIndex].imageUrl,
                   fit: BoxFit.cover,
-                  loadingBuilder: (context, child, progress) =>
-                      progress == null ? child : const ProductImageLoadingIndicator(),
+                  loadingBuilder: (context, child, progress) => progress == null
+                      ? child
+                      : const ProductImageLoadingIndicator(),
                   errorBuilder: (_, __, ___) => const ProductImagePlaceholder(),
                 ),
               ),
@@ -138,7 +143,9 @@ class _VariantImageGalleryState extends ConsumerState<VariantImageGallery> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: isSelected ? AppColors.slate900 : Colors.transparent,
+                            color: isSelected
+                                ? AppColors.greenNude
+                                : Colors.transparent,
                             width: 2,
                           ),
                         ),
@@ -148,8 +155,11 @@ class _VariantImageGalleryState extends ConsumerState<VariantImageGallery> {
                             images[index].imageUrl,
                             fit: BoxFit.cover,
                             loadingBuilder: (context, child, progress) =>
-                                progress == null ? child : const ProductImageLoadingIndicator(),
-                            errorBuilder: (_, __, ___) => const ProductImagePlaceholder(),
+                                progress == null
+                                    ? child
+                                    : const ProductImageLoadingIndicator(),
+                            errorBuilder: (_, __, ___) =>
+                                const ProductImagePlaceholder(),
                           ),
                         ),
                       ),
