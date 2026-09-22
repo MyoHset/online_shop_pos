@@ -192,4 +192,16 @@ class ProductRepositoryImpl implements ProductRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, List<VariantImage>>> getVariantImages(String variantId) async {
+    try {
+      final models = await _dataSource.getVariantImages(variantId);
+      return right(models.map((m) => m.toEntity()).toList());
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
 }

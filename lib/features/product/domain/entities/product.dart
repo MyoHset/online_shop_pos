@@ -36,4 +36,13 @@ abstract class Product with _$Product {
   /// Whether all active variants are out of stock.
   bool get isOutOfStock =>
       variants.where((v) => v.isActive).every((v) => v.isOutOfStock);
+
+  /// Representative image URL (from the variant with highest available stock).
+  String? get primaryImageUrl {
+    if (variants.isEmpty) return null;
+    final activeVariants = variants.where((v) => v.isActive).toList();
+    if (activeVariants.isEmpty) return null;
+    activeVariants.sort((a, b) => b.availableStock.compareTo(a.availableStock));
+    return activeVariants.first.primaryImageUrl;
+  }
 }

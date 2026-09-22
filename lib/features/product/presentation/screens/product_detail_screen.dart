@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../widgets/variant_image_gallery.dart';
 
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
 import '../../domain/entities/product.dart';
 import '../providers/product_detail_provider.dart';
+import '../widgets/product_image_placeholder.dart';
 import '../widgets/variant_row.dart';
 
 /// Product detail screen — full variant list with stock, price, and images.
@@ -36,6 +38,7 @@ class ProductDetailScreen extends ConsumerWidget {
     );
   }
 }
+
 
 class _ProductDetailView extends StatelessWidget {
   const _ProductDetailView({required this.product});
@@ -65,6 +68,10 @@ class _ProductDetailView extends StatelessWidget {
       ),
       body: CustomScrollView(
         slivers: [
+          if (product.variants.isNotEmpty)
+            SliverToBoxAdapter(
+              child: _VariantGallerySection(product: product),
+            ),
           SliverToBoxAdapter(
             child: _ProductInfoHeader(product: product),
           ),
@@ -98,6 +105,137 @@ class _ProductDetailView extends StatelessWidget {
                 },
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VariantGallerySection extends StatefulWidget {
+  const _VariantGallerySection({required this.product});
+  final Product product;
+
+  @override
+  State<_VariantGallerySection> createState() => _VariantGallerySectionState();
+}
+
+class _VariantGallerySectionState extends State<_VariantGallerySection> {
+  String? _selectedSize;
+  String? _selectedColor;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeDefaultSelection();
+  }
+
+  @override
+  void didUpdateWidget(_VariantGallerySection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.product.id != widget.product.id) {
+      _initializeDefaultSelection();
+    }
+  }
+
+  void _initializeDefaultSelection() {
+    final variants = widget.product.variants.where((v) => v.isActive).toList();
+    if (variants.isEmpty) return;
+    
+    variants.sort((a, b) => b.availableStock.compareTo(a.availableStock));
+    final defaultVariant = variants.first;
+    _selectedSize = defaultVariant.size;
+    _selectedColor = defaultVariant.color;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activeVariants = widget.product.variants.where((v) => v.isActive).toList();
+    if (activeVariants.isEmpty) return const SizedBox.shrink();
+
+    // Find all distinct sizes and colors
+    final sizes = activeVariants.map((v) => v.size).where((s) => s != null && s.isNotEmpty).toSet().toList().cast<String>();
+    final colors = activeVariants.map((v) => v.color).where((c) => c != null && c.isNotEmpty).toSet().toList().cast<String>();
+    sizes.sort();
+    colors.sort();
+
+    // Resolve matching variant
+    final matchedVariant = activeVariants.where((v) => 
+      (sizes.isEmpty || v.size == _selectedSize) && 
+      (colors.isEmpty || v.color == _selectedColor)
+    ).firstOrNull;
+
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (matchedVariant != null)
+            VariantImageGallery(variantId: matchedVariant.id)
+          else
+            const AspectRatio(
+              aspectRatio: 1,
+              child: ProductImagePlaceholder(),
+            ),
+            
+          const SizedBox(height: 24),
+          
+          if (sizes.isNotEmpty) ...[
+            const Text('Size', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.slate700)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: sizes.map((s) {
+                final isSelected = _selectedSize == s;
+                // Check if this size is available with the currently selected color
+                final isAvailable = activeVariants.any((v) => v.size == s && (colors.isEmpty || v.color == _selectedColor));
+                
+                return ChoiceChip(
+                  label: Text(s),
+                  selected: isSelected,
+                  onSelected: isAvailable ? (selected) {
+                    if (selected) setState(() => _selectedSize = s);
+                  } : null,
+                  backgroundColor: isAvailable ? Colors.white : AppColors.slate100,
+                  selectedColor: AppColors.greenNude.withValues(alpha: 0.1),
+                  labelStyle: TextStyle(
+                    color: isSelected ? AppColors.greenNude : (isAvailable ? AppColors.slate700 : AppColors.slate400),
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          if (colors.isNotEmpty) ...[
+            const Text('Color', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.slate700)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: colors.map((c) {
+                final isSelected = _selectedColor == c;
+                // Check if this color is available with the currently selected size
+                final isAvailable = activeVariants.any((v) => v.color == c && (sizes.isEmpty || v.size == _selectedSize));
+                
+                return ChoiceChip(
+                  label: Text(c),
+                  selected: isSelected,
+                  onSelected: isAvailable ? (selected) {
+                    if (selected) setState(() => _selectedColor = c);
+                  } : null,
+                  backgroundColor: isAvailable ? Colors.white : AppColors.slate100,
+                  selectedColor: AppColors.slate900.withValues(alpha: 0.1),
+                  labelStyle: TextStyle(
+                    color: isSelected ? AppColors.slate900 : (isAvailable ? AppColors.slate700 : AppColors.slate400),
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );

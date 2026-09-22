@@ -3,6 +3,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/domain/entities/variant.dart';
+import '../../../product/presentation/widgets/product_thumbnail.dart';
 
 class ProductTileSelectable extends StatelessWidget {
   const ProductTileSelectable({
@@ -48,15 +49,10 @@ class ProductTileSelectable extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Product Image (placeholder for now, you can load from first variant image if any)
+              // Product Image
               Expanded(
                 flex: 3,
-                child: Container(
-                  color: AppColors.slate100,
-                  child: const Center(
-                    child: Icon(Icons.image_outlined, color: AppColors.slate300, size: 40),
-                  ),
-                ),
+                child: ProductThumbnail(imageUrl: product.primaryImageUrl),
               ),
               Expanded(
                 flex: 2,

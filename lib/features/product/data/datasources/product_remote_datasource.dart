@@ -327,4 +327,24 @@ class ProductRemoteDataSource {
     }
   }
 
+  Future<List<VariantImageModel>> getVariantImages(String variantId) async {
+    _logCall('getVariantImages', {'variantId': variantId});
+    try {
+      final data = await _client
+          .from('variant_images')
+          .select('*')
+          .eq('variant_id', variantId)
+          .order('sort_order');
+      return (data as List)
+          .map((json) => VariantImageModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on PostgrestException catch (e, s) {
+      _logError('getVariantImages', e, s);
+      throw ServerException(e.message);
+    } catch (e, s) {
+      _logError('getVariantImages', e, s);
+      throw ServerException(e.toString());
+    }
+  }
+
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
-import '../../../../core/widgets/status_badge.dart';
 import '../../domain/entities/product.dart';
+import 'product_thumbnail.dart';
 
 class ProductCard extends StatelessWidget {
   const ProductCard({
@@ -38,7 +38,7 @@ class ProductCard extends StatelessWidget {
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColors.slate200),
+        side: const BorderSide(color: AppColors.slate200),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -48,15 +48,10 @@ class ProductCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Product Image (placeholder for now)
+              // Product Image
               Expanded(
                 flex: 3,
-                child: Container(
-                  color: AppColors.slate100,
-                  child: const Center(
-                    child: Icon(Icons.image_outlined, color: AppColors.slate300, size: 40),
-                  ),
-                ),
+                child: ProductThumbnail(imageUrl: product.primaryImageUrl),
               ),
               Expanded(
                 flex: 2,

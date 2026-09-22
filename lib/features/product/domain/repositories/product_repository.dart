@@ -73,4 +73,6 @@ abstract interface class ProductRepository {
     bool? isActive,
   });
 
+  /// Fetches all images for a specific variant.
+  Future<Either<Failure, List<VariantImage>>> getVariantImages(String variantId);
 }
