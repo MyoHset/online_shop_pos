@@ -21,7 +21,7 @@ mixin _$Order {
   String? get customerAddress;
   OrderStatus get status;
   double get totalAmount;
-  String get orderType;
+  OrderType get orderType;
   DateTime get createdAt;
   DateTime get updatedAt;
   List<OrderItem> get items;
@@ -92,7 +92,7 @@ abstract mixin class $OrderCopyWith<$Res> {
       String? customerAddress,
       OrderStatus status,
       double totalAmount,
-      String orderType,
+      OrderType orderType,
       DateTime createdAt,
       DateTime updatedAt,
       List<OrderItem> items});
@@ -154,7 +154,7 @@ class _$OrderCopyWithImpl<$Res> implements $OrderCopyWith<$Res> {
       orderType: null == orderType
           ? _self.orderType
           : orderType // ignore: cast_nullable_to_non_nullable
-              as String,
+              as OrderType,
       createdAt: null == createdAt
           ? _self.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -272,7 +272,7 @@ extension OrderPatterns on Order {
             String? customerAddress,
             OrderStatus status,
             double totalAmount,
-            String orderType,
+            OrderType orderType,
             DateTime createdAt,
             DateTime updatedAt,
             List<OrderItem> items)?
@@ -322,7 +322,7 @@ extension OrderPatterns on Order {
             String? customerAddress,
             OrderStatus status,
             double totalAmount,
-            String orderType,
+            OrderType orderType,
             DateTime createdAt,
             DateTime updatedAt,
             List<OrderItem> items)
@@ -370,7 +370,7 @@ extension OrderPatterns on Order {
             String? customerAddress,
             OrderStatus status,
             double totalAmount,
-            String orderType,
+            OrderType orderType,
             DateTime createdAt,
             DateTime updatedAt,
             List<OrderItem> items)?
@@ -429,7 +429,7 @@ class _Order implements Order {
   @override
   final double totalAmount;
   @override
-  final String orderType;
+  final OrderType orderType;
   @override
   final DateTime createdAt;
   @override
@@ -511,7 +511,7 @@ abstract mixin class _$OrderCopyWith<$Res> implements $OrderCopyWith<$Res> {
       String? customerAddress,
       OrderStatus status,
       double totalAmount,
-      String orderType,
+      OrderType orderType,
       DateTime createdAt,
       DateTime updatedAt,
       List<OrderItem> items});
@@ -573,7 +573,7 @@ class __$OrderCopyWithImpl<$Res> implements _$OrderCopyWith<$Res> {
       orderType: null == orderType
           ? _self.orderType
           : orderType // ignore: cast_nullable_to_non_nullable
-              as String,
+              as OrderType,
       createdAt: null == createdAt
           ? _self.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable

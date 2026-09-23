@@ -42,6 +42,34 @@ enum OrderStatus {
       );
 }
 
+/// Represents how an order was placed.
+enum OrderType {
+  online,
+  inStore;
+
+  String get displayLabel => switch (this) {
+        OrderType.online => 'Online Order',
+        OrderType.inStore => 'In-Store',
+      };
+
+  String get iconLabel => switch (this) {
+        OrderType.online => '🛒',
+        OrderType.inStore => '🏪',
+      };
+
+  /// DB value stored as snake_case string.
+  String get value => switch (this) {
+        OrderType.online => 'online',
+        OrderType.inStore => 'in_store',
+      };
+
+  static OrderType fromString(String value) =>
+      OrderType.values.firstWhere(
+        (t) => t.value == value || t.name == value,
+        orElse: () => OrderType.online,
+      );
+}
+
 /// Core order entity — pure Dart, no framework or Supabase dependencies.
 @freezed
 abstract class Order with _$Order {
@@ -53,7 +81,7 @@ abstract class Order with _$Order {
     required String? customerAddress,
     required OrderStatus status,
     required double totalAmount,
-    required String orderType,
+    required OrderType orderType,
     required DateTime createdAt,
     required DateTime updatedAt,
     @Default([]) List<OrderItem> items,

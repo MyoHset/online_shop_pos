@@ -85,6 +85,13 @@ class _OrderCardState extends State<OrderCard> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
+              const SizedBox(height: 4),
+              // Order Type Pill
+              _OrderTypeChip(orderType: order.orderType),
+
+              const Spacer(),
+
+              // Bottom Row: Total, Items, Date, and Arrow
               Text(
                 dateStr,
                 style: const TextStyle(
@@ -94,10 +101,7 @@ class _OrderCardState extends State<OrderCard> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-
-              const Spacer(),
-
-              // Bottom Row: Total, Items, and Arrow
+              const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -138,3 +142,38 @@ class _OrderCardState extends State<OrderCard> {
   }
 }
 
+/// Small pill chip showing the order type on cards.
+class _OrderTypeChip extends StatelessWidget {
+  const _OrderTypeChip({required this.orderType});
+  final OrderType orderType;
+
+  @override
+  Widget build(BuildContext context) {
+    final isOnline = orderType == OrderType.online;
+    final bgColor = isOnline ? AppColors.infoBg : AppColors.successBg;
+    final fgColor = isOnline ? AppColors.info : AppColors.success;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(orderType.iconLabel, style: const TextStyle(fontSize: 10)),
+          const SizedBox(width: 4),
+          Text(
+            orderType.displayLabel,
+            style: TextStyle(
+              color: fgColor,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

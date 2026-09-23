@@ -26,8 +26,8 @@ class BrowseForCustomerScreen extends ConsumerWidget {
     final filterState = ref.watch(browseFilterProvider);
     final filterNotifier = ref.read(browseFilterProvider.notifier);
     final resultsAsync = ref.watch(browseResultsProvider);
-    
-    // We can reuse getCategoriesProvider and getBrandsProvider if they were extracted, 
+
+    // We can reuse getCategoriesProvider and getBrandsProvider if they were extracted,
     // but typically we can just fetch them via their respective usecases or providers.
     // For simplicity, using simple FutureProviders if needed, or if they exist in productFilterProvider, but that is private.
     // Let's create local FutureProviders for dropdowns.
@@ -38,7 +38,7 @@ class BrowseForCustomerScreen extends ConsumerWidget {
         titleText: 'Browse for Customer',
         actions: [
           IconButton(
-            icon:  Icon(Icons.arrow_back),
+            icon: Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
           ),
         ],
@@ -57,7 +57,8 @@ class BrowseForCustomerScreen extends ConsumerWidget {
                   children: [
                     const Text(
                       'More Filters',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
@@ -68,22 +69,24 @@ class BrowseForCustomerScreen extends ConsumerWidget {
               ),
               const Divider(height: 1),
               Expanded(
-                child: Consumer(
-                  builder: (context, ref, _) {
-                    final filterState = ref.watch(browseFilterProvider);
-                    final filterNotifier = ref.read(browseFilterProvider.notifier);
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      child: Column(
-                        children: [
-                          _buildCategoryFilter(context, ref, filterState, filterNotifier),
-                          const SizedBox(height: 16),
-                          _buildBrandFilter(context, ref, filterState, filterNotifier),
-                        ],
-                      ),
-                    );
-                  }
-                ),
+                child: Consumer(builder: (context, ref, _) {
+                  final filterState = ref.watch(browseFilterProvider);
+                  final filterNotifier =
+                      ref.read(browseFilterProvider.notifier);
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildCategoryFilter(
+                            context, ref, filterState, filterNotifier),
+                        const SizedBox(height: 16),
+                        _buildBrandFilter(
+                            context, ref, filterState, filterNotifier),
+                      ],
+                    ),
+                  );
+                }),
               ),
             ],
           ),
@@ -103,48 +106,56 @@ class BrowseForCustomerScreen extends ConsumerWidget {
                     child: Stack(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.tune, color: AppColors.slate700),
-                          onPressed: () => Scaffold.of(innerContext).openEndDrawer(),
+                          icon:
+                              const Icon(Icons.tune, color: AppColors.slate700),
+                          onPressed: () =>
+                              Scaffold.of(innerContext).openEndDrawer(),
                         ),
-                      if (filterState.category != null || filterState.brand != null)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: AppColors.danger,
-                              shape: BoxShape.circle,
+                        if (filterState.category != null ||
+                            filterState.brand != null)
+                          Positioned(
+                            right: 8,
+                            top: 8,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: AppColors.danger,
+                                shape: BoxShape.circle,
+                              ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: _buildSizeFilter(context, ref, filterState, filterNotifier),
-                ),
-                if (filterState.category != null || filterState.brand != null || filterState.size != null)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: IconButton(
-                      icon: const Icon(Icons.clear, size: 20, color: AppColors.danger),
-                      onPressed: filterNotifier.clearFilters,
-                      tooltip: 'Clear Filters',
+                      ],
                     ),
                   ),
-              ],
+                  Expanded(
+                    child: _buildSizeFilter(
+                        context, ref, filterState, filterNotifier),
+                  ),
+                  if (filterState.category != null ||
+                      filterState.brand != null ||
+                      filterState.size != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: IconButton(
+                        icon: const Icon(Icons.clear,
+                            size: 20, color: AppColors.danger),
+                        onPressed: filterNotifier.clearFilters,
+                        tooltip: 'Clear Filters',
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
-        ),
-        const Divider(height: 1),
-        // Results
+          const Divider(height: 1),
+          // Results
           Expanded(
             child: resultsAsync.when(
               data: (items) {
                 if (items.isEmpty) {
-                  return const Center(child: Text('No items found for the selected filters.'));
+                  return const Center(
+                      child: Text('No items found for the selected filters.'));
                 }
                 return BrowseResultGrid(items: items);
               },
@@ -153,7 +164,8 @@ class BrowseForCustomerScreen extends ConsumerWidget {
             ),
           ),
           // Action Bar
-          if (resultsAsync.hasValue && (resultsAsync.value?.isNotEmpty ?? false))
+          if (resultsAsync.hasValue &&
+              (resultsAsync.value?.isNotEmpty ?? false))
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -170,10 +182,13 @@ class BrowseForCustomerScreen extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: AppButton(
-                      label: 'Share (${resultsAsync.value!.length > 10 ? 10 : resultsAsync.value!.length})',
+                      label:
+                          'Share (${resultsAsync.value!.length > 10 ? 10 : resultsAsync.value!.length})',
                       variant: AppButtonVariant.secondary,
                       onPressed: () async {
-                        final shopName = ref.read(authControllerProvider).value?.shopName ?? 'Our Shop';
+                        final shopName =
+                            ref.read(authControllerProvider).value?.shopName ??
+                                'Our Shop';
                         await shareTopResults(resultsAsync.value!, shopName);
                       },
                     ),
@@ -195,7 +210,8 @@ class BrowseForCustomerScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCategoryFilter(BuildContext context, WidgetRef ref, BrowseFilterState filterState, BrowseFilter notifier) {
+  Widget _buildCategoryFilter(BuildContext context, WidgetRef ref,
+      BrowseFilterState filterState, BrowseFilter notifier) {
     // Ideally use a provider that caches categories. Let's assume we fetch it via a local FutureProvider.
     return _FilterChips<String>(
       label: 'CATEGORY',
@@ -206,7 +222,8 @@ class BrowseForCustomerScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBrandFilter(BuildContext context, WidgetRef ref, BrowseFilterState filterState, BrowseFilter notifier) {
+  Widget _buildBrandFilter(BuildContext context, WidgetRef ref,
+      BrowseFilterState filterState, BrowseFilter notifier) {
     return _FilterChips<String>(
       label: 'BRAND',
       value: filterState.brand,
@@ -216,7 +233,8 @@ class BrowseForCustomerScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSizeFilter(BuildContext context, WidgetRef ref, BrowseFilterState filterState, BrowseFilter notifier) {
+  Widget _buildSizeFilter(BuildContext context, WidgetRef ref,
+      BrowseFilterState filterState, BrowseFilter notifier) {
     return _FilterChips<String>(
       label: 'SIZE',
       value: filterState.size,
@@ -225,8 +243,6 @@ class BrowseForCustomerScreen extends ConsumerWidget {
       hideLabel: true,
     );
   }
-
-
 }
 
 // Local providers for dropdowns
@@ -272,7 +288,8 @@ class _FilterChips<T> extends ConsumerWidget {
             children: [
               if (!hideLabel)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 20),
                   child: Text(
                     label,
                     style: const TextStyle(
@@ -295,20 +312,28 @@ class _FilterChips<T> extends ConsumerWidget {
                         onTap: () => onChanged(isSelected ? null : item),
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColors.greenNude : Colors.white,
+                            color:
+                                isSelected ? AppColors.greenNude : Colors.white,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: isSelected ? AppColors.greenNude : AppColors.slate300,
+                              color: isSelected
+                                  ? AppColors.greenNude
+                                  : AppColors.slate300,
                             ),
                           ),
                           child: Text(
                             item.toString(),
                             style: TextStyle(
                               fontSize: 13,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                              color: isSelected ? Colors.white : AppColors.slate700,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? Colors.white
+                                  : AppColors.slate700,
                             ),
                           ),
                         ),
@@ -331,12 +356,16 @@ class _FilterChips<T> extends ConsumerWidget {
                         onTap: () => onChanged(isSelected ? null : item),
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColors.greenNude : Colors.white,
+                            color:
+                                isSelected ? AppColors.greenNude : Colors.white,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: isSelected ? AppColors.greenNude : AppColors.slate300,
+                              color: isSelected
+                                  ? AppColors.greenNude
+                                  : AppColors.slate300,
                             ),
                           ),
                           alignment: Alignment.center,
@@ -344,8 +373,12 @@ class _FilterChips<T> extends ConsumerWidget {
                             item.toString(),
                             style: TextStyle(
                               fontSize: 13,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                              color: isSelected ? Colors.white : AppColors.slate700,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? Colors.white
+                                  : AppColors.slate700,
                             ),
                           ),
                         ),

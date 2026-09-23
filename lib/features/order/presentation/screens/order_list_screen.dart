@@ -236,7 +236,7 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                           },
                         ),
                         AppButton(
-                          label: 'New Order',
+                          label: 'Online Order',
                           icon: const Icon(Icons.add, size: 16),
                           variant: AppButtonVariant.primary,
                           onPressed: () => context.pushNamed('orderNew'),

@@ -14,26 +14,28 @@ import '../../../product/domain/entities/variant.dart';
 import '../../../product/presentation/providers/product_brands_provider.dart';
 import '../../../product/presentation/providers/product_categories_provider.dart';
 import '../../../product/presentation/widgets/product_card.dart';
-import '../providers/order_create_provider.dart';
+import '../providers/online_order_provider.dart';
 import '../providers/order_item_picker_filter_provider.dart';
 
-/// POS style single-page order creation screen.
-class OrderCreateScreen extends ConsumerStatefulWidget {
-  const OrderCreateScreen({super.key});
+/// POS style single-page online order creation screen.
+class OnlineOrderScreen extends ConsumerStatefulWidget {
+  const OnlineOrderScreen({super.key});
 
   @override
-  ConsumerState<OrderCreateScreen> createState() => _OrderCreateScreenState();
+  ConsumerState<OnlineOrderScreen> createState() => _OnlineOrderScreenState();
 }
 
-class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
+class _OnlineOrderScreenState extends ConsumerState<OnlineOrderScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
+    _addressCtrl.dispose();
     super.dispose();
   }
 
@@ -60,7 +62,7 @@ class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
 
   void _addVariant(Product p, Variant v, WidgetRef ref) {
     final price = v.priceOverride ?? p.basePrice;
-    ref.read(orderCreateProvider.notifier).addItem(
+    ref.read(onlineOrderProvider.notifier).addItem(
       PendingOrderItem(
         variantId: v.id,
         productName: p.name,
@@ -72,16 +74,17 @@ class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
   }
 
   Future<void> _submitOrder() async {
-    if (!(_formKey.currentState?.validate() ?? true)) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
     
-    final notifier = ref.read(orderCreateProvider.notifier);
-    final state = ref.read(orderCreateProvider);
+    final notifier = ref.read(onlineOrderProvider.notifier);
+    final state = ref.read(onlineOrderProvider);
     
     if (state.items.isEmpty) return;
 
     notifier
       ..updateCustomerName(_nameCtrl.text.trim())
-      ..updateCustomerPhone(_phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim());
+      ..updateCustomerPhone(_phoneCtrl.text.trim())
+      ..updateCustomerAddress(_addressCtrl.text.trim());
       
     final order = await notifier.submit();
     if (order != null && mounted) {
@@ -101,7 +104,7 @@ class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
     return Scaffold(
       backgroundColor: AppColors.slate50,
       appBar: AppBar(
-        title: const Text('New Order'),
+        title: const Text('Online Order'),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -124,6 +127,7 @@ class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
                       formKey: _formKey,
                       nameCtrl: _nameCtrl,
                       phoneCtrl: _phoneCtrl,
+                      addressCtrl: _addressCtrl,
                       onSubmit: _submitOrder,
                     ),
                   ),
@@ -180,6 +184,7 @@ class _OrderCreateScreenState extends ConsumerState<OrderCreateScreen> {
                 formKey: _formKey,
                 nameCtrl: _nameCtrl,
                 phoneCtrl: _phoneCtrl,
+                addressCtrl: _addressCtrl,
                 onSubmit: _submitOrder,
               ),
             ),
@@ -253,13 +258,13 @@ class _ProductGridSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(orderCreateProductListProvider);
+    final productsAsync = ref.watch(onlineOrderProductListProvider);
 
     return productsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => AppErrorWidget(
         message: e.toString(),
-        onRetry: () => ref.refresh(orderCreateProductListProvider.future),
+        onRetry: () => ref.refresh(onlineOrderProductListProvider.future),
       ),
       data: (products) {
         if (products.isEmpty) {
@@ -311,7 +316,7 @@ class _InCartBadgeWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final formState = ref.watch(orderCreateProvider);
+    final formState = ref.watch(onlineOrderProvider);
     // Check if any item in cart matches any variant of this product
     final inCart = formState.items.any((item) => product.variants.any((v) => v.id == item.variantId));
 
@@ -459,18 +464,20 @@ class _CartSidebar extends ConsumerWidget {
     required this.formKey,
     required this.nameCtrl,
     required this.phoneCtrl,
+    required this.addressCtrl,
     required this.onSubmit,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController nameCtrl;
   final TextEditingController phoneCtrl;
+  final TextEditingController addressCtrl;
   final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final formState = ref.watch(orderCreateProvider);
-    final notifier = ref.read(orderCreateProvider.notifier);
+    final formState = ref.watch(onlineOrderProvider);
+    final notifier = ref.read(onlineOrderProvider.notifier);
 
     return Container(
       color: Colors.white,
@@ -487,12 +494,14 @@ class _CartSidebar extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Customer', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                  const Text('Customer Info', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: nameCtrl,
+                    textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
                       hintText: 'Full Name *',
+                      prefixIcon: const Icon(Icons.person_outline, size: 18),
                       isDense: true,
                       filled: true,
                       fillColor: AppColors.slate50,
@@ -504,13 +513,35 @@ class _CartSidebar extends ConsumerWidget {
                   TextFormField(
                     controller: phoneCtrl,
                     keyboardType: TextInputType.phone,
+                    textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
-                      hintText: 'Phone (Optional)',
+                      hintText: 'Phone Number *',
+                      prefixIcon: const Icon(Icons.phone_outlined, size: 18),
                       isDense: true,
                       filled: true,
                       fillColor: AppColors.slate50,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                     ),
+                    validator: Validators.phoneNumber,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: addressCtrl,
+                    keyboardType: TextInputType.streetAddress,
+                    textInputAction: TextInputAction.done,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      hintText: 'Delivery Address *',
+                      prefixIcon: const Padding(
+                        padding: EdgeInsets.only(bottom: 20),
+                        child: Icon(Icons.location_on_outlined, size: 18),
+                      ),
+                      isDense: true,
+                      filled: true,
+                      fillColor: AppColors.slate50,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                    ),
+                    validator: (v) => Validators.required(v, fieldName: 'Delivery Address'),
                   ),
                 ],
               ),
@@ -598,7 +629,7 @@ class _CartSidebar extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 AppButton(
-                  label: 'Confirm Order',
+                  label: 'Confirm Online Order',
                   isLoading: formState.isLoading,
                   minimumWidth: double.infinity,
                   onPressed: formState.items.isEmpty ? null : onSubmit,

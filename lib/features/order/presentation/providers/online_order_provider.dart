@@ -8,14 +8,14 @@ import '../../../product/presentation/providers/product_list_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../product/domain/entities/product.dart';
 
-part 'order_create_provider.g.dart';
+part 'online_order_provider.g.dart';
 
 @riverpod
 CreateOrder createOrderUseCase(Ref ref) =>
     CreateOrder(ref.watch(orderRepositoryProvider));
 
 @riverpod
-Future<List<Product>> orderCreateProductList(Ref ref) async {
+Future<List<Product>> onlineOrderProductList(Ref ref) async {
   final filter = ref.watch(orderItemPickerFilterProvider);
   final useCase = ref.read(getProductsUseCaseProvider);
   final shopId = ref.watch(authControllerProvider).value?.shopId;
@@ -61,9 +61,9 @@ class PendingOrderItem {
       );
 }
 
-/// State for the order creation flow.
-class OrderCreateState {
-  const OrderCreateState({
+/// State for the online order creation flow.
+class OnlineOrderState {
+  const OnlineOrderState({
     this.customerName = '',
     this.customerPhone,
     this.customerAddress,
@@ -82,7 +82,7 @@ class OrderCreateState {
   double get totalAmount =>
       items.fold(0, (sum, item) => sum + item.subtotal);
 
-  OrderCreateState copyWith({
+  OnlineOrderState copyWith({
     String? customerName,
     String? customerPhone,
     String? customerAddress,
@@ -91,7 +91,7 @@ class OrderCreateState {
     String? errorMessage,
     bool clearError = false,
   }) =>
-      OrderCreateState(
+      OnlineOrderState(
         customerName: customerName ?? this.customerName,
         customerPhone: customerPhone ?? this.customerPhone,
         customerAddress: customerAddress ?? this.customerAddress,
@@ -101,11 +101,11 @@ class OrderCreateState {
       );
 }
 
-/// Manages the order creation flow state.
+/// Manages the online order creation flow state.
 @riverpod
-class OrderCreate extends _$OrderCreate {
+class OnlineOrder extends _$OnlineOrder {
   @override
-  OrderCreateState build() => const OrderCreateState();
+  OnlineOrderState build() => const OnlineOrderState();
 
   void updateCustomerName(String v) => state = state.copyWith(customerName: v);
   void updateCustomerPhone(String? v) =>

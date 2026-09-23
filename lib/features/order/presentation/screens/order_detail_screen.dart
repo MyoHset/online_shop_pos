@@ -6,6 +6,8 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
+import '../../../payment/domain/entities/payment.dart';
+import '../../../payment/presentation/providers/payment_provider.dart';
 import '../../domain/entities/order.dart';
 import '../providers/order_detail_provider.dart';
 import '../widgets/horizontal_status_tracker.dart';
@@ -79,7 +81,9 @@ class _OrderDetailBody extends StatelessWidget {
                 child: ListView(
                   padding: const EdgeInsets.only(bottom: 120),
                   children: [
+                    _OrderMetaCard(order: order),
                     _OrderItemsSection(order: order),
+                    _PaymentPanel(orderId: order.id),
                   ],
                 ),
               ),
@@ -106,7 +110,9 @@ class _OrderDetailBody extends StatelessWidget {
           content = ListView(
             padding: const EdgeInsets.only(bottom: 120),
             children: [
+              _OrderMetaCard(order: order),
               _OrderItemsSection(order: order),
+              _PaymentPanel(orderId: order.id),
               HorizontalStatusTracker(status: order.status),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24),
@@ -124,53 +130,53 @@ class _OrderDetailBody extends StatelessWidget {
           children: [
             content,
 
-        // Admin Bottom Action Bar
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: Container(
-            padding: EdgeInsets.only(
-              left: 24,
-              right: 24,
-              top: 16,
-              bottom: 16 + MediaQuery.of(context).padding.bottom,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
+            // Admin Bottom Action Bar
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: EdgeInsets.only(
+                  left: 24,
+                  right: 24,
+                  top: 16,
+                  bottom: 16 + MediaQuery.of(context).padding.bottom,
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: AppButton(
-                    label: 'Payment',
-                    variant: AppButtonVariant.secondary,
-                    onPressed: () => context.pushNamed(
-                      'orderPayment',
-                      pathParameters: {'id': order.id},
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AppButton(
-                    label: 'Update Status',
-                    onPressed: () => _showUpdateStatusModal(context),
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        label: 'Payment',
+                        variant: AppButtonVariant.secondary,
+                        onPressed: () => context.pushNamed(
+                          'orderPayment',
+                          pathParameters: {'id': order.id},
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AppButton(
+                        label: 'Update Status',
+                        onPressed: () => _showUpdateStatusModal(context),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ],
-    );
+          ],
+        );
       },
     );
   }
@@ -226,6 +232,371 @@ class _OrderDetailBody extends StatelessWidget {
   }
 }
 
+// ── Order Meta Card (Type + Customer Info) ──────────────────────────────────
+
+class _OrderMetaCard extends StatelessWidget {
+  const _OrderMetaCard({required this.order});
+  final Order order;
+
+  @override
+  Widget build(BuildContext context) {
+    final isOnline = order.orderType == OrderType.online;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.slate200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Order Type + ID Row
+          Row(
+            children: [
+              _OrderTypeBadge(orderType: order.orderType),
+              const Spacer(),
+              Text(
+                'Order #${order.id.substring(0, 8).toUpperCase()}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.slate500,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(color: AppColors.slate100, height: 1),
+          const SizedBox(height: 16),
+
+          // Customer Info
+          _MetaRow(
+            icon: Icons.person_outline,
+            label: 'Customer',
+            value: order.customerName.isEmpty ? 'Walk-in Customer' : order.customerName,
+          ),
+          if (order.customerPhone != null && order.customerPhone!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _MetaRow(
+              icon: Icons.phone_outlined,
+              label: 'Phone',
+              value: order.customerPhone!,
+            ),
+          ],
+          if (isOnline && order.customerAddress != null && order.customerAddress!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _MetaRow(
+              icon: Icons.location_on_outlined,
+              label: 'Address',
+              value: order.customerAddress!,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderTypeBadge extends StatelessWidget {
+  const _OrderTypeBadge({required this.orderType});
+  final OrderType orderType;
+
+  @override
+  Widget build(BuildContext context) {
+    final isOnline = orderType == OrderType.online;
+    final bgColor = isOnline ? AppColors.infoBg : AppColors.successBg;
+    final fgColor = isOnline ? AppColors.info : AppColors.success;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: fgColor.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(orderType.iconLabel, style: const TextStyle(fontSize: 13)),
+          const SizedBox(width: 6),
+          Text(
+            orderType.displayLabel,
+            style: TextStyle(
+              color: fgColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaRow extends StatelessWidget {
+  const _MetaRow({required this.icon, required this.label, required this.value});
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: AppColors.slate400),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 64,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 13, color: AppColors.slate500),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.slate800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Payment Panel ────────────────────────────────────────────────────────────
+
+class _PaymentPanel extends ConsumerWidget {
+  const _PaymentPanel({required this.orderId});
+  final String orderId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final paymentsAsync = ref.watch(orderPaymentsProvider(orderId));
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.slate200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.payment_outlined, size: 18, color: AppColors.slate700),
+              const SizedBox(width: 8),
+              const Text(
+                'Payment',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.slate900,
+                ),
+              ),
+              const Spacer(),
+              paymentsAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (payments) {
+                  final isPaid = payments.any((p) => p.status == PaymentStatus.paid);
+                  final hasPartial = payments.any((p) => p.status == PaymentStatus.partial);
+                  if (isPaid) return _PaymentStatusPill.paid();
+                  if (hasPartial) return _PaymentStatusPill.partial();
+                  if (payments.isNotEmpty) return _PaymentStatusPill.pending();
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
+          paymentsAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.only(top: 16),
+              child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+            ),
+            error: (e, _) => Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text('Failed to load payments', style: const TextStyle(color: AppColors.danger, fontSize: 13)),
+            ),
+            data: (payments) {
+              if (payments.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: Text(
+                    'No payment recorded yet.',
+                    style: TextStyle(color: AppColors.slate400, fontSize: 13),
+                  ),
+                );
+              }
+              return Column(
+                children: [
+                  const SizedBox(height: 16),
+                  const Divider(color: AppColors.slate100, height: 1),
+                  const SizedBox(height: 12),
+                  ...payments.map((p) => _PaymentMethodRow(payment: p)),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaymentMethodRow extends StatelessWidget {
+  const _PaymentMethodRow({required this.payment});
+  final Payment payment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          _PaymentMethodIcon(method: payment.method),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  payment.method.displayLabel,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.slate800,
+                  ),
+                ),
+                if (payment.paidAt != null)
+                  Text(
+                    _formatDate(payment.paidAt!),
+                    style: const TextStyle(fontSize: 11, color: AppColors.slate400),
+                  ),
+              ],
+            ),
+          ),
+          Text(
+            CurrencyFormatter.format(payment.amount),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.slate900,
+            ),
+          ),
+          const SizedBox(width: 8),
+          _PaymentStatusDot(status: payment.status),
+        ],
+      ),
+    );
+  }
+
+  static String _formatDate(DateTime dt) =>
+      '${dt.day}/${dt.month}/${dt.year}';
+}
+
+class _PaymentMethodIcon extends StatelessWidget {
+  const _PaymentMethodIcon({required this.method});
+  final PaymentMethod method;
+
+  @override
+  Widget build(BuildContext context) {
+    final (IconData icon, Color color) = switch (method) {
+      PaymentMethod.cod => (Icons.money_outlined, AppColors.success),
+      PaymentMethod.kbzPay => (Icons.account_balance_wallet_outlined, const Color(0xFF1565C0)),
+      PaymentMethod.wavePay => (Icons.waves_outlined, const Color(0xFFE65100)),
+      PaymentMethod.bankTransfer => (Icons.account_balance_outlined, AppColors.slate700),
+    };
+
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, size: 18, color: color),
+    );
+  }
+}
+
+class _PaymentStatusDot extends StatelessWidget {
+  const _PaymentStatusDot({required this.status});
+  final PaymentStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final (Color color, String label) = switch (status) {
+      PaymentStatus.paid => (AppColors.success, 'Paid'),
+      PaymentStatus.partial => (AppColors.warning, 'Partial'),
+      PaymentStatus.pending => (AppColors.slate400, 'Pending'),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentStatusPill extends StatelessWidget {
+  const _PaymentStatusPill({required this.label, required this.color});
+  final String label;
+  final Color color;
+
+  factory _PaymentStatusPill.paid() =>
+      const _PaymentStatusPill(label: '✓ Paid', color: AppColors.success);
+  factory _PaymentStatusPill.partial() =>
+      const _PaymentStatusPill(label: '~ Partial', color: AppColors.warning);
+  factory _PaymentStatusPill.pending() =>
+      const _PaymentStatusPill(label: '○ Pending', color: AppColors.slate500);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Order Items Section ──────────────────────────────────────────────────────
+
 class _OrderItemsSection extends StatelessWidget {
   const _OrderItemsSection({required this.order});
   final Order order;
@@ -233,7 +604,7 @@ class _OrderItemsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -249,7 +620,7 @@ class _OrderItemsSection extends StatelessWidget {
               const Text(
                 'Order Summary',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: AppColors.slate900,
                 ),
@@ -257,7 +628,7 @@ class _OrderItemsSection extends StatelessWidget {
               Text(
                 '${order.items.length} items',
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: AppColors.slate500,
                 ),

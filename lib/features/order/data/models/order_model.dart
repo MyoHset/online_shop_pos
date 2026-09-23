@@ -35,7 +35,7 @@ abstract class OrderModel with _$OrderModel {
         customerAddress: customerAddress,
         status: OrderStatus.fromString(status),
         totalAmount: totalAmount,
-        orderType: orderType,
+        orderType: OrderType.fromString(orderType),
         createdAt: createdAt,
         updatedAt: updatedAt,
         items: orderItems.map((i) => i.toEntity()).toList(),

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'order_create_provider.dart';
+part of 'online_order_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -51,25 +51,25 @@ final class CreateOrderUseCaseProvider
 String _$createOrderUseCaseHash() =>
     r'9dc9764568689eb0d127e347722730c47a52609f';
 
-@ProviderFor(orderCreateProductList)
-const orderCreateProductListProvider = OrderCreateProductListProvider._();
+@ProviderFor(onlineOrderProductList)
+const onlineOrderProductListProvider = OnlineOrderProductListProvider._();
 
-final class OrderCreateProductListProvider extends $FunctionalProvider<
+final class OnlineOrderProductListProvider extends $FunctionalProvider<
         AsyncValue<List<Product>>, List<Product>, FutureOr<List<Product>>>
     with $FutureModifier<List<Product>>, $FutureProvider<List<Product>> {
-  const OrderCreateProductListProvider._()
+  const OnlineOrderProductListProvider._()
       : super(
           from: null,
           argument: null,
           retry: null,
-          name: r'orderCreateProductListProvider',
+          name: r'onlineOrderProductListProvider',
           isAutoDispose: true,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
 
   @override
-  String debugGetCreateSourceHash() => _$orderCreateProductListHash();
+  String debugGetCreateSourceHash() => _$onlineOrderProductListHash();
 
   @$internal
   @override
@@ -79,63 +79,63 @@ final class OrderCreateProductListProvider extends $FunctionalProvider<
 
   @override
   FutureOr<List<Product>> create(Ref ref) {
-    return orderCreateProductList(ref);
+    return onlineOrderProductList(ref);
   }
 }
 
-String _$orderCreateProductListHash() =>
+String _$onlineOrderProductListHash() =>
     r'd4e29ba192b5efa0e1bd8ca0587baa092df8dc6d';
 
-/// Manages the order creation flow state.
+/// Manages the online order creation flow state.
 
-@ProviderFor(OrderCreate)
-const orderCreateProvider = OrderCreateProvider._();
+@ProviderFor(OnlineOrder)
+const onlineOrderProvider = OnlineOrderProvider._();
 
-/// Manages the order creation flow state.
-final class OrderCreateProvider
-    extends $NotifierProvider<OrderCreate, OrderCreateState> {
-  /// Manages the order creation flow state.
-  const OrderCreateProvider._()
+/// Manages the online order creation flow state.
+final class OnlineOrderProvider
+    extends $NotifierProvider<OnlineOrder, OnlineOrderState> {
+  /// Manages the online order creation flow state.
+  const OnlineOrderProvider._()
       : super(
           from: null,
           argument: null,
           retry: null,
-          name: r'orderCreateProvider',
+          name: r'onlineOrderProvider',
           isAutoDispose: true,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
 
   @override
-  String debugGetCreateSourceHash() => _$orderCreateHash();
+  String debugGetCreateSourceHash() => _$onlineOrderHash();
 
   @$internal
   @override
-  OrderCreate create() => OrderCreate();
+  OnlineOrder create() => OnlineOrder();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(OrderCreateState value) {
+  Override overrideWithValue(OnlineOrderState value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<OrderCreateState>(value),
+      providerOverride: $SyncValueProvider<OnlineOrderState>(value),
     );
   }
 }
 
-String _$orderCreateHash() => r'2ca3112ed374b17e51caaa73de3d5898fbee9020';
+String _$onlineOrderHash() => r'2ca3112ed374b17e51caaa73de3d5898fbee9020';
 
-/// Manages the order creation flow state.
+/// Manages the online order creation flow state.
 
-abstract class _$OrderCreate extends $Notifier<OrderCreateState> {
-  OrderCreateState build();
+abstract class _$OnlineOrder extends $Notifier<OnlineOrderState> {
+  OnlineOrderState build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<OrderCreateState, OrderCreateState>;
+    final ref = this.ref as $Ref<OnlineOrderState, OnlineOrderState>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<OrderCreateState, OrderCreateState>,
-        OrderCreateState,
+        AnyNotifier<OnlineOrderState, OnlineOrderState>,
+        OnlineOrderState,
         Object?,
         Object?>;
     element.handleValue(ref, created);

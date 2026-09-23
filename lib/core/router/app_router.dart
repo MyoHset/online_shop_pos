@@ -8,7 +8,7 @@ import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_home_screen.dart';
-import '../../features/order/presentation/screens/order_create_screen.dart';
+import '../../features/order/presentation/screens/online_order_screen.dart';
 import '../../features/order/presentation/screens/order_detail_screen.dart';
 import '../../features/order/presentation/screens/order_list_screen.dart';
 import '../../features/order/presentation/screens/quick_sale_screen.dart';
@@ -256,7 +256,7 @@ GoRouter appRouter(Ref ref) {
                   GoRoute(
                     path: 'new',
                     name: 'orderNew',
-                    builder: (context, state) => const OrderCreateScreen(),
+                    builder: (context, state) => const OnlineOrderScreen(),
                   ),
                   GoRoute(
                     path: ':id',
