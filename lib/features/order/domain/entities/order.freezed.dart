@@ -22,6 +22,10 @@ mixin _$Order {
   OrderStatus get status;
   double get totalAmount;
   OrderType get orderType;
+  DiscountType get discountType;
+  double get discountValue;
+  double get discountAmount;
+  String? get discountReason;
   DateTime get createdAt;
   DateTime get updatedAt;
   List<OrderItem> get items;
@@ -51,6 +55,14 @@ mixin _$Order {
                 other.totalAmount == totalAmount) &&
             (identical(other.orderType, orderType) ||
                 other.orderType == orderType) &&
+            (identical(other.discountType, discountType) ||
+                other.discountType == discountType) &&
+            (identical(other.discountValue, discountValue) ||
+                other.discountValue == discountValue) &&
+            (identical(other.discountAmount, discountAmount) ||
+                other.discountAmount == discountAmount) &&
+            (identical(other.discountReason, discountReason) ||
+                other.discountReason == discountReason) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -69,13 +81,17 @@ mixin _$Order {
       status,
       totalAmount,
       orderType,
+      discountType,
+      discountValue,
+      discountAmount,
+      discountReason,
       createdAt,
       updatedAt,
       const DeepCollectionEquality().hash(items));
 
   @override
   String toString() {
-    return 'Order(id: $id, shopId: $shopId, customerName: $customerName, customerPhone: $customerPhone, customerAddress: $customerAddress, status: $status, totalAmount: $totalAmount, orderType: $orderType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items)';
+    return 'Order(id: $id, shopId: $shopId, customerName: $customerName, customerPhone: $customerPhone, customerAddress: $customerAddress, status: $status, totalAmount: $totalAmount, orderType: $orderType, discountType: $discountType, discountValue: $discountValue, discountAmount: $discountAmount, discountReason: $discountReason, createdAt: $createdAt, updatedAt: $updatedAt, items: $items)';
   }
 }
 
@@ -93,6 +109,10 @@ abstract mixin class $OrderCopyWith<$Res> {
       OrderStatus status,
       double totalAmount,
       OrderType orderType,
+      DiscountType discountType,
+      double discountValue,
+      double discountAmount,
+      String? discountReason,
       DateTime createdAt,
       DateTime updatedAt,
       List<OrderItem> items});
@@ -118,6 +138,10 @@ class _$OrderCopyWithImpl<$Res> implements $OrderCopyWith<$Res> {
     Object? status = null,
     Object? totalAmount = null,
     Object? orderType = null,
+    Object? discountType = null,
+    Object? discountValue = null,
+    Object? discountAmount = null,
+    Object? discountReason = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? items = null,
@@ -155,6 +179,22 @@ class _$OrderCopyWithImpl<$Res> implements $OrderCopyWith<$Res> {
           ? _self.orderType
           : orderType // ignore: cast_nullable_to_non_nullable
               as OrderType,
+      discountType: null == discountType
+          ? _self.discountType
+          : discountType // ignore: cast_nullable_to_non_nullable
+              as DiscountType,
+      discountValue: null == discountValue
+          ? _self.discountValue
+          : discountValue // ignore: cast_nullable_to_non_nullable
+              as double,
+      discountAmount: null == discountAmount
+          ? _self.discountAmount
+          : discountAmount // ignore: cast_nullable_to_non_nullable
+              as double,
+      discountReason: freezed == discountReason
+          ? _self.discountReason
+          : discountReason // ignore: cast_nullable_to_non_nullable
+              as String?,
       createdAt: null == createdAt
           ? _self.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -273,6 +313,10 @@ extension OrderPatterns on Order {
             OrderStatus status,
             double totalAmount,
             OrderType orderType,
+            DiscountType discountType,
+            double discountValue,
+            double discountAmount,
+            String? discountReason,
             DateTime createdAt,
             DateTime updatedAt,
             List<OrderItem> items)?
@@ -291,6 +335,10 @@ extension OrderPatterns on Order {
             _that.status,
             _that.totalAmount,
             _that.orderType,
+            _that.discountType,
+            _that.discountValue,
+            _that.discountAmount,
+            _that.discountReason,
             _that.createdAt,
             _that.updatedAt,
             _that.items);
@@ -323,6 +371,10 @@ extension OrderPatterns on Order {
             OrderStatus status,
             double totalAmount,
             OrderType orderType,
+            DiscountType discountType,
+            double discountValue,
+            double discountAmount,
+            String? discountReason,
             DateTime createdAt,
             DateTime updatedAt,
             List<OrderItem> items)
@@ -340,6 +392,10 @@ extension OrderPatterns on Order {
             _that.status,
             _that.totalAmount,
             _that.orderType,
+            _that.discountType,
+            _that.discountValue,
+            _that.discountAmount,
+            _that.discountReason,
             _that.createdAt,
             _that.updatedAt,
             _that.items);
@@ -371,6 +427,10 @@ extension OrderPatterns on Order {
             OrderStatus status,
             double totalAmount,
             OrderType orderType,
+            DiscountType discountType,
+            double discountValue,
+            double discountAmount,
+            String? discountReason,
             DateTime createdAt,
             DateTime updatedAt,
             List<OrderItem> items)?
@@ -388,6 +448,10 @@ extension OrderPatterns on Order {
             _that.status,
             _that.totalAmount,
             _that.orderType,
+            _that.discountType,
+            _that.discountValue,
+            _that.discountAmount,
+            _that.discountReason,
             _that.createdAt,
             _that.updatedAt,
             _that.items);
@@ -399,7 +463,7 @@ extension OrderPatterns on Order {
 
 /// @nodoc
 
-class _Order implements Order {
+class _Order extends Order {
   const _Order(
       {required this.id,
       this.shopId,
@@ -409,10 +473,15 @@ class _Order implements Order {
       required this.status,
       required this.totalAmount,
       required this.orderType,
+      this.discountType = DiscountType.none,
+      this.discountValue = 0.0,
+      this.discountAmount = 0.0,
+      this.discountReason,
       required this.createdAt,
       required this.updatedAt,
       final List<OrderItem> items = const []})
-      : _items = items;
+      : _items = items,
+        super._();
 
   @override
   final String id;
@@ -430,6 +499,17 @@ class _Order implements Order {
   final double totalAmount;
   @override
   final OrderType orderType;
+  @override
+  @JsonKey()
+  final DiscountType discountType;
+  @override
+  @JsonKey()
+  final double discountValue;
+  @override
+  @JsonKey()
+  final double discountAmount;
+  @override
+  final String? discountReason;
   @override
   final DateTime createdAt;
   @override
@@ -469,6 +549,14 @@ class _Order implements Order {
                 other.totalAmount == totalAmount) &&
             (identical(other.orderType, orderType) ||
                 other.orderType == orderType) &&
+            (identical(other.discountType, discountType) ||
+                other.discountType == discountType) &&
+            (identical(other.discountValue, discountValue) ||
+                other.discountValue == discountValue) &&
+            (identical(other.discountAmount, discountAmount) ||
+                other.discountAmount == discountAmount) &&
+            (identical(other.discountReason, discountReason) ||
+                other.discountReason == discountReason) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -487,13 +575,17 @@ class _Order implements Order {
       status,
       totalAmount,
       orderType,
+      discountType,
+      discountValue,
+      discountAmount,
+      discountReason,
       createdAt,
       updatedAt,
       const DeepCollectionEquality().hash(_items));
 
   @override
   String toString() {
-    return 'Order(id: $id, shopId: $shopId, customerName: $customerName, customerPhone: $customerPhone, customerAddress: $customerAddress, status: $status, totalAmount: $totalAmount, orderType: $orderType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items)';
+    return 'Order(id: $id, shopId: $shopId, customerName: $customerName, customerPhone: $customerPhone, customerAddress: $customerAddress, status: $status, totalAmount: $totalAmount, orderType: $orderType, discountType: $discountType, discountValue: $discountValue, discountAmount: $discountAmount, discountReason: $discountReason, createdAt: $createdAt, updatedAt: $updatedAt, items: $items)';
   }
 }
 
@@ -512,6 +604,10 @@ abstract mixin class _$OrderCopyWith<$Res> implements $OrderCopyWith<$Res> {
       OrderStatus status,
       double totalAmount,
       OrderType orderType,
+      DiscountType discountType,
+      double discountValue,
+      double discountAmount,
+      String? discountReason,
       DateTime createdAt,
       DateTime updatedAt,
       List<OrderItem> items});
@@ -537,6 +633,10 @@ class __$OrderCopyWithImpl<$Res> implements _$OrderCopyWith<$Res> {
     Object? status = null,
     Object? totalAmount = null,
     Object? orderType = null,
+    Object? discountType = null,
+    Object? discountValue = null,
+    Object? discountAmount = null,
+    Object? discountReason = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? items = null,
@@ -574,6 +674,22 @@ class __$OrderCopyWithImpl<$Res> implements _$OrderCopyWith<$Res> {
           ? _self.orderType
           : orderType // ignore: cast_nullable_to_non_nullable
               as OrderType,
+      discountType: null == discountType
+          ? _self.discountType
+          : discountType // ignore: cast_nullable_to_non_nullable
+              as DiscountType,
+      discountValue: null == discountValue
+          ? _self.discountValue
+          : discountValue // ignore: cast_nullable_to_non_nullable
+              as double,
+      discountAmount: null == discountAmount
+          ? _self.discountAmount
+          : discountAmount // ignore: cast_nullable_to_non_nullable
+              as double,
+      discountReason: freezed == discountReason
+          ? _self.discountReason
+          : discountReason // ignore: cast_nullable_to_non_nullable
+              as String?,
       createdAt: null == createdAt
           ? _self.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable

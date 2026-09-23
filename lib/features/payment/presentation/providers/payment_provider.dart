@@ -54,7 +54,7 @@ class OrderPayments extends _$OrderPayments {
     state = await AsyncValue.guard(() => _fetch(orderId));
   }
 
-  Future<bool> recordPayment({
+  Future<String?> recordPayment({
     required PaymentMethod method,
     required double amount,
     required PaymentStatus status,
@@ -67,12 +67,12 @@ class OrderPayments extends _$OrderPayments {
       status: status,
     );
     return result.fold(
-      (f) => false,
+      (f) => f.message,
       (payment) {
         state.whenData((list) {
           state = AsyncData([...list, payment]);
         });
-        return true;
+        return null;
       },
     );
   }

@@ -16,6 +16,7 @@ import '../../../product/presentation/providers/product_categories_provider.dart
 import '../../../product/presentation/widgets/product_card.dart';
 import '../providers/online_order_provider.dart';
 import '../providers/order_item_picker_filter_provider.dart';
+import '../widgets/discount_input.dart';
 
 /// POS style single-page online order creation screen.
 class OnlineOrderScreen extends ConsumerStatefulWidget {
@@ -617,6 +618,43 @@ class _CartSidebar extends ConsumerWidget {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Text(formState.errorMessage!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
                   ),
+
+                // Pricing Breakdown
+                if (formState.discount.hasDiscount) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Subtotal',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.slate600,
+                        ),
+                      ),
+                      Text(
+                        CurrencyFormatter.format(formState.subtotal),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.slate800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                DiscountInput(
+                  subtotal: formState.subtotal,
+                  discount: formState.discount,
+                  onApply: (d) async => notifier.updateDiscount(d),
+                  onRemove: () async => notifier.removeDiscount(),
+                ),
+                const SizedBox(height: 12),
+                const Divider(color: AppColors.slate200, height: 1),
+                const SizedBox(height: 14),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

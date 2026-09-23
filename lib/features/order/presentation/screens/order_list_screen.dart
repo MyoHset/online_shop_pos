@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_data_table.dart';
+import '../../../../core/widgets/app_snack_bar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/order.dart';
 import '../providers/order_list_provider.dart';
@@ -230,9 +231,10 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                           icon: const Icon(Icons.download, size: 16),
                           variant: AppButtonVariant.secondary,
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Exporting to CSV...')));
+                            AppSnackBar.showInfo(
+                              context,
+                              'Exporting to CSV...',
+                            );
                           },
                         ),
                         AppButton(

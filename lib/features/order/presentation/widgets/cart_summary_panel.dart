@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../providers/quick_sale_provider.dart';
+import 'discount_input.dart';
 
 class CartSummaryPanel extends ConsumerStatefulWidget {
   const CartSummaryPanel({super.key});
@@ -117,7 +118,43 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
           ),
           const SizedBox(height: 16),
           const Divider(color: AppColors.slate200, height: 1),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
+
+          // Pricing Breakdown
+          if (state.discount.hasDiscount) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Subtotal',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.slate600,
+                  ),
+                ),
+                Text(
+                  CurrencyFormatter.format(state.cart.total),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.slate800,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+
+          DiscountInput(
+            subtotal: state.cart.total,
+            discount: state.discount,
+            onApply: (d) async => notifier.updateDiscount(d),
+            onRemove: () async => notifier.removeDiscount(),
+          ),
+          const SizedBox(height: 12),
+          const Divider(color: AppColors.slate200, height: 1),
+          const SizedBox(height: 14),
 
           // Total
           Row(
@@ -129,7 +166,7 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
                       fontWeight: FontWeight.w600,
                       color: AppColors.slate500)),
               Text(
-                CurrencyFormatter.format(state.cart.total),
+                CurrencyFormatter.format(state.totalAmount),
                 style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,

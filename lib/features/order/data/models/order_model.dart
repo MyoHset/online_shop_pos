@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../domain/entities/discount.dart';
 import '../../domain/entities/order.dart';
 import 'order_item_model.dart';
 
@@ -17,6 +18,10 @@ abstract class OrderModel with _$OrderModel {
     required String status,
     required double totalAmount,
     @Default('online') String orderType,
+    @Default('none') String discountType,
+    @Default(0.0) double discountValue,
+    @Default(0.0) double discountAmount,
+    String? discountReason,
     required DateTime createdAt,
     required DateTime updatedAt,
     @Default([]) List<OrderItemModel> orderItems,
@@ -36,6 +41,10 @@ abstract class OrderModel with _$OrderModel {
         status: OrderStatus.fromString(status),
         totalAmount: totalAmount,
         orderType: OrderType.fromString(orderType),
+        discountType: DiscountType.fromString(discountType),
+        discountValue: discountValue,
+        discountAmount: discountAmount,
+        discountReason: discountReason,
         createdAt: createdAt,
         updatedAt: updatedAt,
         items: orderItems.map((i) => i.toEntity()).toList(),

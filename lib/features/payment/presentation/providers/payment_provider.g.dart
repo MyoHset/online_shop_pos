@@ -272,7 +272,7 @@ final class OrderPaymentsProvider
   }
 }
 
-String _$orderPaymentsHash() => r'620ab17ebda5b5216cdd04c29ecff94f9d6963d7';
+String _$orderPaymentsHash() => r'eee6cb9a3150758ce9e9ef0034af217e0b84d601';
 
 /// Provides all payments for a given order — family + autoDispose.
 

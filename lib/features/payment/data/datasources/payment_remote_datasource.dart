@@ -37,11 +37,11 @@ class PaymentRemoteDataSource {
           .from(SupabaseConstants.paymentsTable)
           .insert({
             'order_id': orderId,
-            'method': method.name,
+            'method': method.value,
             'amount': amount,
             'status': status.name,
             'paid_at': status == PaymentStatus.paid
-                ? DateTime.now().toIso8601String()
+                ? DateTime.now().toUtc().toIso8601String()
                 : null,
           })
           .select()

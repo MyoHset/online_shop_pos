@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/responsive/responsive_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -8,8 +7,8 @@ import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
+import '../../../../core/widgets/app_snack_bar.dart';
 import '../../../../core/widgets/status_badge.dart';
-import '../../../order/domain/entities/order.dart';
 import '../../../order/presentation/providers/order_detail_provider.dart';
 import '../../domain/entities/payment.dart';
 import '../providers/payment_provider.dart';
@@ -339,15 +338,21 @@ class _AddPaymentFormState extends ConsumerState<_AddPaymentForm> {
     setState(() => _isLoading = true);
 
     final amount = double.tryParse(_amountCtrl.text.trim()) ?? 0;
-    final success = await ref
+    final error = await ref
         .read(orderPaymentsProvider(widget.orderId).notifier)
         .recordPayment(method: _method, amount: amount, status: _status);
 
     if (mounted) {
       setState(() => _isLoading = false);
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment recorded')),
+      if (error == null) {
+        AppSnackBar.showSuccess(
+          context,
+          'Payment recorded successfully',
+        );
+      } else {
+        AppSnackBar.showError(
+          context,
+          'Failed to record payment: $error',
         );
       }
     }
@@ -424,26 +429,32 @@ class _PaymentMethodSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: PaymentMethod.values.map((m) {
-        final isSelected = m == selected;
-        return ChoiceChip(
-          label: Text(m.displayLabel),
-          selected: isSelected,
-          onSelected: (_) => onChanged(m),
-          selectedColor: AppColors.slate900,
-          labelStyle: TextStyle(
-            color: isSelected ? Colors.white : AppColors.slate600,
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
-          side: BorderSide(
-            color: isSelected ? AppColors.slate900 : AppColors.slate200,
-          ),
-        );
-      }).toList(),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: PaymentMethod.values.map((m) {
+          final isSelected = m == selected;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(m.displayLabel),
+              selected: isSelected,
+              onSelected: (selected) {
+                if (selected) onChanged(m);
+              },
+              selectedColor: AppColors.greenNude,
+              labelStyle: TextStyle(
+                color: isSelected ? AppColors.slate900 : AppColors.slate600,
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
+              side: BorderSide(
+                color: isSelected ? Colors.transparent : AppColors.slate200,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }

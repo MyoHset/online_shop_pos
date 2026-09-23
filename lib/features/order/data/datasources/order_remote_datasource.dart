@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/supabase_constants.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../domain/entities/discount.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../models/order_model.dart';
@@ -66,6 +67,15 @@ class OrderRemoteDataSource {
     }
   }
 
+  String _parsePostgrestErrorMessage(PostgrestException e) {
+    final msg = e.message.toLowerCase();
+    if (msg.contains('discount') &&
+        (msg.contains('limit') || msg.contains('exceed') || msg.contains('allowed'))) {
+      return 'Discount exceeds your limit — ask a manager';
+    }
+    return e.message;
+  }
+
   /// Creates the order record and uses an atomic RPC to reserve stock.
   ///
   /// The RPC `reserve_stock` is called per item — it checks available stock
@@ -75,14 +85,21 @@ class OrderRemoteDataSource {
     String? customerPhone,
     String? customerAddress,
     required List<OrderItemInput> items,
+    DiscountType discountType = DiscountType.none,
+    double discountValue = 0.0,
+    String? discountReason,
     String? shopId,
   }) async {
     try {
       // Calculate total
-      final total = items.fold<double>(
+      final subtotal = items.fold<double>(
         0,
         (sum, item) => sum + (item.unitPrice * item.quantity),
       );
+      final discountObj = Discount(type: discountType, value: discountValue);
+      final discountAmount = discountObj.calculateAmount(subtotal);
+      final estimatedTotal =
+          (subtotal - discountAmount).clamp(0.0, double.infinity);
 
       // Create the order
       final orderPayload = {
@@ -90,7 +107,11 @@ class OrderRemoteDataSource {
         'customer_phone': customerPhone,
         'customer_address': customerAddress,
         'status': OrderStatus.pending.name,
-        'total_amount': total,
+        'total_amount': estimatedTotal,
+        'discount_type': discountType.value,
+        'discount_value': discountValue,
+        if (discountReason != null && discountReason.isNotEmpty)
+          'discount_reason': discountReason,
         if (shopId != null) 'shop_id': shopId,
       };
       
@@ -148,7 +169,7 @@ class OrderRemoteDataSource {
 
         if (e is PostgrestException) {
           throw StockReservationException(
-            'Order failed: ${e.message}',
+            'Order failed: ${_parsePostgrestErrorMessage(e)}',
           );
         }
         rethrow;
@@ -160,7 +181,7 @@ class OrderRemoteDataSource {
       rethrow;
     } on PostgrestException catch (e, st) {
       AppLogger.logDataError('createOrder_supabase_error', e, stackTrace: st);
-      throw ServerException(e.message);
+      throw ServerException(_parsePostgrestErrorMessage(e));
     } catch (e, st) {
       AppLogger.logDataError('createOrder_unexpected_error', e, stackTrace: st);
       throw ServerException(e.toString());
@@ -172,19 +193,29 @@ class OrderRemoteDataSource {
     String? customerName,
     required List<OrderItemInput> items,
     required String paymentMethod,
+    DiscountType discountType = DiscountType.none,
+    double discountValue = 0.0,
+    String? discountReason,
     String? shopId,
   }) async {
     try {
-      final total = items.fold<double>(
+      final subtotal = items.fold<double>(
         0,
         (sum, item) => sum + (item.unitPrice * item.quantity),
       );
+      final discountObj = Discount(type: discountType, value: discountValue);
+      final discountAmount = discountObj.calculateAmount(subtotal);
+      final finalAmount = (subtotal - discountAmount).clamp(0.0, double.infinity);
 
       final orderPayload = {
         if (customerName != null && customerName.isNotEmpty) 'customer_name': customerName,
         'status': OrderStatus.pending.name,
         'order_type': 'in_store',
-        'total_amount': total,
+        'total_amount': finalAmount,
+        'discount_type': discountType.value,
+        'discount_value': discountValue,
+        if (discountReason != null && discountReason.isNotEmpty)
+          'discount_reason': discountReason,
         if (shopId != null) 'shop_id': shopId,
       };
 
@@ -217,7 +248,7 @@ class OrderRemoteDataSource {
         await _client.from(SupabaseConstants.paymentsTable).insert({
           'order_id': orderId,
           'method': paymentMethod,
-          'amount': total,
+          'amount': finalAmount,
           'status': 'paid',
           'paid_at': DateTime.now().toUtc().toIso8601String(),
         });
@@ -228,7 +259,7 @@ class OrderRemoteDataSource {
             .eq('id', orderId);
 
         if (e is PostgrestException) {
-          throw StockReservationException('Quick sale failed: ${e.message}');
+          throw StockReservationException('Quick sale failed: ${_parsePostgrestErrorMessage(e)}');
         }
         rethrow;
       }
@@ -237,8 +268,46 @@ class OrderRemoteDataSource {
     } on StockReservationException {
       rethrow;
     } on PostgrestException catch (e) {
-      throw ServerException(e.message);
+      throw ServerException(_parsePostgrestErrorMessage(e));
     } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  /// Updates discount fields on an existing order.
+  ///
+  /// The database triggers automatically recompute `discount_amount` and `total_amount`.
+  /// Re-fetches the order afterward to return the authoritative server state.
+  Future<OrderModel> updateOrderDiscount({
+    required String orderId,
+    required DiscountType discountType,
+    required double discountValue,
+    String? discountReason,
+  }) async {
+    try {
+      final updatePayload = <String, dynamic>{
+        'discount_type': discountType.value,
+        'discount_value': discountValue,
+        'discount_reason': discountReason,
+      };
+
+      AppLogger.logEvent('updateOrderDiscount_request', details: {
+        'order_id': orderId,
+        'payload': updatePayload,
+      });
+
+      await _client
+          .from(SupabaseConstants.ordersTable)
+          .update(updatePayload)
+          .eq('id', orderId);
+
+      // Re-fetch to obtain server-calculated discount_amount and total_amount
+      return getOrderById(orderId);
+    } on PostgrestException catch (e, st) {
+      AppLogger.logDataError('updateOrderDiscount_supabase_error', e, stackTrace: st);
+      throw ServerException(_parsePostgrestErrorMessage(e));
+    } catch (e, st) {
+      AppLogger.logDataError('updateOrderDiscount_error', e, stackTrace: st);
       throw ServerException(e.toString());
     }
   }

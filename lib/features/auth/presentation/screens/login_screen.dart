@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/responsive/device_type.dart';
 import '../../../../core/responsive/responsive_extensions.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/widgets/app_snack_bar.dart';
 import '../providers/auth_provider.dart';
 import '../views/login_views.dart';
 import '../widgets/auth_form_field.dart';
@@ -40,25 +41,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login Successful! Redirecting...'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
+        AppSnackBar.showSuccess(
+          context,
+          'Login Successful! Redirecting...',
+          duration: const Duration(seconds: 2),
         );
         context.go(AppRoutes.products);
       } else {
         final authState = ref.read(authControllerProvider);
+        final err = authState.error?.toString() ?? 'Login failed.';
         setState(() {
-          _errorMessage = authState.error?.toString() ?? 'Login failed.';
+          _errorMessage = err;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_errorMessage ?? 'Login failed.'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-          ),
+        AppSnackBar.showError(
+          context,
+          err,
+          duration: const Duration(seconds: 4),
         );
       }
     }

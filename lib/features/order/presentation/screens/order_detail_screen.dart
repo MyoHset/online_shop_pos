@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/responsive/responsive_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -8,8 +9,10 @@ import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
 import '../../../payment/domain/entities/payment.dart';
 import '../../../payment/presentation/providers/payment_provider.dart';
+import '../../domain/entities/discount.dart';
 import '../../domain/entities/order.dart';
 import '../providers/order_detail_provider.dart';
+import '../widgets/discount_input.dart';
 import '../widgets/horizontal_status_tracker.dart';
 import '../widgets/vertical_status_timeline.dart';
 
@@ -182,52 +185,145 @@ class _OrderDetailBody extends StatelessWidget {
   }
 
   void _showUpdateStatusModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) {
-        final nextStatuses = order.status.nextStatuses;
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Update Order Status',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.slate900,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                if (nextStatuses.isEmpty)
-                  const Text('Order is finalized and cannot be updated.')
-                else
-                  ...nextStatuses.map((s) {
-                    final isDanger = s == OrderStatus.cancelled;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: AppButton(
-                        label: isDanger ? 'Cancel Order' : 'Mark as ${s.displayLabel}',
-                        variant: isDanger ? AppButtonVariant.danger : AppButtonVariant.primary,
-                        onPressed: () {
-                          Navigator.pop(context);
-                          if (isDanger) {
-                            onCancel();
-                          } else {
-                            onStatusUpdate(s);
-                          }
-                        },
-                      ),
-                    );
-                  }),
-              ],
+    if (context.isMobile) {
+      showModalBottomSheet<void>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (_) => SafeArea(
+          child: _UpdateStatusModalContent(
+            order: order,
+            onStatusUpdate: onStatusUpdate,
+            onCancel: onCancel,
+            isDialog: false,
+          ),
+        ),
+      );
+    } else {
+      showDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        builder: (_) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: _UpdateStatusModalContent(
+              order: order,
+              onStatusUpdate: onStatusUpdate,
+              onCancel: onCancel,
+              isDialog: true,
             ),
           ),
-        );
-      },
+        ),
+      );
+    }
+  }
+}
+
+class _UpdateStatusModalContent extends StatelessWidget {
+  const _UpdateStatusModalContent({
+    required this.order,
+    required this.onStatusUpdate,
+    required this.onCancel,
+    this.isDialog = false,
+  });
+
+  final Order order;
+  final ValueChanged<OrderStatus> onStatusUpdate;
+  final VoidCallback onCancel;
+  final bool isDialog;
+
+  @override
+  Widget build(BuildContext context) {
+    final nextStatuses = order.status.nextStatuses;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: isDialog
+            ? BorderRadius.circular(16)
+            : const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: isDialog
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ]
+            : null,
+      ),
+      padding: EdgeInsets.fromLTRB(24, isDialog ? 24 : 16, 24, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Drag handle (mobile sheet only)
+          if (!isDialog)
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.slate300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Update Order Status',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.slate900,
+                ),
+              ),
+              IconButton(
+                icon:
+                    const Icon(Icons.close, color: AppColors.slate500, size: 20),
+                onPressed: () => Navigator.of(context).pop(),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          if (nextStatuses.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Order is finalized and cannot be updated.',
+                style: TextStyle(color: AppColors.slate500),
+              ),
+            )
+          else
+            ...nextStatuses.map((s) {
+              final isDanger = s == OrderStatus.cancelled;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: AppButton(
+                  label:
+                      isDanger ? 'Cancel Order' : 'Mark as ${s.displayLabel}',
+                  variant: isDanger
+                      ? AppButtonVariant.danger
+                      : AppButtonVariant.primary,
+                  onPressed: () {
+                    Navigator.pop(context);
+                    if (isDanger) {
+                      onCancel();
+                    } else {
+                      onStatusUpdate(s);
+                    }
+                  },
+                ),
+              );
+            }),
+        ],
+      ),
     );
   }
 }
@@ -597,12 +693,12 @@ class _PaymentStatusPill extends StatelessWidget {
 
 // ── Order Items Section ──────────────────────────────────────────────────────
 
-class _OrderItemsSection extends StatelessWidget {
+class _OrderItemsSection extends ConsumerWidget {
   const _OrderItemsSection({required this.order});
   final Order order;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       padding: const EdgeInsets.all(20),
@@ -637,8 +733,8 @@ class _OrderItemsSection extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           // Table Header
-          Row(
-            children: const [
+          const Row(
+            children: [
               Expanded(
                 flex: 3,
                 child: Text('Item', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.slate500)),
@@ -712,6 +808,51 @@ class _OrderItemsSection extends StatelessWidget {
             );
           }),
           const Divider(height: 24, color: AppColors.slate200),
+
+          // Subtotal
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Subtotal',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.slate600,
+                ),
+              ),
+              Text(
+                CurrencyFormatter.format(order.subtotalAmount),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.slate800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Discount line (interactive if active, read-only if final)
+          DiscountInput(
+            subtotal: order.subtotalAmount,
+            discount: order.discount,
+            readOnly: order.status.isFinal,
+            onApply: (discount) async {
+              await ref
+                  .read(orderDetailProvider(order.id).notifier)
+                  .updateDiscount(discount);
+            },
+            onRemove: () async {
+              await ref
+                  .read(orderDetailProvider(order.id).notifier)
+                  .updateDiscount(const Discount.none());
+            },
+          ),
+          const SizedBox(height: 10),
+          const Divider(height: 16, color: AppColors.slate200),
+          const SizedBox(height: 8),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

@@ -137,6 +137,51 @@ final class CancelOrderUseCaseProvider
 String _$cancelOrderUseCaseHash() =>
     r'2ed5abde3b92311bf6f3eaee8ccfb70fb49f5e60';
 
+@ProviderFor(updateOrderDiscountUseCase)
+const updateOrderDiscountUseCaseProvider =
+    UpdateOrderDiscountUseCaseProvider._();
+
+final class UpdateOrderDiscountUseCaseProvider extends $FunctionalProvider<
+    UpdateOrderDiscount,
+    UpdateOrderDiscount,
+    UpdateOrderDiscount> with $Provider<UpdateOrderDiscount> {
+  const UpdateOrderDiscountUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'updateOrderDiscountUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateOrderDiscountUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<UpdateOrderDiscount> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UpdateOrderDiscount create(Ref ref) {
+    return updateOrderDiscountUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UpdateOrderDiscount value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UpdateOrderDiscount>(value),
+    );
+  }
+}
+
+String _$updateOrderDiscountUseCaseHash() =>
+    r'84bc746fce0e23e4ec537a32d83b3b3c052e918b';
+
 /// Provides a single order's detail — family + autoDispose.
 
 @ProviderFor(OrderDetail)
@@ -181,7 +226,7 @@ final class OrderDetailProvider
   }
 }
 
-String _$orderDetailHash() => r'f960b303c8115a5def97cea8abe0587ccb409e9a';
+String _$orderDetailHash() => r'b7555129a671cc3649c5d4bf89c2e0820111230d';
 
 /// Provides a single order's detail — family + autoDispose.
 

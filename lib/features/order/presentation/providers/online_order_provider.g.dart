@@ -51,6 +51,51 @@ final class CreateOrderUseCaseProvider
 String _$createOrderUseCaseHash() =>
     r'9dc9764568689eb0d127e347722730c47a52609f';
 
+@ProviderFor(updateOrderDiscountUseCase)
+const updateOrderDiscountUseCaseProvider =
+    UpdateOrderDiscountUseCaseProvider._();
+
+final class UpdateOrderDiscountUseCaseProvider extends $FunctionalProvider<
+    UpdateOrderDiscount,
+    UpdateOrderDiscount,
+    UpdateOrderDiscount> with $Provider<UpdateOrderDiscount> {
+  const UpdateOrderDiscountUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'updateOrderDiscountUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateOrderDiscountUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<UpdateOrderDiscount> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UpdateOrderDiscount create(Ref ref) {
+    return updateOrderDiscountUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UpdateOrderDiscount value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UpdateOrderDiscount>(value),
+    );
+  }
+}
+
+String _$updateOrderDiscountUseCaseHash() =>
+    r'84bc746fce0e23e4ec537a32d83b3b3c052e918b';
+
 @ProviderFor(onlineOrderProductList)
 const onlineOrderProductListProvider = OnlineOrderProductListProvider._();
 
@@ -84,7 +129,7 @@ final class OnlineOrderProductListProvider extends $FunctionalProvider<
 }
 
 String _$onlineOrderProductListHash() =>
-    r'd4e29ba192b5efa0e1bd8ca0587baa092df8dc6d';
+    r'7809a69856faf32b975c1e2541eaa4c88ad7c624';
 
 /// Manages the online order creation flow state.
 
@@ -122,7 +167,7 @@ final class OnlineOrderProvider
   }
 }
 
-String _$onlineOrderHash() => r'2ca3112ed374b17e51caaa73de3d5898fbee9020';
+String _$onlineOrderHash() => r'0fcb5ff8719ffbd102f63b7436e228ed241268f3';
 
 /// Manages the online order creation flow state.
 

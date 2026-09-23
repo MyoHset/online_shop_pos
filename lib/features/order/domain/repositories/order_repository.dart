@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart' hide Order;
 import '../../../../core/error/failures.dart';
+import '../entities/discount.dart';
 import '../entities/order.dart';
 
 /// Input model for a single order line item during creation.
@@ -35,6 +36,9 @@ abstract interface class OrderRepository {
     String? customerPhone,
     String? customerAddress,
     required List<OrderItemInput> items,
+    DiscountType discountType = DiscountType.none,
+    double discountValue = 0.0,
+    String? discountReason,
     String? shopId,
   });
 
@@ -43,6 +47,9 @@ abstract interface class OrderRepository {
     String? customerName,
     required List<OrderItemInput> items,
     required String paymentMethod,
+    DiscountType discountType = DiscountType.none,
+    double discountValue = 0.0,
+    String? discountReason,
     String? shopId,
   });
 
@@ -57,4 +64,13 @@ abstract interface class OrderRepository {
 
   /// Confirms stock deduction (called when order is delivered/paid).
   Future<Either<Failure, Unit>> confirmStockDeduction(String orderId);
+
+  /// Updates discount on an existing order.
+  /// Server trigger automatically recalculates [Order.totalAmount].
+  Future<Either<Failure, Order>> updateOrderDiscount({
+    required String orderId,
+    required DiscountType discountType,
+    required double discountValue,
+    String? discountReason,
+  });
 }

@@ -121,7 +121,7 @@ final class QuickSaleProvider
   }
 }
 
-String _$quickSaleHash() => r'ff359d2ef427bb27e5cd69b70de1b2c6f9bace2b';
+String _$quickSaleHash() => r'e647cb212bf506f7306c6ba939b9332a54b502da';
 
 abstract class _$QuickSale extends $Notifier<QuickSaleState> {
   QuickSaleState build();

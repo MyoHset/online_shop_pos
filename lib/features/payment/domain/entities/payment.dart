@@ -10,9 +10,9 @@ enum PaymentMethod {
   bankTransfer;
 
   String get displayLabel => switch (this) {
-        PaymentMethod.cod => 'Cash on Delivery',
+        PaymentMethod.cod => 'Cash / COD',
         PaymentMethod.kbzPay => 'KBZPay',
-        PaymentMethod.wavePay => 'Wave Money',
+        PaymentMethod.wavePay => 'WavePay',
         PaymentMethod.bankTransfer => 'Bank Transfer',
       };
 
@@ -23,11 +23,15 @@ enum PaymentMethod {
         PaymentMethod.bankTransfer => 'bank_transfer',
       };
 
-  static PaymentMethod fromString(String value) =>
-      PaymentMethod.values.firstWhere(
-        (m) => m.value == value || m.name == value,
-        orElse: () => PaymentMethod.cod,
-      );
+  static PaymentMethod fromString(String value) {
+    final normalized = value.toLowerCase().trim();
+    return PaymentMethod.values.firstWhere(
+      (m) =>
+          m.value == normalized ||
+          m.name.toLowerCase() == normalized,
+      orElse: () => PaymentMethod.cod,
+    );
+  }
 }
 
 /// Payment status.

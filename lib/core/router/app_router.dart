@@ -7,6 +7,8 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/customer/presentation/screens/customer_detail_screen.dart';
+import '../../features/customer/presentation/screens/customer_list_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_home_screen.dart';
 import '../../features/order/presentation/screens/online_order_screen.dart';
 import '../../features/order/presentation/screens/order_detail_screen.dart';
@@ -53,6 +55,9 @@ class AppRoutes {
   static const String orderDetail = '/orders/:id';
   static const String orderPayment = '/orders/:id/payment';
 
+  static const String customers = '/customers';
+  static const String customerDetail = '/customers/:id';
+
   static const String staff = '/staff';
   static const String staffInvite = '/staff/invite';
 }
@@ -93,11 +98,17 @@ class _AppShell extends ConsumerWidget {
         selectedIcon: Icon(Icons.receipt_long),
         route: AppRoutes.orders,
       ),
+      const AppNavDestination(
+        label: 'Customers',
+        icon: Icon(Icons.people_alt_outlined),
+        selectedIcon: Icon(Icons.people_alt),
+        route: AppRoutes.customers,
+      ),
       if (role.canManageStaff)
         const AppNavDestination(
           label: 'Staff',
-          icon: Icon(Icons.people_outline),
-          selectedIcon: Icon(Icons.people),
+          icon: Icon(Icons.badge_outlined),
+          selectedIcon: Icon(Icons.badge),
           route: AppRoutes.staff,
         ),
     ];
@@ -273,6 +284,26 @@ GoRouter appRouter(Ref ref) {
                         ),
                       ),
                     ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // ── Customers branch ──────────────────────────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.customers,
+                name: 'customers',
+                builder: (context, state) => const CustomerListScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    name: 'customerDetail',
+                    builder: (context, state) => CustomerDetailScreen(
+                      customerId: state.pathParameters['id']!,
+                    ),
                   ),
                 ],
               ),

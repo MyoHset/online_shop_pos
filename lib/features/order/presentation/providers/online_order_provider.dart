@@ -1,6 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../domain/entities/discount.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../../domain/usecases/create_order.dart';
+import '../../domain/usecases/update_order_discount.dart';
 import '../../domain/entities/order.dart';
 import 'order_list_provider.dart';
 import 'order_item_picker_filter_provider.dart';
@@ -13,6 +15,10 @@ part 'online_order_provider.g.dart';
 @riverpod
 CreateOrder createOrderUseCase(Ref ref) =>
     CreateOrder(ref.watch(orderRepositoryProvider));
+
+@riverpod
+UpdateOrderDiscount updateOrderDiscountUseCase(Ref ref) =>
+    UpdateOrderDiscount(ref.watch(orderRepositoryProvider));
 
 @riverpod
 Future<List<Product>> onlineOrderProductList(Ref ref) async {
@@ -68,6 +74,9 @@ class OnlineOrderState {
     this.customerPhone,
     this.customerAddress,
     this.items = const [],
+    this.discountType = DiscountType.none,
+    this.discountValue = 0.0,
+    this.discountReason,
     this.isLoading = false,
     this.errorMessage,
   });
@@ -76,17 +85,35 @@ class OnlineOrderState {
   final String? customerPhone;
   final String? customerAddress;
   final List<PendingOrderItem> items;
+  final DiscountType discountType;
+  final double discountValue;
+  final String? discountReason;
   final bool isLoading;
   final String? errorMessage;
 
+  double get subtotal =>
+      items.fold(0.0, (sum, item) => sum + item.subtotal);
+
+  Discount get discount => Discount(
+        type: discountType,
+        value: discountValue,
+        reason: discountReason,
+      );
+
+  double get discountAmount => discount.calculateAmount(subtotal);
+
   double get totalAmount =>
-      items.fold(0, (sum, item) => sum + item.subtotal);
+      (subtotal - discountAmount).clamp(0.0, double.infinity);
 
   OnlineOrderState copyWith({
     String? customerName,
     String? customerPhone,
     String? customerAddress,
     List<PendingOrderItem>? items,
+    DiscountType? discountType,
+    double? discountValue,
+    String? discountReason,
+    bool clearDiscountReason = false,
     bool? isLoading,
     String? errorMessage,
     bool clearError = false,
@@ -96,6 +123,11 @@ class OnlineOrderState {
         customerPhone: customerPhone ?? this.customerPhone,
         customerAddress: customerAddress ?? this.customerAddress,
         items: items ?? this.items,
+        discountType: discountType ?? this.discountType,
+        discountValue: discountValue ?? this.discountValue,
+        discountReason: clearDiscountReason
+            ? null
+            : (discountReason ?? this.discountReason),
         isLoading: isLoading ?? this.isLoading,
         errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       );
@@ -112,6 +144,22 @@ class OnlineOrder extends _$OnlineOrder {
       state = state.copyWith(customerPhone: v);
   void updateCustomerAddress(String? v) =>
       state = state.copyWith(customerAddress: v);
+
+  void updateDiscount(Discount discount) {
+    state = state.copyWith(
+      discountType: discount.type,
+      discountValue: discount.value,
+      discountReason: discount.reason,
+    );
+  }
+
+  void removeDiscount() {
+    state = state.copyWith(
+      discountType: DiscountType.none,
+      discountValue: 0.0,
+      clearDiscountReason: true,
+    );
+  }
 
   void addItem(PendingOrderItem item) {
     final existing =
@@ -155,6 +203,9 @@ class OnlineOrder extends _$OnlineOrder {
       customerName: state.customerName,
       customerPhone: state.customerPhone,
       customerAddress: state.customerAddress,
+      discountType: state.discountType,
+      discountValue: state.discountValue,
+      discountReason: state.discountReason,
       shopId: shopId,
       items: state.items
           .map((i) => OrderItemInput(

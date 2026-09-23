@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../product/domain/entities/product.dart';
-import '../../../product/domain/entities/variant.dart';
 import '../../../product/presentation/widgets/product_thumbnail.dart';
 
 class ProductTileSelectable extends StatelessWidget {

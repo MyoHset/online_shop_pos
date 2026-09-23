@@ -24,7 +24,6 @@ class _OrderCardState extends State<OrderCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final order = widget.order;
     
     final dateStr = DateFormat('MMM d, yyyy • hh:mm a').format(order.createdAt);

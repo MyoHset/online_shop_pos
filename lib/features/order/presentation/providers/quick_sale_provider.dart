@@ -4,6 +4,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../product/presentation/providers/product_list_provider.dart';
 import '../../domain/entities/cart.dart';
 import '../../domain/entities/cart_item.dart';
+import '../../domain/entities/discount.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../../domain/usecases/complete_instant_sale.dart';
@@ -41,6 +42,9 @@ class QuickSaleState {
     this.cart = const Cart(),
     this.customerName = '',
     this.paymentMethod = 'cod',
+    this.discountType = DiscountType.none,
+    this.discountValue = 0.0,
+    this.discountReason,
     this.isLoading = false,
     this.errorMessage,
     this.completedOrder,
@@ -49,14 +53,32 @@ class QuickSaleState {
   final Cart cart;
   final String customerName;
   final String paymentMethod;
+  final DiscountType discountType;
+  final double discountValue;
+  final String? discountReason;
   final bool isLoading;
   final String? errorMessage;
   final Order? completedOrder;
+
+  Discount get discount => Discount(
+        type: discountType,
+        value: discountValue,
+        reason: discountReason,
+      );
+
+  double get discountAmount => discount.calculateAmount(cart.total);
+
+  double get totalAmount =>
+      (cart.total - discountAmount).clamp(0.0, double.infinity);
 
   QuickSaleState copyWith({
     Cart? cart,
     String? customerName,
     String? paymentMethod,
+    DiscountType? discountType,
+    double? discountValue,
+    String? discountReason,
+    bool clearDiscountReason = false,
     bool? isLoading,
     String? errorMessage,
     Order? completedOrder,
@@ -67,9 +89,15 @@ class QuickSaleState {
         cart: cart ?? this.cart,
         customerName: customerName ?? this.customerName,
         paymentMethod: paymentMethod ?? this.paymentMethod,
+        discountType: discountType ?? this.discountType,
+        discountValue: discountValue ?? this.discountValue,
+        discountReason: clearDiscountReason
+            ? null
+            : (discountReason ?? this.discountReason),
         isLoading: isLoading ?? this.isLoading,
         errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-        completedOrder: clearOrder ? null : (completedOrder ?? this.completedOrder),
+        completedOrder:
+            clearOrder ? null : (completedOrder ?? this.completedOrder),
       );
 }
 
@@ -84,6 +112,22 @@ class QuickSale extends _$QuickSale {
 
   void updatePaymentMethod(String method) {
     state = state.copyWith(paymentMethod: method);
+  }
+
+  void updateDiscount(Discount discount) {
+    state = state.copyWith(
+      discountType: discount.type,
+      discountValue: discount.value,
+      discountReason: discount.reason,
+    );
+  }
+
+  void removeDiscount() {
+    state = state.copyWith(
+      discountType: DiscountType.none,
+      discountValue: 0.0,
+      clearDiscountReason: true,
+    );
   }
 
   void addToCart(CartItem item) {
@@ -144,6 +188,9 @@ class QuickSale extends _$QuickSale {
     final result = await useCase(
       customerName: state.customerName,
       paymentMethod: state.paymentMethod,
+      discountType: state.discountType,
+      discountValue: state.discountValue,
+      discountReason: state.discountReason,
       shopId: shopId,
       items: state.cart.items
           .map((i) => OrderItemInput(

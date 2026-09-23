@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart' hide Order;
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
+import '../../domain/entities/discount.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../datasources/order_remote_datasource.dart';
@@ -49,6 +50,9 @@ class OrderRepositoryImpl implements OrderRepository {
     String? customerPhone,
     String? customerAddress,
     required List<OrderItemInput> items,
+    DiscountType discountType = DiscountType.none,
+    double discountValue = 0.0,
+    String? discountReason,
     String? shopId,
   }) async {
     try {
@@ -57,6 +61,9 @@ class OrderRepositoryImpl implements OrderRepository {
         customerPhone: customerPhone,
         customerAddress: customerAddress,
         items: items,
+        discountType: discountType,
+        discountValue: discountValue,
+        discountReason: discountReason,
         shopId: shopId,
       );
       return right(model.toEntity());
@@ -74,6 +81,9 @@ class OrderRepositoryImpl implements OrderRepository {
     String? customerName,
     required List<OrderItemInput> items,
     required String paymentMethod,
+    DiscountType discountType = DiscountType.none,
+    double discountValue = 0.0,
+    String? discountReason,
     String? shopId,
   }) async {
     try {
@@ -81,11 +91,36 @@ class OrderRepositoryImpl implements OrderRepository {
         customerName: customerName,
         items: items,
         paymentMethod: paymentMethod,
+        discountType: discountType,
+        discountValue: discountValue,
+        discountReason: discountReason,
         shopId: shopId,
       );
       return right(model.toEntity());
     } on StockReservationException catch (e) {
       return left(StockReservationFailure(e.message));
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Order>> updateOrderDiscount({
+    required String orderId,
+    required DiscountType discountType,
+    required double discountValue,
+    String? discountReason,
+  }) async {
+    try {
+      final model = await _dataSource.updateOrderDiscount(
+        orderId: orderId,
+        discountType: discountType,
+        discountValue: discountValue,
+        discountReason: discountReason,
+      );
+      return right(model.toEntity());
     } on ServerException catch (e) {
       return left(ServerFailure(e.message));
     } catch (e) {

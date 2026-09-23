@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/app_snack_bar.dart';
 import '../../../auth/domain/entities/staff_role.dart';
 import '../../../auth/presentation/widgets/auth_form_field.dart';
 import '../../../auth/presentation/widgets/password_field.dart';
@@ -50,15 +51,21 @@ class _InviteStaffScreenState extends ConsumerState<InviteStaffScreen> {
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Staff member invited successfully!')),
+        AppSnackBar.showSuccess(
+          context,
+          'Staff member invited successfully!',
         );
         context.pop();
       } else {
         final state = ref.read(staffListControllerProvider);
+        final err = state.error?.toString() ?? 'Failed to invite staff';
         setState(() {
-          _errorMessage = state.error?.toString() ?? 'Failed to invite staff';
+          _errorMessage = err;
         });
+        AppSnackBar.showError(
+          context,
+          err,
+        );
       }
     }
   }

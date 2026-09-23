@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'discount.dart';
 import 'order_item.dart';
 
 part 'order.freezed.dart';
@@ -82,8 +83,23 @@ abstract class Order with _$Order {
     required OrderStatus status,
     required double totalAmount,
     required OrderType orderType,
+    @Default(DiscountType.none) DiscountType discountType,
+    @Default(0.0) double discountValue,
+    @Default(0.0) double discountAmount,
+    String? discountReason,
     required DateTime createdAt,
     required DateTime updatedAt,
     @Default([]) List<OrderItem> items,
   }) = _Order;
+
+  const Order._();
+
+  double get subtotalAmount =>
+      items.fold(0.0, (sum, item) => sum + item.subtotal);
+
+  Discount get discount => Discount(
+        type: discountType,
+        value: discountValue,
+        reason: discountReason,
+      );
 }

@@ -22,6 +22,8 @@ class SupabaseConstants {
   static const String ordersTable = 'orders';
   static const String orderItemsTable = 'order_items';
   static const String paymentsTable = 'payments';
+  static const String customersTable = 'customers';
+  static const String customerTransactionsTable = 'customer_transactions';
 
   // Views
   static const String variantDetailsView = 'variant_details';
@@ -34,4 +36,5 @@ class SupabaseConstants {
   static const String reserveStockRpc = 'reserve_order_stock';
   static const String releaseStockRpc = 'release_order_stock';
   static const String commitOrderStockRpc = 'commit_order_stock';
+  static const String recordCustomerRepaymentRpc = 'record_customer_repayment';
 }

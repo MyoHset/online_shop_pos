@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
@@ -50,7 +51,7 @@ class AppDataTable extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minWidth: minWidth ?? constraints.maxWidth,
+              minWidth: math.max(minWidth ?? 0, constraints.maxWidth),
             ),
             child: DataTable(
               headingRowColor: WidgetStateProperty.all(headingRowColor ?? AppColors.slate50),
