@@ -134,7 +134,7 @@ class OrderRemoteDataSource {
                   'variant_id': item.variantId,
                   'quantity': item.quantity,
                   'unit_price': item.unitPrice,
-                })
+                },)
             .toList();
             
         AppLogger.logEvent('createOrder_items_request', details: {'payload': itemRows});
@@ -175,7 +175,7 @@ class OrderRemoteDataSource {
         rethrow;
       }
 
-      return getOrderById(orderId);
+      return await getOrderById(orderId);
     } on StockReservationException catch (e, st) {
       AppLogger.logDataError('createOrder', e, stackTrace: st);
       rethrow;
@@ -191,8 +191,12 @@ class OrderRemoteDataSource {
   /// Creates a quick sale order, atomic stock deduction, and payment record.
   Future<OrderModel> completeInstantSale({
     String? customerName,
+    String? customerId,
     required List<OrderItemInput> items,
     required String paymentMethod,
+    bool isCredit = false,
+    double paidAmount = 0.0,
+    DateTime? dueDate,
     DiscountType discountType = DiscountType.none,
     double discountValue = 0.0,
     String? discountReason,
@@ -209,6 +213,9 @@ class OrderRemoteDataSource {
 
       final orderPayload = {
         if (customerName != null && customerName.isNotEmpty) 'customer_name': customerName,
+        if (customerId != null) 'customer_id': customerId,
+        'is_credit': isCredit,
+        if (dueDate != null) 'due_date': dueDate.toUtc().toIso8601String(),
         'status': OrderStatus.pending.name,
         'order_type': 'in_store',
         'total_amount': finalAmount,
@@ -234,7 +241,7 @@ class OrderRemoteDataSource {
                   'variant_id': item.variantId,
                   'quantity': item.quantity,
                   'unit_price': item.unitPrice,
-                })
+                },)
             .toList();
 
         await _client
@@ -242,16 +249,31 @@ class OrderRemoteDataSource {
             .insert(itemRows)
             .select();
 
-        final params = {'p_order_id': orderId};
-        await _client.rpc('complete_instant_sale', params: params);
+        if (isCredit && customerId != null) {
+          final creditParams = {
+            'p_order_id': orderId,
+            'p_customer_id': customerId,
+            'p_total_amount': finalAmount,
+            'p_paid_amount': paidAmount,
+            'p_payment_method': paymentMethod == 'credit' ? 'cash' : paymentMethod,
+            'p_due_date': dueDate?.toUtc().toIso8601String(),
+          };
+          await _client.rpc(
+            SupabaseConstants.processInstantCreditSaleRpc,
+            params: creditParams,
+          );
+        } else {
+          final params = {'p_order_id': orderId};
+          await _client.rpc('complete_instant_sale', params: params);
 
-        await _client.from(SupabaseConstants.paymentsTable).insert({
-          'order_id': orderId,
-          'method': paymentMethod,
-          'amount': finalAmount,
-          'status': 'paid',
-          'paid_at': DateTime.now().toUtc().toIso8601String(),
-        });
+          await _client.from(SupabaseConstants.paymentsTable).insert({
+            'order_id': orderId,
+            'method': paymentMethod,
+            'amount': finalAmount,
+            'status': 'paid',
+            'paid_at': DateTime.now().toUtc().toIso8601String(),
+          });
+        }
       } catch (e) {
         await _client
             .from(SupabaseConstants.ordersTable)
@@ -264,7 +286,7 @@ class OrderRemoteDataSource {
         rethrow;
       }
 
-      return getOrderById(orderId);
+      return await getOrderById(orderId);
     } on StockReservationException {
       rethrow;
     } on PostgrestException catch (e) {
@@ -294,7 +316,7 @@ class OrderRemoteDataSource {
       AppLogger.logEvent('updateOrderDiscount_request', details: {
         'order_id': orderId,
         'payload': updatePayload,
-      });
+      },);
 
       await _client
           .from(SupabaseConstants.ordersTable)
@@ -302,7 +324,7 @@ class OrderRemoteDataSource {
           .eq('id', orderId);
 
       // Re-fetch to obtain server-calculated discount_amount and total_amount
-      return getOrderById(orderId);
+      return await getOrderById(orderId);
     } on PostgrestException catch (e, st) {
       AppLogger.logDataError('updateOrderDiscount_supabase_error', e, stackTrace: st);
       throw ServerException(_parsePostgrestErrorMessage(e));
@@ -344,7 +366,7 @@ class OrderRemoteDataSource {
     try {
       await releaseOrderStock(orderId);
 
-      return updateOrderStatus(
+      return await updateOrderStatus(
         orderId: orderId,
         newStatus: OrderStatus.cancelled,
       );

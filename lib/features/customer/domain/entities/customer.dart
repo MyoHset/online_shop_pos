@@ -42,6 +42,8 @@ abstract class Customer with _$Customer {
     required double currentDebt,
     required RepaymentCycle repaymentCycle,
     String? notes,
+    @Default(false) bool isSuspended,
+    String? suspendedReason,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _Customer;
@@ -56,4 +58,13 @@ abstract class Customer with _$Customer {
 
   /// Whether current debt exceeds or meets the credit limit
   bool get isLimitReached => creditLimit > 0 && currentDebt >= creditLimit;
+
+  /// Calculates due date from given sale date based on repayment cycle
+  DateTime calculateDueDate(DateTime fromDate) {
+    return switch (repaymentCycle) {
+      RepaymentCycle.weekly => fromDate.add(const Duration(days: 7)),
+      RepaymentCycle.monthly => fromDate.add(const Duration(days: 30)),
+      RepaymentCycle.net30 => fromDate.add(const Duration(days: 30)),
+    };
+  }
 }

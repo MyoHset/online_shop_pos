@@ -17,6 +17,8 @@ abstract class CustomerModel with _$CustomerModel {
     @Default(0.0) double currentDebt,
     @Default('monthly') String repaymentCycle,
     String? notes,
+    @Default(false) bool isSuspended,
+    String? suspendedReason,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _CustomerModel;
@@ -36,6 +38,8 @@ abstract class CustomerModel with _$CustomerModel {
         currentDebt: currentDebt,
         repaymentCycle: RepaymentCycle.fromString(repaymentCycle),
         notes: notes,
+        isSuspended: isSuspended,
+        suspendedReason: suspendedReason,
         createdAt: createdAt,
         updatedAt: updatedAt,
       );

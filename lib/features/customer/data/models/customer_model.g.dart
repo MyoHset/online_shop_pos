@@ -17,6 +17,8 @@ _CustomerModel _$CustomerModelFromJson(Map<String, dynamic> json) =>
       currentDebt: (json['current_debt'] as num?)?.toDouble() ?? 0.0,
       repaymentCycle: json['repayment_cycle'] as String? ?? 'monthly',
       notes: json['notes'] as String?,
+      isSuspended: json['is_suspended'] as bool? ?? false,
+      suspendedReason: json['suspended_reason'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -32,6 +34,8 @@ Map<String, dynamic> _$CustomerModelToJson(_CustomerModel instance) =>
       'current_debt': instance.currentDebt,
       'repayment_cycle': instance.repaymentCycle,
       'notes': instance.notes,
+      'is_suspended': instance.isSuspended,
+      'suspended_reason': instance.suspendedReason,
       'created_at': instance.createdAt.toIso8601String(),
       'updated_at': instance.updatedAt.toIso8601String(),
     };

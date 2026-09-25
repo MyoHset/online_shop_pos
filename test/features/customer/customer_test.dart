@@ -58,6 +58,44 @@ void main() {
       expect(limitReachedCustomer.remainingCredit, 0);
       expect(limitReachedCustomer.isLimitReached, isTrue);
     });
+
+    test('calculateDueDate correctly calculates dates based on cycle', () {
+      final baseDate = DateTime(2026, 9, 1);
+
+      final weeklyCustomer = Customer(
+        id: '1',
+        name: 'Mg Mg',
+        phone: '09123456789',
+        creditLimit: 500000,
+        currentDebt: 0,
+        repaymentCycle: RepaymentCycle.weekly,
+        createdAt: baseDate,
+        updatedAt: baseDate,
+      );
+
+      final monthlyCustomer = weeklyCustomer.copyWith(repaymentCycle: RepaymentCycle.monthly);
+
+      expect(weeklyCustomer.calculateDueDate(baseDate), DateTime(2026, 9, 8));
+      expect(monthlyCustomer.calculateDueDate(baseDate), DateTime(2026, 10, 1));
+    });
+
+    test('isSuspended flag works properly', () {
+      final customer = Customer(
+        id: '1',
+        name: 'Mg Mg',
+        phone: '09123456789',
+        creditLimit: 500000,
+        currentDebt: 0,
+        repaymentCycle: RepaymentCycle.monthly,
+        isSuspended: true,
+        suspendedReason: 'Payment defaulted',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      expect(customer.isSuspended, isTrue);
+      expect(customer.suspendedReason, 'Payment defaulted');
+    });
   });
 
   group('CustomerModel JSON serialization', () {

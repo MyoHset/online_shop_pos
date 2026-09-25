@@ -37,4 +37,5 @@ class SupabaseConstants {
   static const String releaseStockRpc = 'release_order_stock';
   static const String commitOrderStockRpc = 'commit_order_stock';
   static const String recordCustomerRepaymentRpc = 'record_customer_repayment';
+  static const String processInstantCreditSaleRpc = 'process_instant_credit_sale';
 }

@@ -28,6 +28,7 @@ class _CustomerSearchPickerState extends ConsumerState<CustomerSearchPicker> {
   final _focusNode = FocusNode();
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
+  final _tapRegionGroupId = Object();
 
   @override
   void initState() {
@@ -39,8 +40,6 @@ class _CustomerSearchPickerState extends ConsumerState<CustomerSearchPicker> {
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) {
         _showOverlay();
-      } else {
-        _hideOverlay();
       }
     });
   }
@@ -67,15 +66,17 @@ class _CustomerSearchPickerState extends ConsumerState<CustomerSearchPicker> {
   }
 
   void _showOverlay() {
-    _hideOverlay();
+    if (!mounted || _overlayEntry != null) return;
     final overlay = Overlay.of(context);
     _overlayEntry = _createOverlayEntry();
     overlay.insert(_overlayEntry!);
   }
 
   void _hideOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
+    if (_overlayEntry != null) {
+      _overlayEntry?.remove();
+      _overlayEntry = null;
+    }
   }
 
   OverlayEntry _createOverlayEntry() {
@@ -90,13 +91,15 @@ class _CustomerSearchPickerState extends ConsumerState<CustomerSearchPicker> {
             link: _layerLink,
             showWhenUnlinked: false,
             offset: Offset(0.0, size.height + 6.0),
-            child: Material(
-              elevation: 6,
-              shadowColor: Colors.black26,
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.white,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 280),
+            child: TapRegion(
+              groupId: _tapRegionGroupId,
+              child: Material(
+                elevation: 6,
+                shadowColor: Colors.black26,
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 280),
                 child: Consumer(
                   builder: (context, ref, _) {
                     final customersAsync = ref.watch(customerListProvider);
@@ -273,6 +276,7 @@ class _CustomerSearchPickerState extends ConsumerState<CustomerSearchPicker> {
                     );
                   },
                 ),
+                ),
               ),
             ),
           ),
@@ -282,26 +286,29 @@ class _CustomerSearchPickerState extends ConsumerState<CustomerSearchPicker> {
   }
 
   void _selectCustomer(Customer customer) {
-    widget.onCustomerSelected(customer);
-    _searchController.text = '${customer.name} (${customer.phone})';
     _hideOverlay();
+    _searchController.text = '${customer.name} (${customer.phone})';
     _focusNode.unfocus();
+    widget.onCustomerSelected(customer);
   }
 
   void _clearSelection() {
-    widget.onCustomerSelected(null);
+    _hideOverlay();
     _searchController.clear();
     ref.read(customerSearchQueryProvider.notifier).clear();
-    _hideOverlay();
+    widget.onCustomerSelected(null);
   }
 
   @override
   Widget build(BuildContext context) {
     final isSelected = widget.selectedCustomer != null;
 
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: TextField(
+    return TapRegion(
+      groupId: _tapRegionGroupId,
+      onTapOutside: (_) => _hideOverlay(),
+      child: CompositedTransformTarget(
+        link: _layerLink,
+        child: TextField(
         controller: _searchController,
         focusNode: _focusNode,
         decoration: InputDecoration(
@@ -330,10 +337,14 @@ class _CustomerSearchPickerState extends ConsumerState<CustomerSearchPicker> {
           ),
         ),
         onChanged: (val) {
+          if (_overlayEntry == null && _focusNode.hasFocus) {
+            _showOverlay();
+          }
           ref.read(customerSearchQueryProvider.notifier).updateQuery(val);
           _overlayEntry?.markNeedsBuild();
         },
       ),
-    );
+    ),
+  );
   }
 }

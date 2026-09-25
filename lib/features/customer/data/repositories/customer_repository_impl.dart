@@ -125,4 +125,24 @@ class CustomerRepositoryImpl implements CustomerRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, Customer>> toggleSuspendCustomer({
+    required String id,
+    required bool isSuspended,
+    String? reason,
+  }) async {
+    try {
+      final model = await _dataSource.toggleSuspendCustomer(
+        id: id,
+        isSuspended: isSuspended,
+        reason: reason,
+      );
+      return Right(model.toEntity());
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

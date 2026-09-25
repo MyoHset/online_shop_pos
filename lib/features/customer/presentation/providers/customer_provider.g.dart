@@ -425,7 +425,7 @@ final class CustomerControllerProvider
 }
 
 String _$customerControllerHash() =>
-    r'ba5bfa63d46cd434978f5d15e3f3e4104c3d5f34';
+    r'b297a109201455a55ff8491e0fb9e98c5a6e796d';
 
 /// Controller for Customer mutations (Create, Update, Repayment)
 

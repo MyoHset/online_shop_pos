@@ -215,4 +215,35 @@ class CustomerController extends _$CustomerController {
       },
     );
   }
+
+  Future<bool> toggleSuspendCustomer({
+    required String id,
+    required bool isSuspended,
+    String? reason,
+  }) async {
+    state = const AsyncLoading();
+    final repo = ref.read(customerRepositoryProvider);
+    final result = await repo.toggleSuspendCustomer(
+      id: id,
+      isSuspended: isSuspended,
+      reason: reason,
+    );
+
+    return result.fold(
+      (f) {
+        if (ref.mounted) {
+          state = AsyncError(f.message, StackTrace.current);
+        }
+        return false;
+      },
+      (customer) {
+        if (ref.mounted) {
+          state = const AsyncData(null);
+          ref.invalidate(customerListProvider);
+          ref.invalidate(customerDetailProvider(id));
+        }
+        return true;
+      },
+    );
+  }
 }

@@ -6,13 +6,13 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_data_table.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/customer.dart';
 import '../providers/customer_provider.dart';
 import '../widgets/customer_form_dialog.dart';
+import '../widgets/customer_overdue_section.dart';
 import '../widgets/record_repayment_dialog.dart';
 
 class CustomerListScreen extends ConsumerStatefulWidget {
@@ -24,7 +24,8 @@ class CustomerListScreen extends ConsumerStatefulWidget {
 
 class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
   final _searchController = TextEditingController();
-  int _selectedFilter = 0; // 0: All, 1: Has Debt Only, 2: Limit Reached
+  int _viewMode = 0; // 0: Customer Directory, 1: Overdue & Schedules
+  int _selectedFilter = 0; // 0: All, 1: With Debt Only, 2: Limit Reached
 
   @override
   void dispose() {
@@ -74,9 +75,11 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
             return true;
           }).toList();
 
-          final listView = ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
+          return RefreshIndicator(
+            onRefresh: () => ref.read(customerListProvider.notifier).refresh(),
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
                 // Top Metrics Cards
                 _buildMetricsRow(
                   isDesktop: isDesktop,
@@ -86,102 +89,144 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Controls Row: Search Bar, Filters, and Add Button
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  alignment: WrapAlignment.spaceBetween,
-                  crossAxisAlignment: WrapCrossAlignment.center,
+                // View Mode Tabs: [Customer Directory] / [Overdue & Schedules]
+                Row(
                   children: [
-                    // Search box (Name & Phone)
-                    Container(
-                      width: 280,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.slate200),
+                    ChoiceChip(
+                      label: const Text('Customer Directory'),
+                      selected: _viewMode == 0,
+                      selectedColor: AppColors.slate900,
+                      labelStyle: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: _viewMode == 0 ? Colors.white : AppColors.slate700,
                       ),
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Search by name or phone...',
-                          hintStyle: const TextStyle(fontSize: 13, color: AppColors.slate400),
-                          prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.slate500),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear, size: 16),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    ref.read(customerSearchQueryProvider.notifier).clear();
-                                  },
-                                )
-                              : null,
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                        ),
-                        onChanged: (val) {
-                          ref.read(customerSearchQueryProvider.notifier).updateQuery(val);
-                        },
+                      onSelected: (val) {
+                        if (val) setState(() => _viewMode = 0);
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Overdue & Schedules'),
+                          if (debtCustomerCount > 0) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.danger,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '$debtCustomerCount',
+                                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ),
-
-                    // Filter Chips & Refresh Button
-                    Wrap(
-                      spacing: 8,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        _buildFilterChip('All ($totalCustomers)', 0),
-                        _buildFilterChip('Has Debt ($debtCustomerCount)', 1),
-                        _buildFilterChip('Limit Reached', 2),
-                        IconButton(
-                          icon: const Icon(Icons.refresh, color: AppColors.slate500),
-                          onPressed: () => ref.read(customerListProvider.notifier).refresh(),
-                          tooltip: 'Refresh',
-                        ),
-                      ],
-                    ),
-
-                    // Add Customer Button
-                    AppButton(
-                      label: '+ Add Customer',
-                      icon: const Icon(Icons.person_add_alt_1),
-                      onPressed: () => CustomerFormDialog.show(context),
+                      selected: _viewMode == 1,
+                      selectedColor: AppColors.slate900,
+                      labelStyle: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: _viewMode == 1 ? Colors.white : AppColors.slate700,
+                      ),
+                      onSelected: (val) {
+                        if (val) setState(() => _viewMode = 1);
+                      },
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
 
-                // Customer Cards or Table
-                if (filteredList.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(48),
-                    alignment: Alignment.center,
-                    child: Column(
-                      children: [
-                        const Icon(Icons.people_outline, size: 48, color: AppColors.slate400),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No customers found',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: AppColors.slate600,
-                          ),
+                // Body content based on View Mode
+                if (_viewMode == 1)
+                  const CustomerOverdueSection()
+                else ...[
+                  // Controls Row: Search Bar, Filters, and Add Button
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      // Search box (Name & Phone)
+                      Container(
+                        width: 280,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.slate200),
                         ),
-                      ],
-                    ),
-                  )
-                else
-                  _buildCustomerTable(context, filteredList),
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search by Name or Phone...',
+                            hintStyle: const TextStyle(fontSize: 13, color: AppColors.slate400),
+                            prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.slate500),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear, size: 16),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      ref.read(customerSearchQueryProvider.notifier).clear();
+                                    },
+                                  )
+                                : null,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          ),
+                          onChanged: (val) {
+                            ref.read(customerSearchQueryProvider.notifier).updateQuery(val);
+                          },
+                        ),
+                      ),
+
+                      // Filter Chips
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          _buildFilterChip('All ($totalCustomers)', 0),
+                          _buildFilterChip('With Debt ($debtCustomerCount)', 1),
+                          _buildFilterChip('Limit Reached', 2),
+                        ],
+                      ),
+
+                      // Add Customer Button
+                      AppButton(
+                        label: '+ Add Customer',
+                        icon: const Icon(Icons.person_add_alt_1),
+                        onPressed: () => CustomerFormDialog.show(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Customer Table
+                  if (filteredList.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(48),
+                      alignment: Alignment.center,
+                      child: Column(
+                        children: [
+                          const Icon(Icons.people_outline, size: 48, color: AppColors.slate400),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No customers found',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: AppColors.slate600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    _buildCustomerTable(context, filteredList),
+                ],
               ],
-            );
-
-          if (isDesktop) {
-            return listView;
-          }
-
-          return RefreshIndicator(
-            onRefresh: () => ref.read(customerListProvider.notifier).refresh(),
-            child: listView,
+            ),
           );
         },
       ),
@@ -216,9 +261,10 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     required int debtCustomerCount,
   }) {
     final cards = [
-      _MetricCard(
+      const _MetricCard(
         title: 'Total Customers',
-        value: '$totalCustomers',
+        value: '',
+        countNumber: 0,
         icon: Icons.groups_outlined,
         color: AppColors.info,
       ),
@@ -230,27 +276,53 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
         isHighlight: true,
       ),
       _MetricCard(
-        title: 'Customers with Debt',
+        title: 'Accounts with Debt',
         value: '$debtCustomerCount',
         icon: Icons.person_search_outlined,
         color: AppColors.warning,
       ),
     ];
 
+    final updatedCards = [
+      _MetricCard(
+        title: 'Total Customers',
+        value: '$totalCustomers',
+        icon: Icons.groups_outlined,
+        color: AppColors.info,
+      ),
+      cards[1],
+      cards[2],
+    ];
+
     if (isDesktop) {
       return Row(
-        children: cards.map((c) => Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: c))).toList(),
+        children: updatedCards
+            .map(
+              (c) => Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: c,
+                ),
+              ),
+            )
+            .toList(),
       );
     } else {
       return Column(
-        children: cards.map((c) => Padding(padding: const EdgeInsets.only(bottom: 12), child: c)).toList(),
+        children: updatedCards
+            .map(
+              (c) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: c,
+              ),
+            )
+            .toList(),
       );
     }
   }
 
   Widget _buildCustomerTable(BuildContext context, List<Customer> customers) {
     return Container(
-      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -258,17 +330,21 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: AppDataTable(
-          minWidth: 800,
-          headingRowColor: AppColors.slate100,
-          horizontalMargin: 20,
-          columnSpacing: 24,
-          columns: const [
-                DataColumn(label: Text('Name / Phone', style: TextStyle(fontWeight: FontWeight.w700))),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 800),
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(AppColors.slate100),
+              horizontalMargin: 20,
+              columnSpacing: 24,
+              columns: const [
+                DataColumn(label: Text('Customer / Phone', style: TextStyle(fontWeight: FontWeight.w700))),
                 DataColumn(label: Text('Address', style: TextStyle(fontWeight: FontWeight.w700))),
-                DataColumn(label: Text('Current Debt', style: TextStyle(fontWeight: FontWeight.w700))),
+                DataColumn(label: Text('Outstanding Debt', style: TextStyle(fontWeight: FontWeight.w700))),
                 DataColumn(label: Text('Credit Limit', style: TextStyle(fontWeight: FontWeight.w700))),
                 DataColumn(label: Text('Cycle', style: TextStyle(fontWeight: FontWeight.w700))),
+                DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.w700))),
                 DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.w700))),
               ],
               rows: customers.map((c) {
@@ -342,6 +418,24 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                         style: const TextStyle(fontSize: 13),
                       ),
                     ),
+                    // Status
+                    DataCell(
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: c.isSuspended ? AppColors.dangerBg : AppColors.successBg,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          c.isSuspended ? 'Suspended' : 'Active',
+                          style: TextStyle(
+                            color: c.isSuspended ? AppColors.danger : AppColors.success,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ),
                     // Actions
                     DataCell(
                       Row(
@@ -355,7 +449,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                             ),
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, color: AppColors.slate600),
-                            tooltip: 'Edit',
+                            tooltip: 'Edit Customer',
                             onPressed: () => CustomerFormDialog.show(context, customer: c),
                           ),
                           IconButton(
@@ -369,6 +463,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                   ],
                 );
               }).toList(),
+            ),
+          ),
         ),
       ),
     );
@@ -379,6 +475,7 @@ class _MetricCard extends StatelessWidget {
   const _MetricCard({
     required this.title,
     required this.value,
+    this.countNumber,
     required this.icon,
     required this.color,
     this.isHighlight = false,
@@ -386,6 +483,7 @@ class _MetricCard extends StatelessWidget {
 
   final String title;
   final String value;
+  final int? countNumber;
   final IconData icon;
   final Color color;
   final bool isHighlight;

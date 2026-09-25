@@ -169,4 +169,28 @@ class CustomerRemoteDataSource {
       throw ServerFailure('Failed to fetch transactions: $e');
     }
   }
+
+  /// Toggles customer account suspension.
+  Future<CustomerModel> toggleSuspendCustomer({
+    required String id,
+    required bool isSuspended,
+    String? reason,
+  }) async {
+    try {
+      final updatedJson = await _client
+          .from(SupabaseConstants.customersTable)
+          .update({
+            'is_suspended': isSuspended,
+            'suspended_reason': isSuspended ? (reason ?? 'Suspended by admin') : null,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', id)
+          .select()
+          .single();
+
+      return CustomerModel.fromJson(updatedJson);
+    } catch (e) {
+      throw ServerFailure('Failed to update customer status: $e');
+    }
+  }
 }

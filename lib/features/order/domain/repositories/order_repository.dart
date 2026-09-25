@@ -45,8 +45,12 @@ abstract interface class OrderRepository {
   /// Creates a quick sale, atomic stock deduction, and payment record.
   Future<Either<Failure, Order>> completeInstantSale({
     String? customerName,
+    String? customerId,
     required List<OrderItemInput> items,
     required String paymentMethod,
+    bool isCredit = false,
+    double paidAmount = 0.0,
+    DateTime? dueDate,
     DiscountType discountType = DiscountType.none,
     double discountValue = 0.0,
     String? discountReason,

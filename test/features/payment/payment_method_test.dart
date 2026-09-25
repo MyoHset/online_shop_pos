@@ -8,6 +8,7 @@ void main() {
       expect(PaymentMethod.kbzPay.value, 'kbz_pay');
       expect(PaymentMethod.wavePay.value, 'wave_pay');
       expect(PaymentMethod.bankTransfer.value, 'bank_transfer');
+      expect(PaymentMethod.credit.value, 'credit');
     });
 
     test('displayLabel matches Quick Sale chips', () {
@@ -15,6 +16,7 @@ void main() {
       expect(PaymentMethod.kbzPay.displayLabel, 'KBZPay');
       expect(PaymentMethod.wavePay.displayLabel, 'WavePay');
       expect(PaymentMethod.bankTransfer.displayLabel, 'Bank Transfer');
+      expect(PaymentMethod.credit.displayLabel, 'Credit');
     });
 
     test('fromString parses snake_case, camelCase, and uppercase correctly', () {
@@ -27,6 +29,8 @@ void main() {
       expect(PaymentMethod.fromString('wavePay'), PaymentMethod.wavePay);
       expect(PaymentMethod.fromString('bank_transfer'), PaymentMethod.bankTransfer);
       expect(PaymentMethod.fromString('bankTransfer'), PaymentMethod.bankTransfer);
+      expect(PaymentMethod.fromString('credit'), PaymentMethod.credit);
+      expect(PaymentMethod.fromString('CREDIT'), PaymentMethod.credit);
       expect(PaymentMethod.fromString('unknown'), PaymentMethod.cod);
     });
   });
