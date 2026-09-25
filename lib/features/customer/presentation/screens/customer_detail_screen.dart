@@ -61,9 +61,12 @@ class CustomerDetailScreen extends ConsumerWidget {
     final transactionsAsync =
         ref.watch(customerTransactionsProvider(customerId));
     final theme = Theme.of(context);
-    final isDesktop = DeviceType.from(context) == DeviceType.desktop ||
-        DeviceType.from(context) == DeviceType.large ||
-        DeviceType.from(context) == DeviceType.tablet;
+    final deviceType = DeviceType.from(context);
+    final isDesktop = deviceType == DeviceType.desktop ||
+        deviceType == DeviceType.large ||
+        deviceType == DeviceType.tablet;
+    final enablePullToRefresh =
+        deviceType == DeviceType.mobile || deviceType == DeviceType.tablet;
 
     return Scaffold(
       backgroundColor: AppColors.slate50,
@@ -73,6 +76,16 @@ class CustomerDetailScreen extends ConsumerWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.slate900),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, size: 20),
+            tooltip: 'Refresh',
+            onPressed: () {
+              ref.invalidate(customerDetailProvider(customerId));
+              ref
+                  .read(customerTransactionsProvider(customerId).notifier)
+                  .refresh();
+            },
+          ),
           if (customerAsync.hasValue)
             IconButton(
               icon: const Icon(Icons.share_outlined),
@@ -93,202 +106,198 @@ class CustomerDetailScreen extends ConsumerWidget {
           onRetry: () => ref.refresh(customerDetailProvider(customerId)),
         ),
         data: (customer) {
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(customerDetailProvider(customerId));
-              await ref
-                  .read(customerTransactionsProvider(customerId).notifier)
-                  .refresh();
-            },
-            child: ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                // Top Info & Credit Status
-                if (isDesktop)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                          flex: 3,
-                          child: _CustomerProfileCard(customer: customer)),
-                      const SizedBox(width: 20),
-                      Expanded(
-                          flex: 2,
-                          child: _CustomerCreditCard(customer: customer)),
-                    ],
-                  )
-                else ...[
-                  _CustomerProfileCard(customer: customer),
-                  const SizedBox(height: 16),
-                  _CustomerCreditCard(customer: customer),
-                ],
-
-                const SizedBox(height: 32),
-
-                // Transactions / Ledger Header
+          final content = ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              // Top Info & Credit Status
+              if (isDesktop)
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Transaction & Repayment History (Ledger)',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.slate900,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            final txs = transactionsAsync.value ?? [];
-                            _copyStatement(context, customer, txs);
-                          },
-                          icon: const Icon(Icons.copy, size: 16),
-                          label: const Text('Copy Statement'),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(Icons.refresh, size: 20),
-                          tooltip: 'Refresh',
-                          onPressed: () => ref
-                              .read(customerTransactionsProvider(customerId)
-                                  .notifier)
-                              .refresh(),
-                        ),
-                      ],
-                    ),
+                    Expanded(
+                        flex: 3,
+                        child: _CustomerProfileCard(customer: customer)),
+                    const SizedBox(width: 20),
+                    Expanded(
+                        flex: 2,
+                        child: _CustomerCreditCard(customer: customer)),
                   ],
-                ),
+                )
+              else ...[
+                _CustomerProfileCard(customer: customer),
                 const SizedBox(height: 16),
+                _CustomerCreditCard(customer: customer),
+              ],
 
-                // Transactions Table
-                transactionsAsync.when(
-                  loading: () => const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(24.0),
-                      child: CircularProgressIndicator(),
+              const SizedBox(height: 32),
+
+              // Transactions / Ledger Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Transaction & Repayment History (Ledger)',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.slate900,
                     ),
                   ),
-                  error: (err, _) => Text('Error: $err',
-                      style: const TextStyle(color: AppColors.danger)),
-                  data: (transactions) {
-                    if (transactions.isEmpty) {
-                      return Container(
-                        padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.slate200),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          'No transaction history found',
-                          style: TextStyle(color: AppColors.slate500),
-                        ),
-                      );
-                    }
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          final txs = transactionsAsync.value ?? [];
+                          _copyStatement(context, customer, txs);
+                        },
+                        icon: const Icon(Icons.copy, size: 16),
+                        label: const Text('Copy Statement'),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.refresh, size: 20),
+                        tooltip: 'Refresh',
+                        onPressed: () => ref
+                            .read(customerTransactionsProvider(customerId)
+                                .notifier)
+                            .refresh(),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
 
-                    return AppDataTable(
-                      columns: const [
-                        DataColumn(
-                            label: Text('Date & Time',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w700))),
-                        DataColumn(
-                            label: Text('Type',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w700))),
-                        DataColumn(
-                            label: Text('Amount',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w700))),
-                        DataColumn(
-                            label: Text('Method',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w700))),
-                        DataColumn(
-                            label: Text('Balance After',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w700))),
-                        DataColumn(
-                            label: Text('Notes',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w700))),
-                      ],
-                      rows: transactions.map((t) {
-                        final isRepayment = t.transactionType ==
-                            CustomerTransactionType.repayment;
-                        final dateStr = DateFormat('yyyy-MM-dd HH:mm')
-                            .format(t.createdAt.toLocal());
-                    
-                        return DataRow(
-                          cells: [
-                            DataCell(Text(dateStr,
-                                style: const TextStyle(fontSize: 12))),
-                            DataCell(
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: isRepayment
-                                      ? AppColors.successBg
-                                      : AppColors.dangerBg,
-                                  borderRadius:
-                                      BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  isRepayment
-                                      ? 'Repayment'
-                                      : (t.transactionType ==
-                                              CustomerTransactionType
-                                                  .openingBalance
-                                          ? 'Opening Debt'
-                                          : 'Credit Sale'),
-                                  style: TextStyle(
-                                    color: isRepayment
-                                        ? AppColors.success
-                                        : AppColors.danger,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12,
-                                  ),
-                                ),
+              // Transactions Table
+              transactionsAsync.when(
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+                error: (err, _) => Text('Error: $err',
+                    style: const TextStyle(color: AppColors.danger)),
+                data: (transactions) {
+                  if (transactions.isEmpty) {
+                    return Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.slate200),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text(
+                        'No transaction history found',
+                        style: TextStyle(color: AppColors.slate500),
+                      ),
+                    );
+                  }
+
+                  return AppDataTable(
+                    columns: const [
+                      DataColumn(
+                          label: Text('Date & Time',
+                              style: TextStyle(fontWeight: FontWeight.w700))),
+                      DataColumn(
+                          label: Text('Type',
+                              style: TextStyle(fontWeight: FontWeight.w700))),
+                      DataColumn(
+                          label: Text('Amount',
+                              style: TextStyle(fontWeight: FontWeight.w700))),
+                      DataColumn(
+                          label: Text('Method',
+                              style: TextStyle(fontWeight: FontWeight.w700))),
+                      DataColumn(
+                          label: Text('Balance After',
+                              style: TextStyle(fontWeight: FontWeight.w700))),
+                      DataColumn(
+                          label: Text('Notes',
+                              style: TextStyle(fontWeight: FontWeight.w700))),
+                    ],
+                    rows: transactions.map((t) {
+                      final isRepayment = t.transactionType ==
+                          CustomerTransactionType.repayment;
+                      final dateStr = DateFormat('yyyy-MM-dd HH:mm')
+                          .format(t.createdAt.toLocal());
+
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(dateStr,
+                              style: const TextStyle(fontSize: 12))),
+                          DataCell(
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: isRepayment
+                                    ? AppColors.successBg
+                                    : AppColors.dangerBg,
+                                borderRadius: BorderRadius.circular(6),
                               ),
-                            ),
-                            DataCell(
-                              Text(
-                                '${isRepayment ? '-' : '+'} ${CurrencyFormatter.format(t.amount)}',
+                              child: Text(
+                                isRepayment
+                                    ? 'Repayment'
+                                    : (t.transactionType ==
+                                            CustomerTransactionType
+                                                .openingBalance
+                                        ? 'Opening Debt'
+                                        : 'Credit Sale'),
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w700,
                                   color: isRepayment
                                       ? AppColors.success
-                                      : AppColors.slate900,
+                                      : AppColors.danger,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
-                            DataCell(Text(t.paymentMethod.toUpperCase(),
-                                style: const TextStyle(fontSize: 12))),
-                            DataCell(
-                              Text(
-                                CurrencyFormatter.format(
-                                    t.balanceAfter),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13),
+                          ),
+                          DataCell(
+                            Text(
+                              '${isRepayment ? '-' : '+'} ${CurrencyFormatter.format(t.amount)}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: isRepayment
+                                    ? AppColors.success
+                                    : AppColors.slate900,
                               ),
                             ),
-                            DataCell(Text(t.notes ?? '-',
-                                style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.slate600))),
-                          ],
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
-              ],
-            ),
+                          ),
+                          DataCell(Text(t.paymentMethod.toUpperCase(),
+                              style: const TextStyle(fontSize: 12))),
+                          DataCell(
+                            Text(
+                              CurrencyFormatter.format(t.balanceAfter),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                          ),
+                          DataCell(Text(t.notes ?? '-',
+                              style: const TextStyle(
+                                  fontSize: 12, color: AppColors.slate600))),
+                        ],
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+            ],
           );
+
+          if (enablePullToRefresh) {
+            return RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(customerDetailProvider(customerId));
+                await ref
+                    .read(customerTransactionsProvider(customerId).notifier)
+                    .refresh();
+              },
+              child: content,
+            );
+          }
+
+          return content;
         },
       ),
     );

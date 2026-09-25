@@ -350,7 +350,7 @@ class _DesktopScaffold extends StatelessWidget {
                   child: Container(
                     margin: const EdgeInsets.only(top: 5, bottom: 10, right: 5),
                     decoration: BoxDecoration(
-                      color: AppColors.slate50,
+                      color: AppColors.slate100,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(22),
                         bottomLeft: Radius.circular(16),
