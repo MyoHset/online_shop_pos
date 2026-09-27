@@ -614,6 +614,7 @@ class _PaymentMethodIcon extends StatelessWidget {
       PaymentMethod.kbzPay => (Icons.account_balance_wallet_outlined, const Color(0xFF1565C0)),
       PaymentMethod.wavePay => (Icons.waves_outlined, const Color(0xFFE65100)),
       PaymentMethod.bankTransfer => (Icons.account_balance_outlined, AppColors.slate700),
+      PaymentMethod.credit => (Icons.credit_card_outlined, const Color(0xFF7C3AED)),
     };
 
     return Container(

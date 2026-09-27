@@ -395,6 +395,13 @@ class _OrderCardState extends State<OrderCard> {
       ),
     );
   }
+
+  String _getInitials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts[0].isEmpty) return '?';
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
 }
 
 /// Small pill chip showing the order type on cards.

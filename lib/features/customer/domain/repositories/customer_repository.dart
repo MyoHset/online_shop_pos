@@ -42,4 +42,11 @@ abstract interface class CustomerRepository {
 
   /// Fetch transaction ledger history for a customer.
   Future<Either<Failure, List<CustomerTransaction>>> getTransactions(String customerId);
+
+  /// Toggle customer account suspension.
+  Future<Either<Failure, Customer>> toggleSuspendCustomer({
+    required String id,
+    required bool isSuspended,
+    String? reason,
+  });
 }

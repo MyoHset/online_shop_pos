@@ -23,6 +23,8 @@ mixin _$CustomerModel {
   double get currentDebt;
   String get repaymentCycle;
   String? get notes;
+  bool get isSuspended;
+  String? get suspendedReason;
   DateTime get createdAt;
   DateTime get updatedAt;
 
@@ -54,6 +56,10 @@ mixin _$CustomerModel {
             (identical(other.repaymentCycle, repaymentCycle) ||
                 other.repaymentCycle == repaymentCycle) &&
             (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.isSuspended, isSuspended) ||
+                other.isSuspended == isSuspended) &&
+            (identical(other.suspendedReason, suspendedReason) ||
+                other.suspendedReason == suspendedReason) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -62,12 +68,25 @@ mixin _$CustomerModel {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, shopId, name, phone, address,
-      creditLimit, currentDebt, repaymentCycle, notes, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      shopId,
+      name,
+      phone,
+      address,
+      creditLimit,
+      currentDebt,
+      repaymentCycle,
+      notes,
+      isSuspended,
+      suspendedReason,
+      createdAt,
+      updatedAt);
 
   @override
   String toString() {
-    return 'CustomerModel(id: $id, shopId: $shopId, name: $name, phone: $phone, address: $address, creditLimit: $creditLimit, currentDebt: $currentDebt, repaymentCycle: $repaymentCycle, notes: $notes, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'CustomerModel(id: $id, shopId: $shopId, name: $name, phone: $phone, address: $address, creditLimit: $creditLimit, currentDebt: $currentDebt, repaymentCycle: $repaymentCycle, notes: $notes, isSuspended: $isSuspended, suspendedReason: $suspendedReason, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }
 
@@ -87,6 +106,8 @@ abstract mixin class $CustomerModelCopyWith<$Res> {
       double currentDebt,
       String repaymentCycle,
       String? notes,
+      bool isSuspended,
+      String? suspendedReason,
       DateTime createdAt,
       DateTime updatedAt});
 }
@@ -113,6 +134,8 @@ class _$CustomerModelCopyWithImpl<$Res>
     Object? currentDebt = null,
     Object? repaymentCycle = null,
     Object? notes = freezed,
+    Object? isSuspended = null,
+    Object? suspendedReason = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
@@ -152,6 +175,14 @@ class _$CustomerModelCopyWithImpl<$Res>
       notes: freezed == notes
           ? _self.notes
           : notes // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isSuspended: null == isSuspended
+          ? _self.isSuspended
+          : isSuspended // ignore: cast_nullable_to_non_nullable
+              as bool,
+      suspendedReason: freezed == suspendedReason
+          ? _self.suspendedReason
+          : suspendedReason // ignore: cast_nullable_to_non_nullable
               as String?,
       createdAt: null == createdAt
           ? _self.createdAt
@@ -268,6 +299,8 @@ extension CustomerModelPatterns on CustomerModel {
             double currentDebt,
             String repaymentCycle,
             String? notes,
+            bool isSuspended,
+            String? suspendedReason,
             DateTime createdAt,
             DateTime updatedAt)?
         $default, {
@@ -286,6 +319,8 @@ extension CustomerModelPatterns on CustomerModel {
             _that.currentDebt,
             _that.repaymentCycle,
             _that.notes,
+            _that.isSuspended,
+            _that.suspendedReason,
             _that.createdAt,
             _that.updatedAt);
       case _:
@@ -318,6 +353,8 @@ extension CustomerModelPatterns on CustomerModel {
             double currentDebt,
             String repaymentCycle,
             String? notes,
+            bool isSuspended,
+            String? suspendedReason,
             DateTime createdAt,
             DateTime updatedAt)
         $default,
@@ -335,6 +372,8 @@ extension CustomerModelPatterns on CustomerModel {
             _that.currentDebt,
             _that.repaymentCycle,
             _that.notes,
+            _that.isSuspended,
+            _that.suspendedReason,
             _that.createdAt,
             _that.updatedAt);
       case _:
@@ -366,6 +405,8 @@ extension CustomerModelPatterns on CustomerModel {
             double currentDebt,
             String repaymentCycle,
             String? notes,
+            bool isSuspended,
+            String? suspendedReason,
             DateTime createdAt,
             DateTime updatedAt)?
         $default,
@@ -383,6 +424,8 @@ extension CustomerModelPatterns on CustomerModel {
             _that.currentDebt,
             _that.repaymentCycle,
             _that.notes,
+            _that.isSuspended,
+            _that.suspendedReason,
             _that.createdAt,
             _that.updatedAt);
       case _:
@@ -405,6 +448,8 @@ class _CustomerModel extends CustomerModel {
       this.currentDebt = 0.0,
       this.repaymentCycle = 'monthly',
       this.notes,
+      this.isSuspended = false,
+      this.suspendedReason,
       required this.createdAt,
       required this.updatedAt})
       : super._();
@@ -432,6 +477,11 @@ class _CustomerModel extends CustomerModel {
   final String repaymentCycle;
   @override
   final String? notes;
+  @override
+  @JsonKey()
+  final bool isSuspended;
+  @override
+  final String? suspendedReason;
   @override
   final DateTime createdAt;
   @override
@@ -469,6 +519,10 @@ class _CustomerModel extends CustomerModel {
             (identical(other.repaymentCycle, repaymentCycle) ||
                 other.repaymentCycle == repaymentCycle) &&
             (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.isSuspended, isSuspended) ||
+                other.isSuspended == isSuspended) &&
+            (identical(other.suspendedReason, suspendedReason) ||
+                other.suspendedReason == suspendedReason) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -477,12 +531,25 @@ class _CustomerModel extends CustomerModel {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, shopId, name, phone, address,
-      creditLimit, currentDebt, repaymentCycle, notes, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      shopId,
+      name,
+      phone,
+      address,
+      creditLimit,
+      currentDebt,
+      repaymentCycle,
+      notes,
+      isSuspended,
+      suspendedReason,
+      createdAt,
+      updatedAt);
 
   @override
   String toString() {
-    return 'CustomerModel(id: $id, shopId: $shopId, name: $name, phone: $phone, address: $address, creditLimit: $creditLimit, currentDebt: $currentDebt, repaymentCycle: $repaymentCycle, notes: $notes, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'CustomerModel(id: $id, shopId: $shopId, name: $name, phone: $phone, address: $address, creditLimit: $creditLimit, currentDebt: $currentDebt, repaymentCycle: $repaymentCycle, notes: $notes, isSuspended: $isSuspended, suspendedReason: $suspendedReason, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }
 
@@ -504,6 +571,8 @@ abstract mixin class _$CustomerModelCopyWith<$Res>
       double currentDebt,
       String repaymentCycle,
       String? notes,
+      bool isSuspended,
+      String? suspendedReason,
       DateTime createdAt,
       DateTime updatedAt});
 }
@@ -530,6 +599,8 @@ class __$CustomerModelCopyWithImpl<$Res>
     Object? currentDebt = null,
     Object? repaymentCycle = null,
     Object? notes = freezed,
+    Object? isSuspended = null,
+    Object? suspendedReason = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
@@ -569,6 +640,14 @@ class __$CustomerModelCopyWithImpl<$Res>
       notes: freezed == notes
           ? _self.notes
           : notes // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isSuspended: null == isSuspended
+          ? _self.isSuspended
+          : isSuspended // ignore: cast_nullable_to_non_nullable
+              as bool,
+      suspendedReason: freezed == suspendedReason
+          ? _self.suspendedReason
+          : suspendedReason // ignore: cast_nullable_to_non_nullable
               as String?,
       createdAt: null == createdAt
           ? _self.createdAt

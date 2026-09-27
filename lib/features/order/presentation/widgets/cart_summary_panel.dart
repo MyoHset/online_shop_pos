@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../customer/domain/entities/customer.dart';
-import '../../../customer/presentation/providers/customer_provider.dart';
-import '../../../customer/presentation/widgets/customer_form_dialog.dart';
+import '../../../customer/presentation/widgets/customer_search_picker.dart';
 import '../providers/quick_sale_provider.dart';
 import 'discount_input.dart';
 
@@ -18,38 +18,19 @@ class CartSummaryPanel extends ConsumerStatefulWidget {
 
 class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
   bool _showCustomerField = false;
-  late final TextEditingController _customerController;
-
-  @override
-  void initState() {
-    super.initState();
-    _customerController = TextEditingController(
-      text: ref.read(quickSaleProvider).customerName,
-    );
-  }
+  final _paidAmountController = TextEditingController();
 
   @override
   void dispose() {
-    _customerController.dispose();
+    _paidAmountController.dispose();
     super.dispose();
-  }
-
-  Future<void> _addNewCustomer() async {
-    final newCustomer = await CustomerFormDialog.show(context);
-    if (newCustomer != null && mounted) {
-      _customerController.text = newCustomer.name;
-      ref.read(quickSaleProvider.notifier).updateCustomer(
-        name: newCustomer.name,
-        id: newCustomer.id,
-      );
-      setState(() => _showCustomerField = true);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(quickSaleProvider);
     final notifier = ref.read(quickSaleProvider.notifier);
+    final customer = state.selectedCustomer;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -76,265 +57,173 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
                   color: AppColors.danger.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  state.errorMessage!,
-                  style: const TextStyle(color: AppColors.danger, fontSize: 13),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline, size: 18, color: AppColors.danger),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        state.errorMessage!,
+                        style: const TextStyle(color: AppColors.danger, fontSize: 13),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
 
-          // Customer / Credit Section
-          () {
-            final isCredit = state.paymentMethod == 'credit';
-            final showCustomer =
-                isCredit || _showCustomerField || state.customerName.isNotEmpty;
-
-            if (!showCustomer) {
-              return Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () => setState(() => _showCustomerField = true),
-                  icon: const Icon(
-                    Icons.person_add_alt_1,
-                    size: 18,
+          // Customer Selection Section
+          if (!_showCustomerField && customer == null && !state.isCredit)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => setState(() => _showCustomerField = true),
+                icon: const Icon(Icons.person_add_alt_1, size: 18),
+                label: const Text('Select Customer'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.slate900,
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+            )
+          else ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Customer',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.slate500,
+                      ),
+                    ),
+                    if (state.isCredit && customer == null) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.dangerBg,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Required for Credit',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.danger,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (customer != null)
+                  TextButton(
+                    onPressed: () {
+                      notifier.selectCustomer(null);
+                      setState(() => _showCustomerField = true);
+                      _paidAmountController.clear();
+                      notifier.updatePaidAmount(0.0);
+                    },
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                    child: const Text('Change', style: TextStyle(fontSize: 12, color: AppColors.info)),
                   ),
-                  label: const Text('Add customer name (Optional)'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.slate900,
-                    padding: EdgeInsets.zero,
+              ],
+            ),
+            const SizedBox(height: 6),
+            if (customer == null)
+              CustomerSearchPicker(
+                selectedCustomer: customer,
+                hintText: 'Search customer by Name or Phone...',
+                onCustomerSelected: (c) {
+                  notifier.selectCustomer(c);
+                  setState(() => _showCustomerField = false);
+                },
+              )
+            else
+              // Selected Customer Card & Status
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: customer.isSuspended
+                      ? AppColors.dangerBg
+                      : (customer.hasDebt ? AppColors.warningBg : AppColors.slate50),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: customer.isSuspended
+                        ? AppColors.danger.withValues(alpha: 0.4)
+                        : (customer.hasDebt
+                            ? AppColors.warning.withValues(alpha: 0.4)
+                            : AppColors.slate200),
                   ),
                 ),
-              );
-            }
-
-            return Consumer(
-              builder: (context, ref, _) {
-                final customers = ref.watch(customerListProvider).value ?? [];
-                final nameLower = state.customerName.trim().toLowerCase();
-                final matched = nameLower.isNotEmpty
-                    ? customers
-                        .where((c) =>
-                            c.name.toLowerCase() == nameLower ||
-                            c.phone == nameLower)
-                        .firstOrNull
-                    : null;
-                final suggestions = nameLower.isNotEmpty && matched == null
-                    ? customers
-                        .where((c) =>
-                            c.name.toLowerCase().contains(nameLower) ||
-                            c.phone.contains(nameLower))
-                        .take(3)
-                        .toList()
-                    : <Customer>[];
-
-                if (_customerController.text != state.customerName &&
-                    !FocusScope.of(context).hasFocus) {
-                  _customerController.text = state.customerName;
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header Row
-                      Row(
-                        children: [
-                          Text(
-                            isCredit ? 'Customer *' : 'Customer (Optional)',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: isCredit &&
-                                      state.customerName.trim().isEmpty
-                                  ? AppColors.danger
-                                  : AppColors.slate700,
-                            ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          customer.name,
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                        ),
+                        Text(
+                          customer.phone,
+                          style: const TextStyle(fontSize: 12, color: AppColors.slate600),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          customer.hasDebt
+                              ? 'Outstanding: ${CurrencyFormatter.format(customer.currentDebt)}'
+                              : 'No Outstanding Debt',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: customer.hasDebt ? AppColors.danger : AppColors.success,
                           ),
-                          if (isCredit) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.danger.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                'Required for Credit',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.danger,
-                                ),
-                              ),
-                            ),
-                          ],
-                          const Spacer(),
-                          TextButton.icon(
-                            onPressed: _addNewCustomer,
-                            icon: const Icon(Icons.add, size: 14),
-                            label: const Text('New Customer'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppColors.greenNude,
-                              padding: EdgeInsets.zero,
-                              visualDensity: VisualDensity.compact,
-                              textStyle: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                        Text(
+                          customer.creditLimit > 0
+                              ? 'Limit: ${CurrencyFormatter.format(customer.creditLimit)}'
+                              : 'Limit: Unlimited',
+                          style: const TextStyle(fontSize: 11, color: AppColors.slate600),
+                        ),
+                      ],
+                    ),
+                    if (customer.isSuspended) ...[
                       const SizedBox(height: 6),
-                      TextField(
-                        controller: _customerController,
-                        decoration: InputDecoration(
-                          hintText: isCredit
-                              ? 'Search or enter customer name (Required) *'
-                              : 'Customer Name / Phone (Optional)',
-                          isDense: true,
-                          filled: true,
-                          fillColor: AppColors.slate50,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: isCredit &&
-                                      state.customerName.trim().isEmpty
-                                  ? AppColors.danger
-                                  : AppColors.slate200,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: isCredit &&
-                                      state.customerName.trim().isEmpty
-                                  ? AppColors.danger.withValues(alpha: 0.6)
-                                  : AppColors.slate200,
-                            ),
-                          ),
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.close, size: 18),
-                            onPressed: () {
-                              _customerController.clear();
-                              notifier.updateCustomer(name: '', id: null);
-                              if (!isCredit) {
-                                setState(() => _showCustomerField = false);
-                              }
-                            },
-                          ),
+                      Text(
+                        '⛔ Account suspended: ${customer.suspendedReason ?? 'Credit sales blocked'}',
+                        style: const TextStyle(
+                          color: AppColors.danger,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
                         ),
-                        onChanged: (val) {
-                          final valLower = val.trim().toLowerCase();
-                          final m = customers
-                              .where((c) =>
-                                  c.name.toLowerCase() == valLower ||
-                                  c.phone == valLower)
-                              .firstOrNull;
-                          notifier.updateCustomer(name: val, id: m?.id);
-                        },
                       ),
-                      if (isCredit && state.customerName.trim().isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 4, left: 2),
-                          child: Text(
-                            'Customer is required for credit payment.',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.danger,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      if (matched != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: matched.isLimitReached
-                                  ? AppColors.danger.withValues(alpha: 0.12)
-                                  : AppColors.success.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  matched.isLimitReached
-                                      ? Icons.warning_amber_rounded
-                                      : Icons.account_balance_wallet_outlined,
-                                  size: 13,
-                                  color: matched.isLimitReached
-                                      ? AppColors.danger
-                                      : AppColors.success,
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  matched.hasDebt
-                                      ? 'Debt: ${CurrencyFormatter.format(matched.currentDebt)}'
-                                      : 'No Debt',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: matched.isLimitReached
-                                        ? AppColors.danger
-                                        : AppColors.success,
-                                  ),
-                                ),
-                                if (matched.creditLimit > 0) ...[
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '| Limit: ${CurrencyFormatter.format(matched.creditLimit)}',
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.slate600,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                      if (suggestions.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Wrap(
-                            spacing: 6,
-                            children: suggestions.map((c) {
-                              return ActionChip(
-                                padding: EdgeInsets.zero,
-                                labelPadding: const EdgeInsets.symmetric(
-                                    horizontal: 6),
-                                label: Text('${c.name} (${c.phone})',
-                                    style: const TextStyle(fontSize: 11)),
-                                onPressed: () {
-                                  _customerController.text = c.name;
-                                  notifier.updateCustomer(
-                                    name: c.name,
-                                    id: c.id,
-                                  );
-                                },
-                              );
-                            }).toList(),
-                          ),
-                        ),
                     ],
-                  ),
-                );
-              },
-            );
-          }(),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 12),
+          ],
 
           // Payment Method Selector
-          const Text('Payment Method',
-              style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  color: AppColors.slate500)),
+          const Text(
+            'Payment Method',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: AppColors.slate500,
+            ),
+          ),
           const SizedBox(height: 8),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -354,7 +243,86 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
+
+          // If Credit is selected: show Partial Payment and Due Date details
+          if (state.isCredit) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.slate100,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.slate200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Credit Details',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  ),
+                  const SizedBox(height: 10),
+                  // Partial Upfront Payment field
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _paidAmountController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          decoration: const InputDecoration(
+                            labelText: 'Upfront Deposit (Optional)',
+                            hintText: '0',
+                            suffixText: 'MMK',
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          ),
+                          onChanged: (val) {
+                            final parsed = double.tryParse(val.trim()) ?? 0.0;
+                            notifier.updatePaidAmount(parsed);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Remaining Credit Debt:', style: TextStyle(fontSize: 12, color: AppColors.slate600)),
+                      Text(
+                        CurrencyFormatter.format(state.creditDebtAmount),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.danger),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  if (customer != null)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Scheduled Due Date:', style: TextStyle(fontSize: 12, color: AppColors.slate600)),
+                        Text(
+                          DateFormat('MMM dd, yyyy').format(customer.calculateDueDate(DateTime.now())),
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.slate800),
+                        ),
+                      ],
+                    ),
+                  if (customer != null &&
+                      customer.creditLimit > 0 &&
+                      (customer.currentDebt + state.creditDebtAmount) > customer.creditLimit) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      '⚠️ Warning: Will exceed credit limit by ${CurrencyFormatter.format((customer.currentDebt + state.creditDebtAmount) - customer.creditLimit)}',
+                      style: const TextStyle(fontSize: 11, color: AppColors.danger, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
           const Divider(color: AppColors.slate200, height: 1),
           const SizedBox(height: 14),
 
@@ -398,17 +366,21 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Total',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.slate500)),
+              const Text(
+                'Total',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.slate500,
+                ),
+              ),
               Text(
                 CurrencyFormatter.format(state.totalAmount),
                 style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.slate900),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.slate900,
+                ),
               ),
             ],
           ),
@@ -416,7 +388,7 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
 
           // Submit
           AppButton(
-            label: 'Complete Sale',
+            label: state.isCredit ? 'Complete Credit Sale' : 'Complete Sale',
             isLoading: state.isLoading,
             backgroundColor: AppColors.greenNude,
             textColor: AppColors.slate900,

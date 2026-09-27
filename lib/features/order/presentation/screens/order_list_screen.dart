@@ -11,6 +11,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_data_table.dart';
 import '../../../../core/widgets/app_snack_bar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../core/widgets/search_text_field.dart';
 import '../../domain/entities/order.dart';
 import '../providers/order_list_provider.dart';
 import '../widgets/order_card.dart';
@@ -46,13 +47,11 @@ class _OrderListReportView extends ConsumerStatefulWidget {
   ConsumerState<_OrderListReportView> createState() =>
       _OrderListReportViewState();
 }
-
 class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
   int _selectedFilter = 0; // 0: All, 1: On Process, 2: Completed
   String _searchQuery = '';
   final _searchController = TextEditingController();
   bool _sortNewestFirst = true;
-
   OrderDatePreset _datePreset = OrderDatePreset.all;
   DateTimeRange? _customDateRange;
 
@@ -591,7 +590,7 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
           Expanded(
             child: _buildDesktopMetricCard(
               title: 'Active Orders',
-              value: '$activeCount',
+              value: '',
               icon: Icons.pending_actions_rounded,
               color: AppColors.warning,
             ),
@@ -600,7 +599,7 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
           Expanded(
             child: _buildDesktopMetricCard(
               title: 'Completed',
-              value: '$completedCount',
+              value: '',
               icon: Icons.check_circle_outline_rounded,
               color: AppColors.success,
             ),
@@ -1441,6 +1440,112 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
   }
 }
 
+class _CustomerCell extends StatelessWidget {
+  const _CustomerCell({
+    required this.customerName,
+    required this.customerPhone,
+    required this.orderType,
+  });
+
+  final String customerName;
+  final String? customerPhone;
+  final OrderType orderType;
+
+  String _getInitials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts[0].isEmpty) return '?';
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isWalkIn = customerName.isEmpty || customerName == 'Walk-in Customer';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: isWalkIn ? AppColors.slate100 : const Color(0xFFF1F5F9),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isWalkIn ? AppColors.slate200 : AppColors.slate300,
+                width: 1,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: isWalkIn
+                ? const Icon(
+                    Icons.storefront_outlined,
+                    size: 16,
+                    color: AppColors.slate500,
+                  )
+                : Text(
+                    _getInitials(customerName),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.slate800,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                isWalkIn ? 'Walk-in Customer' : customerName,
+                style: TextStyle(
+                  fontWeight: isWalkIn ? FontWeight.w600 : FontWeight.w700,
+                  fontSize: 13,
+                  color: isWalkIn ? AppColors.slate700 : AppColors.slate900,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              if (customerPhone != null && customerPhone!.isNotEmpty)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.phone_outlined,
+                      size: 11,
+                      color: AppColors.slate400,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      customerPhone!,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.slate500,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Text(
+                  orderType.displayLabel,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.slate400,
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _EmptyOrdersView extends StatelessWidget {
   const _EmptyOrdersView({
     this.hasFilters = false,
@@ -1511,6 +1616,248 @@ class _EmptyOrdersView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FloatingSaleSummaryBar extends StatelessWidget {
+  const _FloatingSaleSummaryBar({
+    required this.dateLabel,
+    required this.totalOrders,
+    required this.totalSales,
+    required this.totalItems,
+    required this.onClearDateFilter,
+    required this.isCompact,
+  });
+
+  final String dateLabel;
+  final int totalOrders;
+  final double totalSales;
+  final int totalItems;
+  final VoidCallback onClearDateFilter;
+  final bool isCompact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: isCompact ? 360 : 660,
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(
+          horizontal: isCompact ? 14 : 20,
+          vertical: isCompact ? 10 : 12,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0F172A), // Deep slate 900
+          borderRadius: BorderRadius.circular(50),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.15),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.28),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: isCompact ? _buildCompactView() : _buildFullView(),
+      ),
+    );
+  }
+
+  Widget _buildCompactView() {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: AppColors.greenNude.withValues(alpha: 0.2),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.insights_rounded,
+            size: 16,
+            color: AppColors.greenNude,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$dateLabel • $totalOrders Orders ($totalItems items)',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 1),
+              Text(
+                CurrencyFormatter.format(totalSales),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.close, size: 16, color: Colors.white60),
+          onPressed: onClearDateFilter,
+          tooltip: 'Clear Date Filter',
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFullView() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Date Icon & Label Badge
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.calendar_today_outlined,
+                size: 13,
+                color: AppColors.greenNude,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                dateLabel,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        _divider(),
+        const SizedBox(width: 16),
+
+        // Orders Count
+        _metricItem(
+          label: 'ORDERS',
+          value: '$totalOrders',
+        ),
+        const SizedBox(width: 16),
+        _divider(),
+        const SizedBox(width: 16),
+
+        // Items Count
+        _metricItem(
+          label: 'ITEMS SOLD',
+          value: '$totalItems',
+        ),
+        const SizedBox(width: 16),
+        _divider(),
+        const SizedBox(width: 16),
+
+        // Total Revenue
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'TOTAL SALES',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: AppColors.greenNude,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              CurrencyFormatter.format(totalSales),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 14),
+
+        // Clear Button
+        InkWell(
+          onTap: onClearDateFilter,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.close_rounded,
+              size: 14,
+              color: Colors.white70,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _divider() {
+    return Container(
+      height: 24,
+      width: 1,
+      color: Colors.white.withValues(alpha: 0.15),
+    );
+  }
+
+  Widget _metricItem({required String label, required String value}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: Colors.white.withValues(alpha: 0.6),
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+      ],
     );
   }
 }

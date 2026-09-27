@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +11,7 @@ import '../../../../core/widgets/app_data_table.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../core/widgets/app_snack_bar.dart';
 import '../../domain/entities/customer.dart';
 import '../../domain/entities/customer_transaction.dart';
 import '../providers/customer_provider.dart';
@@ -20,6 +22,40 @@ class CustomerDetailScreen extends ConsumerStatefulWidget {
   const CustomerDetailScreen({super.key, required this.customerId});
 
   final String customerId;
+
+  void _copyStatement(BuildContext context, Customer customer,
+      List<CustomerTransaction> transactions) {
+    final buffer = StringBuffer();
+    buffer.writeln('===================================');
+    buffer.writeln('CUSTOMER STATEMENT - ${customer.name.toUpperCase()}');
+    buffer.writeln('Phone: ${customer.phone}');
+    if (customer.address != null)
+      buffer.writeln('Address: ${customer.address}');
+    buffer.writeln('Repayment Terms: ${customer.repaymentCycle.displayLabel}');
+    buffer.writeln(
+        'Outstanding Debt: ${CurrencyFormatter.format(customer.currentDebt)}');
+    buffer.writeln(
+        'Credit Limit: ${customer.creditLimit > 0 ? CurrencyFormatter.format(customer.creditLimit) : 'Unlimited'}');
+    buffer.writeln(
+        'Generated: ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}');
+    buffer.writeln('-----------------------------------');
+    buffer.writeln('DATE        | TYPE        | AMOUNT       | BALANCE');
+    buffer.writeln('-----------------------------------');
+
+    for (final t in transactions) {
+      final dateStr = DateFormat('yyyy-MM-dd').format(t.createdAt);
+      final isRepay = t.transactionType == CustomerTransactionType.repayment;
+      final typeStr = isRepay ? 'Repayment ' : 'CreditSale';
+      final amtStr =
+          '${isRepay ? '-' : '+'}${CurrencyFormatter.format(t.amount)}';
+      final balStr = CurrencyFormatter.format(t.balanceAfter);
+      buffer.writeln('$dateStr | $typeStr | $amtStr | $balStr');
+    }
+    buffer.writeln('===================================');
+
+    Clipboard.setData(ClipboardData(text: buffer.toString()));
+    AppSnackBar.showSuccess(context, 'Statement copied to clipboard!');
+  }
 
   @override
   ConsumerState<CustomerDetailScreen> createState() =>
@@ -42,9 +78,12 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
     final transactionsAsync =
         ref.watch(customerTransactionsProvider(widget.customerId));
     final theme = Theme.of(context);
-    final isDesktop = DeviceType.from(context) == DeviceType.desktop ||
-        DeviceType.from(context) == DeviceType.large ||
-        DeviceType.from(context) == DeviceType.tablet;
+    final deviceType = DeviceType.from(context);
+    final isDesktop = deviceType == DeviceType.desktop ||
+        deviceType == DeviceType.large ||
+        deviceType == DeviceType.tablet;
+    final enablePullToRefresh =
+        deviceType == DeviceType.mobile || deviceType == DeviceType.tablet;
 
     return Scaffold(
       backgroundColor: AppColors.slate50,
@@ -83,6 +122,17 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
             visualDensity: VisualDensity.compact,
             onPressed: _refresh,
           ),
+          if (customerAsync.hasValue)
+            IconButton(
+              icon: const Icon(Icons.share_outlined, size: 20, color: AppColors.slate700),
+              tooltip: 'Copy Statement to Clipboard',
+              visualDensity: VisualDensity.compact,
+              onPressed: () {
+                final customer = customerAsync.value!;
+                final txs = transactionsAsync.value ?? [];
+                widget._copyStatement(context, customer, txs);
+              },
+            ),
           if (customerAsync.value != null) ...[
             IconButton(
               icon: Container(
@@ -1238,13 +1288,58 @@ class _EmptyTransactionsCard extends StatelessWidget {
 }
 
 // ── Desktop Subcomponents ─────────────────────────────────────
-class _CustomerProfileCard extends StatelessWidget {
+class _CustomerProfileCard extends ConsumerWidget {
   const _CustomerProfileCard({required this.customer});
 
   final Customer customer;
 
+  Future<void> _toggleSuspension(BuildContext context, WidgetRef ref) async {
+    final willSuspend = !customer.isSuspended;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(willSuspend
+            ? 'Suspend Customer Account?'
+            : 'Reactivate Customer Account?'),
+        content: Text(
+          willSuspend
+              ? 'Suspending this account will block future credit sales for ${customer.name}.'
+              : 'Reactivating this account will allow future credit sales for ${customer.name}.',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor:
+                  willSuspend ? AppColors.danger : AppColors.success,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(willSuspend ? 'Suspend' : 'Reactivate'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !context.mounted) return;
+
+    final success = await ref
+        .read(customerControllerProvider.notifier)
+        .toggleSuspendCustomer(id: customer.id, isSuspended: willSuspend);
+
+    if (context.mounted && success) {
+      AppSnackBar.showSuccess(
+        context,
+        willSuspend
+            ? 'Account has been suspended.'
+            : 'Account has been reactivated.',
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Container(
@@ -1260,55 +1355,88 @@ class _CustomerProfileCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: AppColors.slate100,
-                      child: Text(
-                        customer.name.isNotEmpty
-                            ? customer.name.characters.first.toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.slate800,
-                        ),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: customer.isSuspended
+                        ? AppColors.dangerBg
+                        : AppColors.slate100,
+                    child: Text(
+                      customer.name.isNotEmpty
+                          ? customer.name.characters.first.toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: customer.isSuspended
+                            ? AppColors.danger
+                            : AppColors.slate800,
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Text(
-                            customer.name,
-                            style: theme.textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            customer.phone,
-                            style: const TextStyle(
-                              color: AppColors.slate500,
-                              fontSize: 14,
+                          Text(customer.name,
+                              style: theme.textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w800)),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: customer.isSuspended
+                                  ? AppColors.dangerBg
+                                  : AppColors.successBg,
+                              borderRadius: BorderRadius.circular(6),
                             ),
-                            overflow: TextOverflow.ellipsis,
+                            child: Text(
+                              customer.isSuspended ? 'Suspended' : 'Active',
+                              style: TextStyle(
+                                color: customer.isSuspended
+                                    ? AppColors.danger
+                                    : AppColors.success,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
+                      Text(customer.phone,
+                          style: const TextStyle(
+                              color: AppColors.slate500, fontSize: 14)),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              AppButton(
-                label: 'Edit',
-                icon: const Icon(Icons.edit, size: 16),
-                variant: AppButtonVariant.secondary,
-                onPressed: () =>
-                    CustomerFormDialog.show(context, customer: customer),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      customer.isSuspended
+                          ? Icons.lock_open_outlined
+                          : Icons.lock_outline,
+                      color: customer.isSuspended
+                          ? AppColors.success
+                          : AppColors.danger,
+                    ),
+                    tooltip: customer.isSuspended
+                        ? 'Reactivate Account'
+                        : 'Suspend Account',
+                    onPressed: () => _toggleSuspension(context, ref),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        CustomerFormDialog.show(context, customer: customer),
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Edit'),
+                  ),
+                ],
               ),
             ],
           ),

@@ -7,13 +7,15 @@ enum PaymentMethod {
   cod,
   kbzPay,
   wavePay,
-  bankTransfer;
+  bankTransfer,
+  credit;
 
   String get displayLabel => switch (this) {
         PaymentMethod.cod => 'Cash / COD',
         PaymentMethod.kbzPay => 'KBZPay',
         PaymentMethod.wavePay => 'WavePay',
         PaymentMethod.bankTransfer => 'Bank Transfer',
+        PaymentMethod.credit => 'Credit',
       };
 
   String get value => switch (this) {
@@ -21,6 +23,7 @@ enum PaymentMethod {
         PaymentMethod.kbzPay => 'kbz_pay',
         PaymentMethod.wavePay => 'wave_pay',
         PaymentMethod.bankTransfer => 'bank_transfer',
+        PaymentMethod.credit => 'credit',
       };
 
   static PaymentMethod fromString(String value) {
