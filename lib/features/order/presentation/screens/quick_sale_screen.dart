@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/responsive/adaptive_scaffold.dart';
 import '../../../../core/responsive/device_type.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/category_search_bar.dart';
+import '../../../../core/widgets/mobile_filter_header.dart';
 import '../../../../core/widgets/search_text_field.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/domain/entities/variant.dart';
@@ -16,13 +18,21 @@ import '../providers/quick_sale_provider.dart';
 import '../widgets/cart_line_item.dart';
 import '../widgets/cart_summary_panel.dart';
 import '../widgets/product_tile_selectable.dart';
+import '../widgets/quick_sale_mobile_cart.dart';
 import '../widgets/sale_success_receipt.dart';
 
-class QuickSaleScreen extends ConsumerWidget {
+class QuickSaleScreen extends ConsumerStatefulWidget {
   const QuickSaleScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<QuickSaleScreen> createState() => _QuickSaleScreenState();
+}
+
+class _QuickSaleScreenState extends ConsumerState<QuickSaleScreen> {
+  final GlobalKey _cartIconKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(quickSaleProvider);
 
     if (state.completedOrder != null) {
@@ -38,6 +48,13 @@ class QuickSaleScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.slate50,
       appBar: AppBar(
+        leading: !isLargeScreen
+            ? IconButton(
+                icon: const Icon(Icons.menu_rounded, color: AppColors.slate900),
+                tooltip: 'Open menu',
+                onPressed: () => AdaptiveScaffold.openDrawer(context),
+              )
+            : null,
         title: const Text('Quick Sale'),
         centerTitle: false,
         backgroundColor: Colors.white,
@@ -46,12 +63,13 @@ class QuickSaleScreen extends ConsumerWidget {
           if (isDesktop) const _DesktopSearchAction(),
           if (!isLargeScreen)
             IconButton(
+              key: _cartIconKey,
               icon: Badge(
                 isLabelVisible: state.cart.isNotEmpty,
                 label: Text('${state.cart.items.length}'),
                 child: const Icon(Icons.shopping_cart_outlined),
               ),
-              onPressed: () => _showMobileCart(context),
+              onPressed: () => showQuickSaleMobileCart(context),
             ),
           const SizedBox(width: 16),
         ],
@@ -63,37 +81,90 @@ class QuickSaleScreen extends ConsumerWidget {
       body: Column(
         children: [
           // Top Search and Filter Bar
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-            child: Builder(builder: (ctx) {
-              final categoriesAsync = ref.watch(productCategoriesProvider);
-              final brandsAsync = ref.watch(productBrandsProvider);
-              final filter = ref.watch(quickSaleFilterProvider);
-              return CategorySearchBar(
-                showSearchField: !isDesktop,
-                categories: categoriesAsync.value ?? [],
-                brands: brandsAsync.value ?? [],
-                selectedCategory: filter.category,
-                selectedBrand: filter.brand,
-                searchQuery: filter.search,
-                onCategoryChanged: (c) =>
-                    ref.read(quickSaleFilterProvider.notifier).setCategory(c),
-                onBrandChanged: (b) =>
-                    ref.read(quickSaleFilterProvider.notifier).setBrand(b),
-                onSearchChanged: (s) =>
-                    ref.read(quickSaleFilterProvider.notifier).setSearch(s),
-              );
-            }),
-          ),
-          Container(height: 1, color: AppColors.slate200),
+          if (!isLargeScreen)
+            Builder(
+              builder: (ctx) {
+                final categoriesAsync = ref.watch(productCategoriesProvider);
+                final brandsAsync = ref.watch(productBrandsProvider);
+                final filter = ref.watch(quickSaleFilterProvider);
+                return MobileSearchFilterHeader(
+                  searchQuery: filter.search,
+                  onSearchChanged: (s) =>
+                      ref.read(quickSaleFilterProvider.notifier).setSearch(s),
+                  selectedCategory: filter.category,
+                  selectedBrand: filter.brand,
+                  onCategoryChanged: (c) =>
+                      ref.read(quickSaleFilterProvider.notifier).setCategory(c),
+                  onBrandChanged: (b) =>
+                      ref.read(quickSaleFilterProvider.notifier).setBrand(b),
+                  onClearFilters: () {
+                    ref
+                        .read(quickSaleFilterProvider.notifier)
+                        .setCategory(null);
+                    ref.read(quickSaleFilterProvider.notifier).setBrand(null);
+                  },
+                  onOpenFilter: () => showFilterTopSheet(
+                    context,
+                    categories: categoriesAsync.value ?? [],
+                    brands: brandsAsync.value ?? [],
+                    selectedCategory: filter.category,
+                    selectedBrand: filter.brand,
+                    onCategoryChanged: (c) => ref
+                        .read(quickSaleFilterProvider.notifier)
+                        .setCategory(c),
+                    onBrandChanged: (b) =>
+                        ref.read(quickSaleFilterProvider.notifier).setBrand(b),
+                    onReset: () {
+                      ref
+                          .read(quickSaleFilterProvider.notifier)
+                          .setCategory(null);
+                      ref.read(quickSaleFilterProvider.notifier).setBrand(null);
+                    },
+                  ),
+                );
+              },
+            )
+          else ...[
+            Container(
+              color: Colors.white,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Builder(
+                builder: (ctx) {
+                  final categoriesAsync = ref.watch(productCategoriesProvider);
+                  final brandsAsync = ref.watch(productBrandsProvider);
+                  final filter = ref.watch(quickSaleFilterProvider);
+                  return CategorySearchBar(
+                    showSearchField: !isDesktop,
+                    categories: categoriesAsync.value ?? [],
+                    brands: brandsAsync.value ?? [],
+                    selectedCategory: filter.category,
+                    selectedBrand: filter.brand,
+                    searchQuery: filter.search,
+                    onCategoryChanged: (c) => ref
+                        .read(quickSaleFilterProvider.notifier)
+                        .setCategory(c),
+                    onBrandChanged: (b) =>
+                        ref.read(quickSaleFilterProvider.notifier).setBrand(b),
+                    onSearchChanged: (s) =>
+                        ref.read(quickSaleFilterProvider.notifier).setSearch(s),
+                  );
+                },
+              ),
+            ),
+            Container(height: 1, color: AppColors.slate200),
+          ],
           // Main Content
           Expanded(
             child: Row(
               children: [
                 // Left Side: Product Grid
                 Expanded(
-                  child: _ProductGrid(isDesktop: isDesktop),
+                  child: _ProductGrid(
+                    isDesktop: isDesktop,
+                    isLargeScreen: isLargeScreen,
+                    cartIconKey: _cartIconKey,
+                  ),
                 ),
                 // Right Side: Cart (Desktop/Tablet Only)
                 if (isLargeScreen) ...[
@@ -110,44 +181,14 @@ class QuickSaleScreen extends ConsumerWidget {
       ),
     );
   }
-
-  void _showMobileCart(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        height: MediaQuery.of(context).size.height * 0.9,
-        decoration: const BoxDecoration(
-          color: AppColors.slate50,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(
-                child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                        color: AppColors.slate300,
-                        borderRadius: BorderRadius.circular(2))),
-              ),
-            ),
-            Expanded(child: _CartSidebar()),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _DesktopSearchAction extends ConsumerStatefulWidget {
   const _DesktopSearchAction();
 
   @override
-  ConsumerState<_DesktopSearchAction> createState() => _DesktopSearchActionState();
+  ConsumerState<_DesktopSearchAction> createState() =>
+      _DesktopSearchActionState();
 }
 
 class _DesktopSearchActionState extends ConsumerState<_DesktopSearchAction> {
@@ -176,7 +217,8 @@ class _DesktopSearchActionState extends ConsumerState<_DesktopSearchAction> {
         children: [
           SearchTextField(
             value: filter.search,
-            onChanged: (s) => ref.read(quickSaleFilterProvider.notifier).setSearch(s),
+            onChanged: (s) =>
+                ref.read(quickSaleFilterProvider.notifier).setSearch(s),
             width: 300,
           ),
           const SizedBox(width: 8),
@@ -196,33 +238,76 @@ class _DesktopSearchActionState extends ConsumerState<_DesktopSearchAction> {
   }
 }
 
-class _ProductGrid extends ConsumerWidget {
-  const _ProductGrid({required this.isDesktop});
-  final bool isDesktop;
+class _ProductGrid extends ConsumerStatefulWidget {
+  const _ProductGrid({
+    required this.isDesktop,
+    required this.isLargeScreen,
+    this.cartIconKey,
+  });
 
-  void _onProductTapped(BuildContext context, WidgetRef ref, Product p) {
+  final bool isDesktop;
+  final bool isLargeScreen;
+  final GlobalKey? cartIconKey;
+
+  @override
+  ConsumerState<_ProductGrid> createState() => _ProductGridState();
+}
+
+class _ProductGridState extends ConsumerState<_ProductGrid> {
+  Offset? _lastTapPosition;
+
+  void _triggerFlightAnimation(BuildContext context, Offset? startOffset) {
+    if (startOffset == null) return;
+    final media = MediaQuery.of(context);
+    final Offset target;
+    if (!widget.isLargeScreen) {
+      final renderBox =
+          widget.cartIconKey?.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox != null && renderBox.hasSize) {
+        final pos = renderBox.localToGlobal(Offset.zero);
+        target = Offset(
+          pos.dx + renderBox.size.width / 2,
+          pos.dy + renderBox.size.height / 2,
+        );
+      } else {
+        target = Offset(media.size.width - 38, media.padding.top + 28);
+      }
+    } else {
+      target = Offset(media.size.width - (widget.isDesktop ? 200 : 160), 120);
+    }
+
+    runAddToCartFlightAnimation(
+      context: context,
+      startOffset: startOffset,
+      targetOffset: target,
+    );
+  }
+
+  void _onProductTapped(BuildContext context, Product p, Offset? tapPos) {
     final activeVariants =
         p.variants.where((v) => v.isActive && !v.isOutOfStock).toList();
     if (activeVariants.isEmpty) return;
 
     if (activeVariants.length == 1) {
-      _addVariantToCart(ref, p, activeVariants.first);
+      _triggerFlightAnimation(context, tapPos);
+      _addVariantToCart(p, activeVariants.first);
     } else {
       showDialog(
         context: context,
         builder: (ctx) => _VariantSelectionDialog(
           product: p,
           variants: activeVariants,
-          onSelected: (v) {
+          onSelected: (v, variantTapPos) {
             Navigator.pop(ctx);
-            _addVariantToCart(ref, p, v);
+            _triggerFlightAnimation(context, variantTapPos ?? tapPos);
+            _addVariantToCart(p, v);
           },
         ),
       );
     }
   }
 
-  void _addVariantToCart(WidgetRef ref, Product p, Variant v) {
+  void _addVariantToCart(Product p, Variant v) {
     final price = v.priceOverride ?? p.basePrice;
     ref.read(quickSaleProvider.notifier).addToCart(
           CartItem(
@@ -237,7 +322,7 @@ class _ProductGrid extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final productsAsync = ref.watch(quickSaleProductListProvider);
 
     return productsAsync.when(
@@ -256,10 +341,15 @@ class _ProductGrid extends ConsumerWidget {
         return CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.fromLTRB(
+                widget.isLargeScreen ? 20 : 16,
+                widget.isLargeScreen ? 20 : 16,
+                widget.isLargeScreen ? 20 : 16,
+                widget.isLargeScreen ? 20 : 20,
+              ),
               sliver: SliverGrid(
                 gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: isDesktop ? 220 : 180,
+                  maxCrossAxisExtent: widget.isDesktop ? 220 : 180,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
                   mainAxisExtent: 220,
@@ -269,7 +359,9 @@ class _ProductGrid extends ConsumerWidget {
                     final product = products[i];
                     return ProductTileSelectable(
                       product: product,
-                      onTap: () => _onProductTapped(context, ref, product),
+                      onTapWithPosition: (pos) => _lastTapPosition = pos,
+                      onTap: () =>
+                          _onProductTapped(context, product, _lastTapPosition),
                     );
                   },
                   childCount: products.length,
@@ -328,7 +420,7 @@ class _CartSidebar extends ConsumerWidget {
   }
 }
 
-class _VariantSelectionDialog extends StatelessWidget {
+class _VariantSelectionDialog extends StatefulWidget {
   const _VariantSelectionDialog({
     required this.product,
     required this.variants,
@@ -337,7 +429,15 @@ class _VariantSelectionDialog extends StatelessWidget {
 
   final Product product;
   final List<Variant> variants;
-  final void Function(Variant) onSelected;
+  final void Function(Variant, Offset? tapPos) onSelected;
+
+  @override
+  State<_VariantSelectionDialog> createState() =>
+      _VariantSelectionDialogState();
+}
+
+class _VariantSelectionDialogState extends State<_VariantSelectionDialog> {
+  Offset? _itemTapPos;
 
   @override
   Widget build(BuildContext context) {
@@ -360,7 +460,7 @@ class _VariantSelectionDialog extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              product.name,
+              widget.product.name,
               style: const TextStyle(color: AppColors.slate500, fontSize: 14),
             ),
             const SizedBox(height: 24),
@@ -368,13 +468,15 @@ class _VariantSelectionDialog extends StatelessWidget {
               constraints: const BoxConstraints(maxHeight: 400),
               child: ListView.separated(
                 shrinkWrap: true,
-                itemCount: variants.length,
+                itemCount: widget.variants.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
-                  final v = variants[index];
-                  final price = v.priceOverride ?? product.basePrice;
+                  final v = widget.variants[index];
+                  final price = v.priceOverride ?? widget.product.basePrice;
                   return InkWell(
-                    onTap: () => onSelected(v),
+                    onTapDown: (details) =>
+                        _itemTapPos = details.globalPosition,
+                    onTap: () => widget.onSelected(v, _itemTapPos),
                     borderRadius: BorderRadius.circular(12),
                     splashColor: AppColors.slate100,
                     highlightColor: AppColors.slate50,

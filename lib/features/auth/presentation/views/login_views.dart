@@ -29,23 +29,23 @@ class LoginMobileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF09090B),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 420),
-              padding: const EdgeInsets.all(32.0),
+              constraints: const BoxConstraints(maxWidth: 440),
+              padding: const EdgeInsets.symmetric(horizontal: 26.0, vertical: 30.0),
               decoration: BoxDecoration(
-                color: const Color(0xFF09090B),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(24.0),
-                border: Border.all(color: const Color(0xFF27272A)),
+                border: Border.all(color: const Color(0xFFE4E4E7), width: 0.8),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x80000000),
-                    blurRadius: 40,
-                    offset: Offset(0, 16),
+                    color: Color(0x0A000000),
+                    blurRadius: 32,
+                    offset: Offset(0, 12),
                   ),
                 ],
               ),
@@ -54,48 +54,87 @@ class LoginMobileView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Brand Header + Engine Badge
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF18181B),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.storefront, size: 18, color: Colors.white),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF09090B),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.storefront, size: 18, color: Colors.white),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'POS.OS',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF09090B),
+                                letterSpacing: -0.6,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 10),
-                        const Text(
-                          'POS.OS',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: -0.6,
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF4F4F5),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFFE4E4E7)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xFF22C55E),
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              const Text(
+                                'v1.0 • Multi-tenant',
+                                style: TextStyle(
+                                  color: Color(0xFF71717A),
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
+
+                    // Welcome Text
                     const Text(
                       'Welcome back',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: Color(0xFF09090B),
                         letterSpacing: -0.6,
                       ),
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'Sign in to access your shop workspace',
+                      'Enter your credentials to access your POS workspace.',
                       style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFFA1A1AA),
+                        fontSize: 13.5,
+                        color: Color(0xFF71717A),
                         fontWeight: FontWeight.w400,
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 26),
+
                     if (errorMessage != null) ...[
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -106,15 +145,21 @@ class LoginMobileView extends StatelessWidget {
                         ),
                         child: Text(
                           errorMessage!,
-                          style: const TextStyle(color: Color(0xFFDC2626), fontSize: 13, fontWeight: FontWeight.w500),
+                          style: const TextStyle(
+                            color: Color(0xFFDC2626),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
                     ],
+
                     emailField,
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
                     passwordField,
                     const SizedBox(height: 10),
+
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
@@ -125,15 +170,20 @@ class LoginMobileView extends StatelessWidget {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           foregroundColor: const Color(0xFF71717A),
                         ),
-                        child: const Text('Forgot password?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                        child: const Text(
+                          'Forgot password?',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 22),
+
+                    // Sign In Button
                     ElevatedButton(
                       onPressed: isLoading ? null : onSubmit,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF09090B),
+                        backgroundColor: const Color(0xFF09090B),
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -146,28 +196,64 @@ class LoginMobileView extends StatelessWidget {
                               width: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Color(0xFF09090B),
+                                color: Colors.white,
                               ),
                             )
-                          : const Text('Sign in', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          : const Text(
+                              'Sign in',
+                              style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+                            ),
                     ),
                     const SizedBox(height: 20),
+
+                    // Switch to Sign Up
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text(
                           "Don't have an account?",
-                          style: TextStyle(fontSize: 13, color: Color(0xFFA1A1AA)),
+                          style: TextStyle(fontSize: 13, color: Color(0xFF71717A)),
                         ),
                         const SizedBox(width: 4),
                         GestureDetector(
                           onTap: onGoToRegister,
                           child: const Text(
                             'Sign up',
-                            style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF09090B),
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
+                    ),
+
+                    // Comprehensive Data / Desktop Metric Parity
+                    Container(
+                      margin: const EdgeInsets.only(top: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF4F4F5).withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE4E4E7), width: 0.8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildMobileMiniMetric('99.9%', 'Uptime'),
+                          Container(width: 1, height: 20, color: const Color(0xFFE4E4E7)),
+                          _buildMobileMiniMetric('Atomic', 'Stock Sync'),
+                          Container(width: 1, height: 20, color: const Color(0xFFE4E4E7)),
+                          _buildMobileMiniMetric('Isolated', 'Security'),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      '© 2026 POS.OS Inc. All rights reserved.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xFFA1A1AA), fontSize: 11),
                     ),
                   ],
                 ),
@@ -179,6 +265,30 @@ class LoginMobileView extends StatelessWidget {
     );
   }
 
+  Widget _buildMobileMiniMetric(String value, String label) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Color(0xFF09090B),
+            fontWeight: FontWeight.w700,
+            fontSize: 12.5,
+          ),
+        ),
+        const SizedBox(height: 1),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF71717A),
+            fontSize: 10.5,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class LoginTabletDesktopView extends StatelessWidget {

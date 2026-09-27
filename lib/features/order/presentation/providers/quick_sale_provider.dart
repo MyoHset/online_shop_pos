@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/error/failures.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../customer/presentation/providers/customer_provider.dart';
 import '../../../product/presentation/providers/product_list_provider.dart';
 import '../../domain/entities/cart.dart';
 import '../../domain/entities/cart_item.dart';
@@ -41,6 +42,7 @@ class QuickSaleState {
   const QuickSaleState({
     this.cart = const Cart(),
     this.customerName = '',
+    this.customerId,
     this.paymentMethod = 'cod',
     this.discountType = DiscountType.none,
     this.discountValue = 0.0,
@@ -52,6 +54,7 @@ class QuickSaleState {
 
   final Cart cart;
   final String customerName;
+  final String? customerId;
   final String paymentMethod;
   final DiscountType discountType;
   final double discountValue;
@@ -74,6 +77,8 @@ class QuickSaleState {
   QuickSaleState copyWith({
     Cart? cart,
     String? customerName,
+    String? customerId,
+    bool clearCustomerId = false,
     String? paymentMethod,
     DiscountType? discountType,
     double? discountValue,
@@ -88,6 +93,7 @@ class QuickSaleState {
       QuickSaleState(
         cart: cart ?? this.cart,
         customerName: customerName ?? this.customerName,
+        customerId: clearCustomerId ? null : (customerId ?? this.customerId),
         paymentMethod: paymentMethod ?? this.paymentMethod,
         discountType: discountType ?? this.discountType,
         discountValue: discountValue ?? this.discountValue,
@@ -108,6 +114,18 @@ class QuickSale extends _$QuickSale {
 
   void updateCustomerName(String name) {
     state = state.copyWith(customerName: name);
+  }
+
+  void updateCustomer({required String name, String? id}) {
+    state = state.copyWith(
+      customerName: name,
+      customerId: id,
+      clearCustomerId: id == null,
+    );
+  }
+
+  void updateCustomerId(String? id) {
+    state = state.copyWith(customerId: id, clearCustomerId: id == null);
   }
 
   void updatePaymentMethod(String method) {
@@ -181,12 +199,20 @@ class QuickSale extends _$QuickSale {
       return;
     }
 
+    if (state.paymentMethod == 'credit' && state.customerName.trim().isEmpty) {
+      state = state.copyWith(
+        errorMessage: 'Customer is required for credit payment.',
+      );
+      return;
+    }
+
     state = state.copyWith(isLoading: true, clearError: true);
     final useCase = ref.read(completeInstantSaleUseCaseProvider);
     final shopId = ref.read(authControllerProvider).value?.shopId;
     
     final result = await useCase(
       customerName: state.customerName,
+      customerId: state.customerId,
       paymentMethod: state.paymentMethod,
       discountType: state.discountType,
       discountValue: state.discountValue,
@@ -216,6 +242,7 @@ class QuickSale extends _$QuickSale {
         );
         ref.invalidate(orderListProvider);
         ref.invalidate(productListProvider);
+        ref.invalidate(customerListProvider);
       },
     );
   }

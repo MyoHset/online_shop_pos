@@ -9,10 +9,12 @@ class ProductTileSelectable extends StatelessWidget {
     super.key,
     required this.product,
     required this.onTap,
+    this.onTapWithPosition,
   });
 
   final Product product;
   final void Function() onTap;
+  final void Function(Offset globalPosition)? onTapWithPosition;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +23,7 @@ class ProductTileSelectable extends StatelessWidget {
         .where((v) => v.isActive)
         .fold(0, (sum, v) => sum + v.availableStock);
     final isOutOfStock = availableStock <= 0;
-    
+
     // Find price range or base price
     final prices = product.variants
         .where((v) => v.isActive && v.priceOverride != null)
@@ -29,8 +31,8 @@ class ProductTileSelectable extends StatelessWidget {
         .toList();
     final priceStr = prices.isEmpty
         ? CurrencyFormatter.format(product.basePrice)
-        : (prices.length == 1 
-            ? CurrencyFormatter.format(prices.first) 
+        : (prices.length == 1
+            ? CurrencyFormatter.format(prices.first)
             : '${CurrencyFormatter.format(product.basePrice)} - ${CurrencyFormatter.format(prices.reduce((a, b) => a > b ? a : b))}');
 
     return Card(
@@ -38,10 +40,13 @@ class ProductTileSelectable extends StatelessWidget {
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColors.slate200),
+        side: const BorderSide(color: AppColors.slate200),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
+        onTapDown: isOutOfStock
+            ? null
+            : (details) => onTapWithPosition?.call(details.globalPosition),
         onTap: isOutOfStock ? null : onTap,
         child: Opacity(
           opacity: isOutOfStock ? 0.5 : 1.0,
@@ -65,7 +70,8 @@ class ProductTileSelectable extends StatelessWidget {
                         product.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 14),
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -73,14 +79,17 @@ class ProductTileSelectable extends StatelessWidget {
                           Text(
                             priceStr,
                             style: const TextStyle(
-                              fontWeight: FontWeight.w700, 
+                              fontWeight: FontWeight.w700,
                               color: AppColors.slate900,
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: isOutOfStock ? AppColors.danger.withValues(alpha: 0.1) : AppColors.success.withValues(alpha: 0.1),
+                              color: isOutOfStock
+                                  ? AppColors.danger.withValues(alpha: 0.1)
+                                  : AppColors.success.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -88,7 +97,9 @@ class ProductTileSelectable extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: isOutOfStock ? AppColors.danger : AppColors.success,
+                                color: isOutOfStock
+                                    ? AppColors.danger
+                                    : AppColors.success,
                               ),
                             ),
                           ),

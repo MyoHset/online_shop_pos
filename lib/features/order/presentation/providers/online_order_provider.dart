@@ -25,14 +25,14 @@ Future<List<Product>> onlineOrderProductList(Ref ref) async {
   final filter = ref.watch(orderItemPickerFilterProvider);
   final useCase = ref.read(getProductsUseCaseProvider);
   final shopId = ref.watch(authControllerProvider).value?.shopId;
-  
+
   final result = await useCase(
     searchQuery: filter.search,
     category: filter.category,
     brand: filter.brand,
     shopId: shopId,
   );
-  
+
   return result.fold(
     (failure) => throw Exception(failure.message),
     (products) => products,
@@ -91,8 +91,7 @@ class OnlineOrderState {
   final bool isLoading;
   final String? errorMessage;
 
-  double get subtotal =>
-      items.fold(0.0, (sum, item) => sum + item.subtotal);
+  double get subtotal => items.fold(0.0, (sum, item) => sum + item.subtotal);
 
   Discount get discount => Discount(
         type: discountType,
@@ -165,7 +164,8 @@ class OnlineOrder extends _$OnlineOrder {
     final existing =
         state.items.where((i) => i.variantId == item.variantId).firstOrNull;
     if (existing != null) {
-      final updated = existing.copyWith(quantity: existing.quantity + item.quantity);
+      final updated =
+          existing.copyWith(quantity: existing.quantity + item.quantity);
       state = state.copyWith(
         items: state.items
             .map((i) => i.variantId == item.variantId ? updated : i)
@@ -182,6 +182,10 @@ class OnlineOrder extends _$OnlineOrder {
     );
   }
 
+  void clearCart() {
+    state = state.copyWith(items: []);
+  }
+
   void updateItemQuantity(String variantId, int quantity) {
     if (quantity <= 0) {
       removeItem(variantId);
@@ -189,7 +193,8 @@ class OnlineOrder extends _$OnlineOrder {
     }
     state = state.copyWith(
       items: state.items
-          .map((i) => i.variantId == variantId ? i.copyWith(quantity: quantity) : i)
+          .map((i) =>
+              i.variantId == variantId ? i.copyWith(quantity: quantity) : i)
           .toList(),
     );
   }
@@ -198,7 +203,7 @@ class OnlineOrder extends _$OnlineOrder {
     state = state.copyWith(isLoading: true, clearError: true);
     final useCase = ref.read(createOrderUseCaseProvider);
     final shopId = ref.read(authControllerProvider).value?.shopId;
-    
+
     final result = await useCase(
       customerName: state.customerName,
       customerPhone: state.customerPhone,

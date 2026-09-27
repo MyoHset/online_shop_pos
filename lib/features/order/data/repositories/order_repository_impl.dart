@@ -79,6 +79,7 @@ class OrderRepositoryImpl implements OrderRepository {
   @override
   Future<Either<Failure, Order>> completeInstantSale({
     String? customerName,
+    String? customerId,
     required List<OrderItemInput> items,
     required String paymentMethod,
     DiscountType discountType = DiscountType.none,
@@ -89,6 +90,7 @@ class OrderRepositoryImpl implements OrderRepository {
     try {
       final model = await _dataSource.completeInstantSale(
         customerName: customerName,
+        customerId: customerId,
         items: items,
         paymentMethod: paymentMethod,
         discountType: discountType,

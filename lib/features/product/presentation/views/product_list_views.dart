@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/responsive/adaptive_scaffold.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_loading_widget.dart';
 import '../../../../core/widgets/category_search_bar.dart';
+import '../../../../core/widgets/mobile_filter_header.dart';
 import '../../../../core/widgets/search_text_field.dart';
 import '../../domain/entities/product.dart';
 import '../providers/product_brands_provider.dart';
@@ -29,11 +31,15 @@ class ProductListMobileView extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.slate50,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.menu_rounded, color: AppColors.slate900),
+          tooltip: 'Open menu',
+          onPressed: () => AdaptiveScaffold.openDrawer(context),
+        ),
         title: const Text('Products'),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          const _SearchAction(),
           IconButton(
             icon: const Icon(Icons.storefront),
             tooltip: 'Browse for Customer',
@@ -52,22 +58,36 @@ class ProductListMobileView extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-            child: CategorySearchBar(
-              showSearchField: false,
+          MobileSearchFilterHeader(
+            searchQuery: filter.search,
+            onSearchChanged: (s) =>
+                ref.read(productFilterProvider.notifier).setSearch(s),
+            selectedCategory: filter.category,
+            selectedBrand: filter.brand,
+            onCategoryChanged: (c) =>
+                ref.read(productFilterProvider.notifier).setCategory(c),
+            onBrandChanged: (b) =>
+                ref.read(productFilterProvider.notifier).setBrand(b),
+            onClearFilters: () {
+              ref.read(productFilterProvider.notifier).setCategory(null);
+              ref.read(productFilterProvider.notifier).setBrand(null);
+            },
+            onOpenFilter: () => showFilterTopSheet(
+              context,
               categories: categoriesAsync.value ?? [],
               brands: brandsAsync.value ?? [],
               selectedCategory: filter.category,
               selectedBrand: filter.brand,
-              searchQuery: filter.search,
-              onCategoryChanged: (c) => ref.read(productFilterProvider.notifier).setCategory(c),
-              onBrandChanged: (b) => ref.read(productFilterProvider.notifier).setBrand(b),
-              onSearchChanged: (s) => ref.read(productFilterProvider.notifier).setSearch(s),
+              onCategoryChanged: (c) =>
+                  ref.read(productFilterProvider.notifier).setCategory(c),
+              onBrandChanged: (b) =>
+                  ref.read(productFilterProvider.notifier).setBrand(b),
+              onReset: () {
+                ref.read(productFilterProvider.notifier).setCategory(null);
+                ref.read(productFilterProvider.notifier).setBrand(null);
+              },
             ),
           ),
-          Container(height: 1, color: AppColors.slate200),
           Expanded(
             child: productsAsync.when(
               loading: () => const SkeletonListLoader(),
@@ -127,7 +147,8 @@ class ProductListTabletView extends ConsumerWidget {
         children: [
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: CategorySearchBar(
               showSearchField: false,
               categories: categoriesAsync.value ?? [],
@@ -135,9 +156,12 @@ class ProductListTabletView extends ConsumerWidget {
               selectedCategory: filter.category,
               selectedBrand: filter.brand,
               searchQuery: filter.search,
-              onCategoryChanged: (c) => ref.read(productFilterProvider.notifier).setCategory(c),
-              onBrandChanged: (b) => ref.read(productFilterProvider.notifier).setBrand(b),
-              onSearchChanged: (s) => ref.read(productFilterProvider.notifier).setSearch(s),
+              onCategoryChanged: (c) =>
+                  ref.read(productFilterProvider.notifier).setCategory(c),
+              onBrandChanged: (b) =>
+                  ref.read(productFilterProvider.notifier).setBrand(b),
+              onSearchChanged: (s) =>
+                  ref.read(productFilterProvider.notifier).setSearch(s),
             ),
           ),
           Container(height: 1, color: AppColors.slate200),
@@ -206,7 +230,8 @@ class ProductListDesktopView extends ConsumerWidget {
         children: [
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: CategorySearchBar(
               showSearchField: false,
               categories: categoriesAsync.value ?? [],
@@ -214,9 +239,12 @@ class ProductListDesktopView extends ConsumerWidget {
               selectedCategory: filter.category,
               selectedBrand: filter.brand,
               searchQuery: filter.search,
-              onCategoryChanged: (c) => ref.read(productFilterProvider.notifier).setCategory(c),
-              onBrandChanged: (b) => ref.read(productFilterProvider.notifier).setBrand(b),
-              onSearchChanged: (s) => ref.read(productFilterProvider.notifier).setSearch(s),
+              onCategoryChanged: (c) =>
+                  ref.read(productFilterProvider.notifier).setCategory(c),
+              onBrandChanged: (b) =>
+                  ref.read(productFilterProvider.notifier).setBrand(b),
+              onSearchChanged: (s) =>
+                  ref.read(productFilterProvider.notifier).setSearch(s),
             ),
           ),
           Container(height: 1, color: AppColors.slate200),
@@ -237,8 +265,6 @@ class ProductListDesktopView extends ConsumerWidget {
     );
   }
 }
-
-
 
 // ── Product scroll view ────────────────────────────────────────────────────────
 
@@ -347,7 +373,8 @@ class _SearchActionState extends ConsumerState<_SearchAction> {
         children: [
           SearchTextField(
             value: filter.search,
-            onChanged: (s) => ref.read(productFilterProvider.notifier).setSearch(s),
+            onChanged: (s) =>
+                ref.read(productFilterProvider.notifier).setSearch(s),
             width: 250,
           ),
           const SizedBox(width: 8),

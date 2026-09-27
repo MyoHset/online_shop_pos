@@ -48,7 +48,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     if (mounted) {
       if (success) {
-        context.go(AppRoutes.products);
+        context.go(AppRoutes.dashboard);
       } else {
         final authState = ref.read(authControllerProvider);
         setState(() {

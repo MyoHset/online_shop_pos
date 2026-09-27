@@ -227,6 +227,7 @@ class _CustomerFormDialogState extends ConsumerState<CustomerFormDialog> {
                       Expanded(
                         child: DropdownButtonFormField<RepaymentCycle>(
                           initialValue: _selectedCycle,
+                          isExpanded: true,
                           decoration: const InputDecoration(
                             labelText: 'Payment Cycle',
                             prefixIcon: Icon(Icons.schedule_outlined),

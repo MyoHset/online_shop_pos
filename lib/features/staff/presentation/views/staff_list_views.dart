@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/staff_member.dart';
 import '../widgets/staff_card.dart';
 
@@ -15,8 +16,8 @@ class StaffListMobileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Staff Management'),
+      appBar: const CustomAppBar(
+        titleText: 'Staff Management',
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: onInviteStaff,

@@ -75,28 +75,28 @@ class _AppShell extends ConsumerWidget {
 
     final destinations = [
       const AppNavDestination(
-        label: 'Quick Sale',
-        icon: Icon(Icons.point_of_sale_outlined),
-        selectedIcon: Icon(Icons.point_of_sale),
-        route: AppRoutes.quickSale,
-      ),
-      const AppNavDestination(
         label: 'Dashboard',
         icon: Icon(Icons.dashboard_outlined),
         selectedIcon: Icon(Icons.dashboard),
         route: AppRoutes.dashboard,
       ),
       const AppNavDestination(
-        label: 'Products',
-        icon: Icon(Icons.inventory_2_outlined),
-        selectedIcon: Icon(Icons.inventory_2),
-        route: AppRoutes.products,
+        label: 'Quick Sale',
+        icon: Icon(Icons.point_of_sale_outlined),
+        selectedIcon: Icon(Icons.point_of_sale),
+        route: AppRoutes.quickSale,
       ),
       const AppNavDestination(
         label: 'Orders',
         icon: Icon(Icons.receipt_long_outlined),
         selectedIcon: Icon(Icons.receipt_long),
         route: AppRoutes.orders,
+      ),
+      const AppNavDestination(
+        label: 'Products',
+        icon: Icon(Icons.inventory_2_outlined),
+        selectedIcon: Icon(Icons.inventory_2),
+        route: AppRoutes.products,
       ),
       const AppNavDestination(
         label: 'Customers',
@@ -146,7 +146,7 @@ GoRouter appRouter(Ref ref) {
       }
 
       if (isLoggedIn && isAuthRoute) {
-        return AppRoutes.quickSale;
+        return AppRoutes.dashboard;
       }
 
       return null;
@@ -183,18 +183,7 @@ GoRouter appRouter(Ref ref) {
         builder: (context, state, navigationShell) =>
             _AppShell(navigationShell: navigationShell),
         branches: [
-          // ── Quick Sale branch ─────────────────────────────────────────────
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.quickSale,
-                name: 'quickSale',
-                builder: (context, state) => const QuickSaleScreen(),
-              ),
-            ],
-          ),
-
-          // ── Dashboard branch ─────────────────────────────────────────────
+          // ── 0: Dashboard branch ──────────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -205,7 +194,52 @@ GoRouter appRouter(Ref ref) {
             ],
           ),
 
-          // ── Products branch ──────────────────────────────────────────────
+          // ── 1: Quick Sale branch ─────────────────────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.quickSale,
+                name: 'quickSale',
+                builder: (context, state) => const QuickSaleScreen(),
+              ),
+            ],
+          ),
+
+          // ── 2: Orders branch ─────────────────────────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.orders,
+                name: 'orders',
+                builder: (context, state) => const OrderListScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'new',
+                    name: 'orderNew',
+                    builder: (context, state) => const OnlineOrderScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    name: 'orderDetail',
+                    builder: (context, state) => OrderDetailScreen(
+                      orderId: state.pathParameters['id']!,
+                    ),
+                    routes: [
+                      GoRoute(
+                        path: 'payment',
+                        name: 'orderPayment',
+                        builder: (context, state) => PaymentEntryScreen(
+                          orderId: state.pathParameters['id']!,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // ── 3: Products branch ───────────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -256,41 +290,7 @@ GoRouter appRouter(Ref ref) {
             ],
           ),
 
-          // ── Orders branch ─────────────────────────────────────────────────
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.orders,
-                name: 'orders',
-                builder: (context, state) => const OrderListScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'new',
-                    name: 'orderNew',
-                    builder: (context, state) => const OnlineOrderScreen(),
-                  ),
-                  GoRoute(
-                    path: ':id',
-                    name: 'orderDetail',
-                    builder: (context, state) => OrderDetailScreen(
-                      orderId: state.pathParameters['id']!,
-                    ),
-                    routes: [
-                      GoRoute(
-                        path: 'payment',
-                        name: 'orderPayment',
-                        builder: (context, state) => PaymentEntryScreen(
-                          orderId: state.pathParameters['id']!,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          // ── Customers branch ──────────────────────────────────────────────
+          // ── 4: Customers branch ──────────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -310,7 +310,7 @@ GoRouter appRouter(Ref ref) {
             ],
           ),
 
-          // ── Staff branch ──────────────────────────────────────────────────
+          // ── 5: Staff branch ──────────────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(

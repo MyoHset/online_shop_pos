@@ -11,6 +11,7 @@ class CompleteInstantSale {
 
   Future<Either<Failure, Order>> call({
     String? customerName,
+    String? customerId,
     required List<OrderItemInput> items,
     required String paymentMethod,
     DiscountType discountType = DiscountType.none,
@@ -20,6 +21,7 @@ class CompleteInstantSale {
   }) =>
       _repository.completeInstantSale(
         customerName: customerName,
+        customerId: customerId,
         items: items,
         paymentMethod: paymentMethod,
         discountType: discountType,

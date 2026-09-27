@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../responsive/adaptive_scaffold.dart';
+import '../responsive/device_type.dart';
 import '../theme/app_theme.dart';
 
 /// A reusable custom AppBar component for common use across the app.
@@ -30,6 +32,18 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget? effectiveLeading = leading;
+    if (effectiveLeading == null) {
+      final canPop = ModalRoute.of(context)?.canPop ?? false;
+      if (!canPop && DeviceType.from(context).isMobile) {
+        effectiveLeading = IconButton(
+          icon: const Icon(Icons.menu_rounded, color: AppColors.slate900),
+          tooltip: 'Open menu',
+          onPressed: () => AdaptiveScaffold.openDrawer(context),
+        );
+      }
+    }
+
     return AppBar(
       title: title ??
           (titleText != null
@@ -44,7 +58,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               : null),
       centerTitle: centerTitle,
       actions: actions,
-      leading: leading,
+      leading: effectiveLeading,
       backgroundColor: backgroundColor,
       elevation: elevation,
       iconTheme: const IconThemeData(color: AppColors.slate900),

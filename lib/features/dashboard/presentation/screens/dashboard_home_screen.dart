@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../auth/domain/entities/staff_role.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/owner_dashboard_view.dart';
@@ -13,8 +14,8 @@ class DashboardHomeScreen extends ConsumerWidget {
     final roleAsync = ref.watch(currentStaffRoleProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
+      appBar: const CustomAppBar(
+        titleText: 'Dashboard',
       ),
       body: roleAsync.when(
         data: (role) {

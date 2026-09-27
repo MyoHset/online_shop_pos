@@ -46,7 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           'Login Successful! Redirecting...',
           duration: const Duration(seconds: 2),
         );
-        context.go(AppRoutes.products);
+        context.go(AppRoutes.dashboard);
       } else {
         final authState = ref.read(authControllerProvider);
         final err = authState.error?.toString() ?? 'Login failed.';

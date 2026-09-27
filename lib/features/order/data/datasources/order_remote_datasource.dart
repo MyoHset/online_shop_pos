@@ -191,6 +191,7 @@ class OrderRemoteDataSource {
   /// Creates a quick sale order, atomic stock deduction, and payment record.
   Future<OrderModel> completeInstantSale({
     String? customerName,
+    String? customerId,
     required List<OrderItemInput> items,
     required String paymentMethod,
     DiscountType discountType = DiscountType.none,
@@ -207,10 +208,14 @@ class OrderRemoteDataSource {
       final discountAmount = discountObj.calculateAmount(subtotal);
       final finalAmount = (subtotal - discountAmount).clamp(0.0, double.infinity);
 
+      final isCreditSale = paymentMethod == 'credit';
+
       final orderPayload = {
         if (customerName != null && customerName.isNotEmpty) 'customer_name': customerName,
+        if (customerId != null && customerId.isNotEmpty) 'customer_id': customerId,
         'status': OrderStatus.pending.name,
         'order_type': 'in_store',
+        'is_credit': isCreditSale,
         'total_amount': finalAmount,
         'discount_type': discountType.value,
         'discount_value': discountValue,
@@ -245,13 +250,51 @@ class OrderRemoteDataSource {
         final params = {'p_order_id': orderId};
         await _client.rpc('complete_instant_sale', params: params);
 
-        await _client.from(SupabaseConstants.paymentsTable).insert({
-          'order_id': orderId,
-          'method': paymentMethod,
-          'amount': finalAmount,
-          'status': 'paid',
-          'paid_at': DateTime.now().toUtc().toIso8601String(),
-        });
+        if (isCreditSale) {
+          if (customerId != null && customerId.isNotEmpty) {
+            try {
+              final custDoc = await _client
+                  .from(SupabaseConstants.customersTable)
+                  .select('current_debt')
+                  .eq('id', customerId)
+                  .maybeSingle();
+
+              final currentDebt =
+                  (custDoc?['current_debt'] as num?)?.toDouble() ?? 0.0;
+              final newDebt = currentDebt + finalAmount;
+
+              await _client
+                  .from(SupabaseConstants.customersTable)
+                  .update({
+                    'current_debt': newDebt,
+                    'updated_at': DateTime.now().toUtc().toIso8601String(),
+                  })
+                  .eq('id', customerId);
+
+              await _client
+                  .from(SupabaseConstants.customerTransactionsTable)
+                  .insert({
+                    'customer_id': customerId,
+                    'order_id': orderId,
+                    'transaction_type': 'debt',
+                    'amount': finalAmount,
+                    'payment_method': 'cash',
+                    'balance_after': newDebt,
+                    'notes': 'Quick Sale Credit',
+                  });
+            } catch (e) {
+              AppLogger.logEvent('credit_ledger_error', details: {'error': e.toString()});
+            }
+          }
+        } else {
+          await _client.from(SupabaseConstants.paymentsTable).insert({
+            'order_id': orderId,
+            'method': paymentMethod,
+            'amount': finalAmount,
+            'status': 'paid',
+            'paid_at': DateTime.now().toUtc().toIso8601String(),
+          });
+        }
       } catch (e) {
         await _client
             .from(SupabaseConstants.ordersTable)
