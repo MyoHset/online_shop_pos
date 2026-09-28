@@ -483,15 +483,15 @@ class _MobileDrawer extends ConsumerWidget {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () => _confirmSignOut(context, ref),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
+                        onTap: () => _confirmSignOut(context, ref, isDrawer: true),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(
                             horizontal: 10,
                             vertical: 8,
                           ),
                           child: Row(
-                            children: const [
+                            children: [
                               Icon(
                                 Icons.logout_rounded,
                                 size: 17,
@@ -529,30 +529,39 @@ class _MobileDrawer extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Sign Out'),
-          ),
-        ],
-      ),
-    );
+Future<void> _confirmSignOut(
+  BuildContext context,
+  WidgetRef ref, {
+  bool isDrawer = false,
+}) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Sign Out'),
+      content: const Text('Are you sure you want to sign out?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: const Text('Sign Out'),
+        ),
+      ],
+    ),
+  );
 
-    if (confirmed == true && context.mounted) {
+  if (confirmed == true && context.mounted) {
+    if (isDrawer) {
       Navigator.of(context).pop(); // close drawer
-      await ref.read(authControllerProvider.notifier).logout();
+    }
+    await ref.read(authControllerProvider.notifier).logout();
+    if (context.mounted) {
+      context.go('/login');
     }
   }
 }
@@ -661,7 +670,7 @@ class _DrawerTile extends StatelessWidget {
 
 // ── Tablet — sliding icon rail ─────────────────────────────────────────────────
 
-class _TabletScaffold extends StatelessWidget {
+class _TabletScaffold extends ConsumerWidget {
   const _TabletScaffold({
     required this.destinations,
     required this.selectedIndex,
@@ -676,12 +685,12 @@ class _TabletScaffold extends StatelessWidget {
 
   // Fixed geometry
   static const double _iconSize = 40.0; // per-item height in Stack
-  static const double _topOffset = 68.0; // logo(20+32+16) = 68
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
             width: 64,
@@ -697,8 +706,11 @@ class _TabletScaffold extends StatelessWidget {
                       color: AppColors.slate900,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.storefront,
-                        size: 18, color: Colors.white),
+                    child: const Icon(
+                      Icons.storefront,
+                      size: 18,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Divider(height: 1, color: AppColors.slate100),
@@ -764,6 +776,14 @@ class _TabletScaffold extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const Spacer(),
+                  _SidebarIconButton(
+                    icon: Icons.logout_rounded,
+                    tooltip: 'Sign Out',
+                    color: AppColors.danger,
+                    onTap: () => _confirmSignOut(context, ref),
+                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -778,7 +798,7 @@ class _TabletScaffold extends StatelessWidget {
 
 // ── Desktop — sliding sidebar ──────────────────────────────────────────────────
 
-class _DesktopScaffold extends StatelessWidget {
+class _DesktopScaffold extends ConsumerWidget {
   const _DesktopScaffold({
     required this.destinations,
     required this.selectedIndex,
@@ -800,7 +820,7 @@ class _DesktopScaffold extends StatelessWidget {
   static const double _navTop = 100.0;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Do NOT wrap in Scaffold here. _DesktopScaffold is rendered directly by
     // GoRouter as a page-level widget and already receives tight full-screen
     // constraints. Using Scaffold(body: Row) would loosen those constraints
@@ -844,33 +864,46 @@ class _DesktopScaffold extends StatelessWidget {
                       ),
 
                       // ── Sidebar content ────────────────────────────────────
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Wordmark
-                          Padding(
-                            padding: const EdgeInsets.only(top: 24),
-                            child: Center(
-                              child: Icon(
-                                Icons.storefront,
-                                size: 32,
-                                color: AppColors.greenNude,
+                      Positioned.fill(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Wordmark
+                            const Padding(
+                              padding: EdgeInsets.only(top: 24),
+                              child: Center(
+                                child: Icon(
+                                  Icons.storefront,
+                                  size: 32,
+                                  color: AppColors.greenNude,
+                                ),
                               ),
                             ),
-                          ),
 
-                          const SizedBox(height: 44),
+                            const SizedBox(height: 44),
 
-                          // Nav items — each must be exactly _itemH px tall
-                          ...List.generate(destinations.length, (i) {
-                            return _SidebarItem(
-                              destination: destinations[i],
-                              isSelected: i == selectedIndex,
-                              itemHeight: _itemH,
-                              onTap: () => onDestinationSelected(i),
-                            );
-                          }),
-                        ],
+                            // Nav items — each must be exactly _itemH px tall
+                            ...List.generate(destinations.length, (i) {
+                              return _SidebarItem(
+                                destination: destinations[i],
+                                isSelected: i == selectedIndex,
+                                itemHeight: _itemH,
+                                onTap: () => onDestinationSelected(i),
+                              );
+                            }),
+
+                            const Spacer(),
+
+                            // ── Sign Out Button ──────────────────────────────
+                            _SidebarIconButton(
+                              icon: Icons.logout_rounded,
+                              tooltip: 'Sign Out',
+                              color: AppColors.danger,
+                              onTap: () => _confirmSignOut(context, ref),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -878,7 +911,7 @@ class _DesktopScaffold extends StatelessWidget {
                 Expanded(
                   child: Container(
                     margin: const EdgeInsets.only(top: 5, bottom: 10, right: 5),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.slate100,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(22),
@@ -955,6 +988,64 @@ class _SidebarItemState extends State<_SidebarItem> {
                       ? widget.destination.selectedIcon
                       : widget.destination.icon,
                 ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A reusable icon button for sidebar actions (e.g. Sign Out)
+class _SidebarIconButton extends StatefulWidget {
+  const _SidebarIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.color,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final Color? color;
+
+  @override
+  State<_SidebarIconButton> createState() => _SidebarIconButtonState();
+}
+
+class _SidebarIconButtonState extends State<_SidebarIconButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: widget.tooltip,
+      preferBelow: false,
+      waitDuration: const Duration(milliseconds: 300),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: _hovered
+                  ? (widget.color ?? AppColors.slate700).withValues(alpha: 0.15)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Icon(
+                widget.icon,
+                color: widget.color ??
+                    (_hovered ? Colors.white : AppColors.slate400),
+                size: 22,
               ),
             ),
           ),

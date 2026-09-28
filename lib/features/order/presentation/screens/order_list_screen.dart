@@ -267,16 +267,9 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
           return Column(
             children: [
               // ── Header (Desktop vs Mobile) ──
-              if (isDesktop) ...[
-                _buildDesktopHeader(),
-                if (_datePreset != OrderDatePreset.all)
-                  _buildDesktopMetrics(
-                    allCount: allCount,
-                    totalSales: totalSales,
-                    activeCount: activeCount,
-                    completedCount: completedCount,
-                  ),
-              ] else
+              if (isDesktop)
+                _buildDesktopHeader()
+              else
                 _buildMobileHeader(
                   allCount: allCount,
                   activeCount: activeCount,
@@ -304,7 +297,13 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                             },
                           )
                         : (isDesktop
-                            ? _buildDesktopTable(filteredOrders)
+                            ? _buildDesktopTable(
+                                filteredOrders,
+                                bottomPadding:
+                                    _datePreset != OrderDatePreset.all
+                                        ? 96.0
+                                        : 24.0,
+                              )
                             : _buildMobileList(
                                 filteredOrders,
                                 bottomPadding:
@@ -313,16 +312,21 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                                         : 24.0,
                               )),
 
-                    // Floating Summary Bar on Mobile (Only shown when date filter is applied)
-                    if (!isDesktop && _datePreset != OrderDatePreset.all)
+                    // Floating Summary Bar (Shown when date filter is applied on Desktop & Mobile)
+                    if (_datePreset != OrderDatePreset.all)
                       Positioned(
-                        bottom: 16,
+                        bottom: isDesktop ? 24 : 16,
                         left: 16,
                         right: 16,
-                        child: _buildMobileFloatingSummaryBar(
-                          allCount: allCount,
-                          totalSales: totalSales,
-                          activeCount: activeCount,
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: _buildFloatingSummaryBar(
+                            allCount: allCount,
+                            totalSales: totalSales,
+                            activeCount: activeCount,
+                            completedCount: completedCount,
+                            isDesktop: isDesktop,
+                          ),
                         ),
                       ),
                   ],
@@ -558,138 +562,37 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
     );
   }
 
-  // ── Desktop Dashboard Metrics Row ──
-  Widget _buildDesktopMetrics({
+  // ── Floating Summary Bar (Appears when Date Filter is active) ──
+  Widget _buildFloatingSummaryBar({
     required int allCount,
     required double totalSales,
     required int activeCount,
     required int completedCount,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildDesktopMetricCard(
-              title: 'Total Orders',
-              value: '$allCount',
-              icon: Icons.receipt_long_rounded,
-              color: AppColors.info,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildDesktopMetricCard(
-              title: 'Total Sales',
-              value: CurrencyFormatter.format(totalSales),
-              icon: Icons.payments_outlined,
-              color: AppColors.greenNude,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildDesktopMetricCard(
-              title: 'Active Orders',
-              value: '',
-              icon: Icons.pending_actions_rounded,
-              color: AppColors.warning,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildDesktopMetricCard(
-              title: 'Completed',
-              value: '',
-              icon: Icons.check_circle_outline_rounded,
-              color: AppColors.success,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDesktopMetricCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.slate200),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.slate500,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.slate900,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Floating Summary Bar on Mobile (Appears only when Date Filter is active) ──
-  Widget _buildMobileFloatingSummaryBar({
-    required int allCount,
-    required double totalSales,
-    required int activeCount,
+    required bool isDesktop,
   }) {
     return SafeArea(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        padding: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 20 : 14,
+          vertical: isDesktop ? 12 : 11,
+        ),
         decoration: BoxDecoration(
           color: AppColors.slate900,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.22),
-              blurRadius: 18,
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 20,
               offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Row(
+          mainAxisSize: isDesktop ? MainAxisSize.min : MainAxisSize.max,
           children: [
-            // Calendar Icon & Date Label
+            // Calendar Icon
             Container(
-              padding: const EdgeInsets.all(7),
+              padding: EdgeInsets.all(isDesktop ? 8 : 7),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
@@ -700,40 +603,39 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                 size: 18,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
 
-            // Date label + Total Sales
-            Expanded(
-              child: Column(
+            if (isDesktop) ...[
+              // Date label + Total Sales on Desktop
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Flexible(
-                        child: Text(
-                          _dateFilterLabel,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white.withValues(alpha: 0.75),
-                          ),
+                      Text(
+                        _dateFilterLabel,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 5, vertical: 1),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.greenNude.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           '$allCount orders',
                           style: const TextStyle(
-                            fontSize: 9.5,
+                            fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: AppColors.greenNude,
                           ),
@@ -744,10 +646,8 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                   const SizedBox(height: 2),
                   Text(
                     CurrencyFormatter.format(totalSales),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 15.5,
+                      fontSize: 17,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
                       letterSpacing: -0.3,
@@ -755,65 +655,202 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                   ),
                 ],
               ),
-            ),
-
-            // Active count badge (if any active)
-            if (activeCount > 0) ...[
+              const SizedBox(width: 24),
+              // Vertical Divider
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppColors.warning.withValues(alpha: 0.4),
-                    width: 0.8,
+                height: 32,
+                width: 1,
+                color: Colors.white.withValues(alpha: 0.15),
+              ),
+              const SizedBox(width: 20),
+              // Active count pill
+              if (activeCount > 0) ...[
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.warning.withValues(alpha: 0.4),
+                      width: 0.8,
+                    ),
                   ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Active',
-                      style: TextStyle(
-                        fontSize: 8.5,
-                        fontWeight: FontWeight.w600,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.pending_actions_rounded,
+                        size: 14,
                         color: AppColors.warning,
                       ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$activeCount Active',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+              ],
+              // Completed count pill
+              if (completedCount > 0) ...[
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.success.withValues(alpha: 0.4),
+                      width: 0.8,
                     ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 14,
+                        color: AppColors.success,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$completedCount Completed',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+              ],
+            ] else ...[
+              // Mobile layout
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            _dateFilterLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withValues(alpha: 0.75),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.greenNude.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '$allCount orders',
+                            style: const TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.greenNude,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
                     Text(
-                      '$activeCount',
+                      CurrencyFormatter.format(totalSales),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 15.5,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
+                        letterSpacing: -0.3,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              // Active count badge (if any active)
+              if (activeCount > 0) ...[
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.warning.withValues(alpha: 0.4),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Active',
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.warning,
+                        ),
+                      ),
+                      Text(
+                        '$activeCount',
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
             ],
 
             // Close / Clear Date Filter Button
-            InkWell(
-              onTap: () {
-                setState(() {
-                  _datePreset = OrderDatePreset.all;
-                  _customDateRange = null;
-                });
-              },
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.close_rounded,
-                  color: Colors.white,
-                  size: 15,
+            Tooltip(
+              message: 'Clear date filter',
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _datePreset = OrderDatePreset.all;
+                    _customDateRange = null;
+                  });
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                    size: 15,
+                  ),
                 ),
               ),
             ),
@@ -1343,9 +1380,12 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
   }
 
   // ── Desktop Table ──
-  Widget _buildDesktopTable(List<Order> filteredOrders) {
+  Widget _buildDesktopTable(
+    List<Order> filteredOrders, {
+    double bottomPadding = 24.0,
+  }) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      padding: EdgeInsets.fromLTRB(24, 0, 24, bottomPadding),
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(

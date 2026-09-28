@@ -85,6 +85,8 @@ class AuthController extends _$AuthController {
     final useCase = Logout(repository);
     await useCase();
     state = const AsyncValue.data(null);
+    ref.invalidate(currentStaffRoleProvider);
+    ref.invalidate(currentShopIdProvider);
   }
 
   Future<bool> resetPassword(String email) async {

@@ -29,7 +29,8 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
 
       final list = (response as List)
           .map(
-              (json) => StaffMemberModel.fromJson(json as Map<String, dynamic>))
+            (json) => StaffMemberModel.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
       AppLogger.logDataSuccess('getStaffList', data: 'Count: ${list.length}');
       return list;
@@ -49,19 +50,6 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
     final params = {'email': email, 'role': role.value};
     try {
       AppLogger.logEvent('InviteStaffAttempt', details: params);
-      final currentUser = _client.auth.currentUser;
-      if (currentUser == null) {
-        throw const AuthException('Not authenticated');
-      }
-
-      final currentStaff = await _client
-          .from(SupabaseConstants.shopStaffTable)
-          .select('shop_id')
-          .eq('user_id', currentUser.id)
-          .single();
-
-      final shopId = currentStaff['shop_id'] as String;
-
       final response = await _client.functions.invoke(
         'invite-staff',
         body: {
@@ -69,22 +57,28 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
           'password': password,
           'fullName': fullName,
           'role': role.value,
-          'shopId': shopId,
-          'requestedByUserId': currentUser.id,
         },
       );
 
       if (response.status != 200 && response.status != 201) {
-        final errorMsg =
-            response.data?['error'] ?? 'Failed to invite staff member';
-        AppLogger.logRpcError('invite-staff (EdgeFunction)', errorMsg,
-            params: params);
+        final data = response.data;
+        final errorMsg = (data is Map ? data['error'] : null) ??
+            'Failed to invite staff member';
+        AppLogger.logRpcError(
+          'invite-staff (EdgeFunction)',
+          errorMsg,
+          params: params,
+        );
         throw Exception(errorMsg);
       }
       AppLogger.logRpcSuccess('invite-staff (EdgeFunction)', params: params);
     } catch (e, st) {
-      AppLogger.logRpcError('invite-staff (EdgeFunction)', e,
-          params: params, stackTrace: st);
+      AppLogger.logRpcError(
+        'invite-staff (EdgeFunction)',
+        e,
+        params: params,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
