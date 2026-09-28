@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../customer/domain/entities/customer.dart';
@@ -289,7 +290,7 @@ class QuickSaleFloatingCartBarState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '$totalItems ${totalItems == 1 ? 'item' : 'items'} in cart',
+                          context.l10n.orderItemCount(totalItems),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
@@ -317,19 +318,19 @@ class QuickSaleFloatingCartBarState
                       color: AppColors.greenNude,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'View Cart',
-                          style: TextStyle(
+                          context.l10n.quickSaleCart,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        SizedBox(width: 4),
-                        Icon(
+                        const SizedBox(width: 4),
+                        const Icon(
                           Icons.keyboard_arrow_up_rounded,
                           color: Colors.white,
                           size: 18,
@@ -468,9 +469,9 @@ class _QuickSaleCartSheetState extends ConsumerState<_QuickSaleCartSheet> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    'Sale Cart',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.quickSaleCart,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: AppColors.slate900,
@@ -512,9 +513,9 @@ class _QuickSaleCartSheetState extends ConsumerState<_QuickSaleCartSheet> {
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         visualDensity: VisualDensity.compact,
                       ),
-                      child: const Text(
-                        'Clear',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.commonClear,
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -527,7 +528,7 @@ class _QuickSaleCartSheetState extends ConsumerState<_QuickSaleCartSheet> {
                       size: 20,
                     ),
                     visualDensity: VisualDensity.compact,
-                    tooltip: 'Close',
+                    tooltip: context.l10n.commonClose,
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -555,20 +556,13 @@ class _QuickSaleCartSheetState extends ConsumerState<_QuickSaleCartSheet> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          const Text(
-                            'Your cart is empty',
-                            style: TextStyle(
+                          Text(
+                            context.l10n.quickSaleCartEmpty,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppColors.slate700,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'Tap any product to add to cart',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.slate400,
                             ),
                           ),
                         ],
@@ -659,16 +653,16 @@ class _QuickSaleCartSheetState extends ConsumerState<_QuickSaleCartSheet> {
                                     vertical: 4, horizontal: 2),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Icon(
+                                  children: [
+                                    const Icon(
                                       Icons.person_add_alt_1_outlined,
                                       size: 16,
                                       color: AppColors.greenNude,
                                     ),
-                                    SizedBox(width: 6),
+                                    const SizedBox(width: 6),
                                     Text(
-                                      'Add Customer (Optional)',
-                                      style: TextStyle(
+                                      '+ ${context.l10n.orderCustomer}',
+                                      style: const TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.greenNude,
@@ -692,7 +686,9 @@ class _QuickSaleCartSheetState extends ConsumerState<_QuickSaleCartSheet> {
                             Row(
                               children: [
                                 Text(
-                                  isCredit ? 'Customer *' : 'Customer (Optional)',
+                                  isCredit
+                                      ? '${context.l10n.orderCustomer} *'
+                                      : '${context.l10n.orderCustomer} (Optional)',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -731,14 +727,14 @@ class _QuickSaleCartSheetState extends ConsumerState<_QuickSaleCartSheet> {
                                         horizontal: 6, vertical: 2),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
-                                      children: const [
-                                        Icon(Icons.add,
+                                      children: [
+                                        const Icon(Icons.add,
                                             size: 14,
                                             color: AppColors.greenNude),
-                                        SizedBox(width: 3),
+                                        const SizedBox(width: 3),
                                         Text(
-                                          'New Customer',
-                                          style: TextStyle(
+                                          context.l10n.customerAddNew,
+                                          style: const TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w600,
                                             color: AppColors.greenNude,
@@ -992,9 +988,9 @@ class _QuickSaleCartSheetState extends ConsumerState<_QuickSaleCartSheet> {
                     // Payment Method selector (single horizontal row)
                     Row(
                       children: [
-                        const Text(
-                          'Payment:',
-                          style: TextStyle(
+                        Text(
+                          '${context.l10n.paymentMethodCash}:',
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: AppColors.slate600,
@@ -1007,14 +1003,14 @@ class _QuickSaleCartSheetState extends ConsumerState<_QuickSaleCartSheet> {
                             child: Row(
                               children: [
                                 _PaymentMethodChip(
-                                  label: 'Cash / COD',
+                                  label: context.l10n.paymentMethodCod,
                                   value: 'cod',
                                   selectedValue: state.paymentMethod,
                                   onSelected: notifier.updatePaymentMethod,
                                 ),
                                 const SizedBox(width: 6),
                                 _PaymentMethodChip(
-                                  label: 'Credit (အကြွေး)',
+                                  label: '${context.l10n.paymentMethodCredit} (အကြွေး)',
                                   value: 'credit',
                                   selectedValue: state.paymentMethod,
                                   onSelected: (val) {
@@ -1024,21 +1020,21 @@ class _QuickSaleCartSheetState extends ConsumerState<_QuickSaleCartSheet> {
                                 ),
                                 const SizedBox(width: 6),
                                 _PaymentMethodChip(
-                                  label: 'KBZPay',
+                                  label: context.l10n.paymentMethodKbzpay,
                                   value: 'kbz_pay',
                                   selectedValue: state.paymentMethod,
                                   onSelected: notifier.updatePaymentMethod,
                                 ),
                                 const SizedBox(width: 6),
                                 _PaymentMethodChip(
-                                  label: 'WavePay',
+                                  label: context.l10n.paymentMethodWavepay,
                                   value: 'wave_pay',
                                   selectedValue: state.paymentMethod,
                                   onSelected: notifier.updatePaymentMethod,
                                 ),
                                 const SizedBox(width: 6),
                                 _PaymentMethodChip(
-                                  label: 'Bank Transfer',
+                                  label: context.l10n.paymentMethodBankTransfer,
                                   value: 'bank_transfer',
                                   selectedValue: state.paymentMethod,
                                   onSelected: notifier.updatePaymentMethod,
@@ -1098,9 +1094,9 @@ class _QuickSaleCartSheetState extends ConsumerState<_QuickSaleCartSheet> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text(
-                                    'Complete Sale',
-                                    style: TextStyle(
+                                  Text(
+                                    context.l10n.quickSaleCheckout,
+                                    style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -1312,7 +1308,7 @@ class _CartItemMobileTile extends StatelessWidget {
               size: 16,
               color: AppColors.slate400,
             ),
-            tooltip: 'Remove',
+            tooltip: context.l10n.commonDelete,
             onPressed: onRemove,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/responsive/adaptive_scaffold.dart';
 import '../../../../core/responsive/device_type.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -170,7 +171,7 @@ class _OnlineOrderScreenState extends ConsumerState<OnlineOrderScreen> {
                 onPressed: () => AdaptiveScaffold.openDrawer(context),
               )
             : null,
-        title: const Text('Online Order'),
+        title: Text(context.l10n.orderTypeOnline),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -336,7 +337,7 @@ class _DesktopSearchActionState extends ConsumerState<_DesktopSearchAction> {
     if (!_expanded) {
       return IconButton(
         icon: const Icon(Icons.search),
-        tooltip: 'Search',
+        tooltip: context.l10n.commonSearch,
         onPressed: () {
           setState(() {
             _expanded = true;
@@ -359,7 +360,7 @@ class _DesktopSearchActionState extends ConsumerState<_DesktopSearchAction> {
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.close),
-            tooltip: 'Close Search',
+            tooltip: context.l10n.commonClose,
             onPressed: () {
               ref.read(orderItemPickerFilterProvider.notifier).setSearch('');
               setState(() {
@@ -390,9 +391,9 @@ class _ProductGridSection extends ConsumerWidget {
       ),
       data: (products) {
         if (products.isEmpty) {
-          return const Center(
-              child: Text('No products available.',
-                  style: TextStyle(color: AppColors.slate500)));
+          return Center(
+              child: Text(context.l10n.productEmpty,
+                  style: const TextStyle(color: AppColors.slate500)));
         }
 
         return CustomScrollView(
@@ -510,7 +511,7 @@ class _VariantSelectionDialogState extends State<_VariantSelectionDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Select Variant',
+              context.l10n.productVariants,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.slate900,
@@ -587,8 +588,8 @@ class _VariantSelectionDialogState extends State<_VariantSelectionDialog> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Cancel',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                child: Text(context.l10n.commonCancel,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),
           ],
@@ -634,15 +635,15 @@ class _CartSidebar extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Customer Info',
+                  Text(context.l10n.customerDetailTitle,
                       style:
-                          TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                          const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: nameCtrl,
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
-                      hintText: 'Full Name *',
+                      hintText: '${context.l10n.customerName} *',
                       prefixIcon: const Icon(Icons.person_outline, size: 18),
                       isDense: true,
                       filled: true,
@@ -660,7 +661,7 @@ class _CartSidebar extends ConsumerWidget {
                     keyboardType: TextInputType.phone,
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
-                      hintText: 'Phone Number *',
+                      hintText: '${context.l10n.customerPhone} *',
                       prefixIcon: const Icon(Icons.phone_outlined, size: 18),
                       isDense: true,
                       filled: true,
@@ -678,7 +679,7 @@ class _CartSidebar extends ConsumerWidget {
                     textInputAction: TextInputAction.done,
                     maxLines: 2,
                     decoration: InputDecoration(
-                      hintText: 'Delivery Address *',
+                      hintText: '${context.l10n.customerAddress} *',
                       prefixIcon: const Padding(
                         padding: EdgeInsets.only(bottom: 20),
                         child: Icon(Icons.location_on_outlined, size: 18),
@@ -701,9 +702,9 @@ class _CartSidebar extends ConsumerWidget {
           // Cart Items Section
           Expanded(
             child: formState.items.isEmpty
-                ? const Center(
-                    child: Text('Cart is empty',
-                        style: TextStyle(color: AppColors.slate400)),
+                ? Center(
+                    child: Text(context.l10n.quickSaleCartEmpty,
+                        style: const TextStyle(color: AppColors.slate400)),
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.all(20),
@@ -793,9 +794,9 @@ class _CartSidebar extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Subtotal',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.commonSubtotal,
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                           color: AppColors.slate600,
@@ -827,8 +828,8 @@ class _CartSidebar extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Total',
-                        style: TextStyle(
+                    Text(context.l10n.commonTotal,
+                        style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: AppColors.slate500)),
@@ -843,7 +844,7 @@ class _CartSidebar extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 AppButton(
-                  label: 'Confirm Online Order',
+                  label: context.l10n.orderCreateNew,
                   isLoading: formState.isLoading,
                   minimumWidth: double.infinity,
                   onPressed: formState.items.isEmpty ? null : onSubmit,
@@ -964,9 +965,9 @@ class _OnlineOrderMobileCartSheetState
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    'Online Order Cart',
-                    style: TextStyle(
+                  Text(
+                    '${context.l10n.orderTypeOnline} - ${context.l10n.quickSaleCart}',
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: AppColors.slate900,
@@ -1000,9 +1001,9 @@ class _OnlineOrderMobileCartSheetState
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         visualDensity: VisualDensity.compact,
                       ),
-                      child: const Text(
-                        'Clear',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.commonClear,
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1015,7 +1016,7 @@ class _OnlineOrderMobileCartSheetState
                       size: 20,
                     ),
                     visualDensity: VisualDensity.compact,
-                    tooltip: 'Close',
+                    tooltip: context.l10n.commonClose,
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -1070,20 +1071,13 @@ class _OnlineOrderMobileCartSheetState
                               ),
                             ),
                             const SizedBox(height: 10),
-                            const Text(
-                              'Your cart is empty',
-                              style: TextStyle(
+                            Text(
+                              context.l10n.quickSaleCartEmpty,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.slate700,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            const Text(
-                              'Tap any product to add to cart',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppColors.slate400,
                               ),
                             ),
                           ],
@@ -1099,9 +1093,9 @@ class _OnlineOrderMobileCartSheetState
                             color: AppColors.slate500,
                           ),
                           const SizedBox(width: 6),
-                          const Text(
-                            'Order Items',
-                            style: TextStyle(
+                          Text(
+                            context.l10n.orderItems(totalCount),
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: AppColors.slate700,
@@ -1109,7 +1103,7 @@ class _OnlineOrderMobileCartSheetState
                           ),
                           const Spacer(),
                           Text(
-                            '$totalCount ${totalCount == 1 ? 'item' : 'items'}',
+                            context.l10n.orderItemCount(totalCount),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -1189,16 +1183,16 @@ class _OnlineOrderMobileCartSheetState
                           children: [
                             if (formState.discount.hasDiscount) ...[
                               Text(
-                                'Subtotal: ${CurrencyFormatter.format(formState.subtotal)}',
+                                '${context.l10n.commonSubtotal}: ${CurrencyFormatter.format(formState.subtotal)}',
                                 style: const TextStyle(
                                   fontSize: 11,
                                   color: AppColors.slate500,
                                 ),
                               ),
                             ],
-                            const Text(
-                              'Total Amount',
-                              style: TextStyle(
+                            Text(
+                              context.l10n.commonTotal,
+                              style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.slate500,
@@ -1219,7 +1213,7 @@ class _OnlineOrderMobileCartSheetState
                     const SizedBox(height: 10),
                     // Submit button
                     AppButton(
-                      label: 'Confirm Online Order',
+                      label: context.l10n.orderCreateNew,
                       isLoading: formState.isLoading,
                       minimumWidth: double.infinity,
                       onPressed: _handleConfirm,
@@ -1335,9 +1329,9 @@ class _CustomerInfoAccordionState extends State<_CustomerInfoAccordion> {
                       children: [
                         Row(
                           children: [
-                            const Text(
-                              'Customer Information',
-                              style: TextStyle(
+                            Text(
+                              context.l10n.customerDetailTitle,
+                              style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.slate900,
@@ -1433,7 +1427,7 @@ class _CustomerInfoAccordionState extends State<_CustomerInfoAccordion> {
                       textInputAction: TextInputAction.next,
                       style: const TextStyle(fontSize: 13),
                       decoration: InputDecoration(
-                        labelText: 'Customer Name *',
+                        labelText: '${context.l10n.customerName} *',
                         labelStyle: const TextStyle(
                           fontSize: 13,
                           color: AppColors.slate600,
@@ -1479,7 +1473,7 @@ class _CustomerInfoAccordionState extends State<_CustomerInfoAccordion> {
                       textInputAction: TextInputAction.next,
                       style: const TextStyle(fontSize: 13),
                       decoration: InputDecoration(
-                        labelText: 'Phone Number *',
+                        labelText: '${context.l10n.customerPhone} *',
                         labelStyle: const TextStyle(
                           fontSize: 13,
                           color: AppColors.slate600,
@@ -1525,7 +1519,7 @@ class _CustomerInfoAccordionState extends State<_CustomerInfoAccordion> {
                       maxLines: 2,
                       style: const TextStyle(fontSize: 13),
                       decoration: InputDecoration(
-                        labelText: 'Delivery Address *',
+                        labelText: '${context.l10n.customerAddress} *',
                         labelStyle: const TextStyle(
                           fontSize: 13,
                           color: AppColors.slate600,

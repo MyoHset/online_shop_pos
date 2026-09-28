@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/entities/cart_item.dart';
@@ -47,7 +48,7 @@ class CartLineItem extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      'Only ${item.availableStock} in stock',
+                      context.l10n.productStockLeft(item.availableStock),
                       style: const TextStyle(color: AppColors.danger, fontSize: 12, fontWeight: FontWeight.w500),
                     ),
                   ),

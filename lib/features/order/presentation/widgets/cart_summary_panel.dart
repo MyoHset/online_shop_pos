@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -79,7 +80,7 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
               child: TextButton.icon(
                 onPressed: () => setState(() => _showCustomerField = true),
                 icon: const Icon(Icons.person_add_alt_1, size: 18),
-                label: const Text('Select Customer'),
+                label: Text(context.l10n.orderCustomer),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.slate900,
                   padding: EdgeInsets.zero,
@@ -92,9 +93,9 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
               children: [
                 Row(
                   children: [
-                    const Text(
-                      'Customer',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.orderCustomer,
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: AppColors.slate500,
@@ -216,9 +217,9 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
           ],
 
           // Payment Method Selector
-          const Text(
-            'Payment Method',
-            style: TextStyle(
+          Text(
+            context.l10n.paymentSelectMethod,
+            style: const TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 13,
               color: AppColors.slate500,
@@ -229,17 +230,17 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                const _PaymentMethodChip('cod', 'Cash / COD'),
+                _PaymentMethodChip('cod', context.l10n.paymentMethodCod),
                 const SizedBox(width: 8),
-                _PaymentMethodChip('credit', 'Credit (အကြွေး)', onSelected: () {
+                _PaymentMethodChip('credit', '${context.l10n.paymentMethodCredit} (အကြွေး)', onSelected: () {
                   setState(() => _showCustomerField = true);
                 }),
                 const SizedBox(width: 8),
-                const _PaymentMethodChip('kbz_pay', 'KBZPay'),
+                _PaymentMethodChip('kbz_pay', context.l10n.paymentMethodKbzpay),
                 const SizedBox(width: 8),
-                const _PaymentMethodChip('wave_pay', 'WavePay'),
+                _PaymentMethodChip('wave_pay', context.l10n.paymentMethodWavepay),
                 const SizedBox(width: 8),
-                const _PaymentMethodChip('bank_transfer', 'Bank Transfer'),
+                _PaymentMethodChip('bank_transfer', context.l10n.paymentMethodBankTransfer),
               ],
             ),
           ),
@@ -331,9 +332,9 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Subtotal',
-                  style: TextStyle(
+                Text(
+                  context.l10n.commonSubtotal,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: AppColors.slate600,
@@ -366,9 +367,9 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Total',
-                style: TextStyle(
+              Text(
+                context.l10n.commonTotal,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: AppColors.slate500,
@@ -388,7 +389,7 @@ class _CartSummaryPanelState extends ConsumerState<CartSummaryPanel> {
 
           // Submit
           AppButton(
-            label: state.isCredit ? 'Complete Credit Sale' : 'Complete Sale',
+            label: context.l10n.quickSaleCheckout,
             isLoading: state.isLoading,
             backgroundColor: AppColors.greenNude,
             textColor: AppColors.slate900,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/responsive/adaptive_scaffold.dart';
 import '../../../../core/responsive/device_type.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -55,7 +56,7 @@ class _QuickSaleScreenState extends ConsumerState<QuickSaleScreen> {
                 onPressed: () => AdaptiveScaffold.openDrawer(context),
               )
             : null,
-        title: const Text('Quick Sale'),
+        title: Text(context.l10n.quickSaleTitle),
         centerTitle: false,
         backgroundColor: Colors.white,
         elevation: 0,
@@ -201,7 +202,7 @@ class _DesktopSearchActionState extends ConsumerState<_DesktopSearchAction> {
     if (!_expanded) {
       return IconButton(
         icon: const Icon(Icons.search),
-        tooltip: 'Search',
+        tooltip: context.l10n.commonSearch,
         onPressed: () {
           setState(() {
             _expanded = true;
@@ -224,7 +225,7 @@ class _DesktopSearchActionState extends ConsumerState<_DesktopSearchAction> {
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.close),
-            tooltip: 'Close Search',
+            tooltip: context.l10n.commonClose,
             onPressed: () {
               ref.read(quickSaleFilterProvider.notifier).setSearch('');
               setState(() {
@@ -333,9 +334,9 @@ class _ProductGridState extends ConsumerState<_ProductGrid> {
       ),
       data: (products) {
         if (products.isEmpty) {
-          return const Center(
-              child: Text('No products available.',
-                  style: TextStyle(color: AppColors.slate500)));
+          return Center(
+              child: Text(context.l10n.productEmpty,
+                  style: const TextStyle(color: AppColors.slate500)));
         }
 
         return CustomScrollView(
@@ -387,15 +388,16 @@ class _CartSidebar extends ConsumerWidget {
       children: [
         Expanded(
           child: state.cart.isEmpty
-              ? const Center(
+              ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.shopping_cart_outlined,
+                      const Icon(Icons.shopping_cart_outlined,
                           size: 64, color: AppColors.slate300),
-                      SizedBox(height: 16),
-                      Text('Cart is empty',
-                          style: TextStyle(
+                      const SizedBox(height: 16),
+                      Text(context.l10n.quickSaleCartEmpty,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
                               color: AppColors.slate500, fontSize: 16)),
                     ],
                   ),
@@ -452,7 +454,7 @@ class _VariantSelectionDialogState extends State<_VariantSelectionDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Select Variant',
+              context.l10n.productVariants,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.slate900,
@@ -529,8 +531,8 @@ class _VariantSelectionDialogState extends State<_VariantSelectionDialog> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Cancel',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                child: Text(context.l10n.commonCancel,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),
           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/entities/order.dart';
@@ -228,7 +229,7 @@ class _OrderCardState extends State<OrderCard> {
                               ),
                               const SizedBox(width: 5),
                               Text(
-                                '$totalItemsCount ${totalItemsCount == 1 ? 'item' : 'items'}',
+                                context.l10n.orderItemCount(totalItemsCount),
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
@@ -322,7 +323,7 @@ class _OrderCardState extends State<OrderCard> {
                             Padding(
                               padding: const EdgeInsets.only(bottom: 2),
                               child: Text(
-                                'Discount: -${CurrencyFormatter.format(order.discountAmount)}',
+                                '${context.l10n.commonDiscount}: -${CurrencyFormatter.format(order.discountAmount)}',
                                 style: const TextStyle(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w600,
@@ -334,9 +335,9 @@ class _OrderCardState extends State<OrderCard> {
                             crossAxisAlignment: CrossAxisAlignment.baseline,
                             textBaseline: TextBaseline.alphabetic,
                             children: [
-                              const Text(
-                                'Total: ',
-                                style: TextStyle(
+                              Text(
+                                '${context.l10n.commonTotal}: ',
+                                style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                   color: AppColors.slate500,
@@ -394,13 +395,6 @@ class _OrderCardState extends State<OrderCard> {
         ),
       ),
     );
-  }
-
-  String _getInitials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || parts[0].isEmpty) return '?';
-    if (parts.length == 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 }
 

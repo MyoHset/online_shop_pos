@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/responsive/responsive_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -249,9 +250,9 @@ class _DiscountEditSheetState extends State<DiscountEditSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Order Discount',
-                  style: TextStyle(
+                Text(
+                  context.l10n.orderApplyDiscount,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.slate900,
@@ -306,7 +307,7 @@ class _DiscountEditSheetState extends State<DiscountEditSheet> {
               children: [
                 Expanded(
                   child: _TypeSelectionButton(
-                    label: 'Fixed Amount (ks)',
+                    label: context.l10n.discountTypeFixed,
                     icon: Icons.payments_outlined,
                     isSelected: _selectedType == DiscountType.fixed,
                     onTap: () {
@@ -321,7 +322,7 @@ class _DiscountEditSheetState extends State<DiscountEditSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _TypeSelectionButton(
-                    label: 'Percentage (%)',
+                    label: context.l10n.discountTypePercentage,
                     icon: Icons.percent,
                     isSelected: _selectedType == DiscountType.percentage,
                     onTap: () {
@@ -502,9 +503,9 @@ class _DiscountEditSheetState extends State<DiscountEditSheet> {
                         ),
                       ),
                       onPressed: _isSubmitting ? null : _handleRemove,
-                      child: const Text(
-                        'Remove',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      child: Text(
+                        context.l10n.commonDelete,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -513,7 +514,7 @@ class _DiscountEditSheetState extends State<DiscountEditSheet> {
                 Expanded(
                   flex: 2,
                   child: AppButton(
-                    label: 'Apply Discount',
+                    label: context.l10n.orderApplyDiscount,
                     isLoading: _isSubmitting,
                     backgroundColor: AppColors.greenNude,
                     textColor: AppColors.slate900,

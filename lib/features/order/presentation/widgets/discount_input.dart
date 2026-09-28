@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/entities/discount.dart';
@@ -61,9 +62,9 @@ class DiscountInput extends StatelessWidget {
                       color: AppColors.slate500,
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'Discount',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.commonDiscount,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: AppColors.slate600,
@@ -107,9 +108,9 @@ class DiscountInput extends StatelessWidget {
                         ),
                       ),
                     ] else ...[
-                      const Text(
-                        'None',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.commonNone,
+                        style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.slate400,
                           fontWeight: FontWeight.w500,
@@ -119,7 +120,7 @@ class DiscountInput extends StatelessWidget {
                     if (!readOnly) ...[
                       const SizedBox(width: 8),
                       Text(
-                        hasDiscount ? 'Edit' : 'Add',
+                        hasDiscount ? context.l10n.commonEdit : context.l10n.commonAdd,
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,

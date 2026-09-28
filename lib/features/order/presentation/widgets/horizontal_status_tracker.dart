@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/order.dart';
 
@@ -16,9 +17,9 @@ class HorizontalStatusTracker extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 24),
         alignment: Alignment.center,
-        child: const Text(
-          'Order Cancelled',
-          style: TextStyle(
+        child: Text(
+          context.l10n.orderStatusCancelled,
+          style: const TextStyle(
             color: AppColors.danger,
             fontWeight: FontWeight.w700,
             fontSize: 16,

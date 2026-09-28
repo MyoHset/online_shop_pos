@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/responsive/responsive_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -29,7 +30,7 @@ class OrderDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Track Order'),
+        title: Text(context.l10n.orderDetailTitle),
         centerTitle: false,
         backgroundColor: Colors.white,
         actions: [
@@ -170,7 +171,7 @@ class _OrderDetailBody extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: AppButton(
-                        label: 'Update Status',
+                        label: context.l10n.orderUpdateStatus,
                         onPressed: () => _showUpdateStatusModal(context),
                       ),
                     ),
@@ -275,9 +276,9 @@ class _UpdateStatusModalContent extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Update Order Status',
-                style: TextStyle(
+              Text(
+                context.l10n.orderUpdateStatus,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: AppColors.slate900,
@@ -355,7 +356,7 @@ class _OrderMetaCard extends StatelessWidget {
               _OrderTypeBadge(orderType: order.orderType),
               const Spacer(),
               Text(
-                'Order #${order.id.substring(0, 8).toUpperCase()}',
+                context.l10n.orderId(order.id.substring(0, 8).toUpperCase()),
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -372,14 +373,14 @@ class _OrderMetaCard extends StatelessWidget {
           // Customer Info
           _MetaRow(
             icon: Icons.person_outline,
-            label: 'Customer',
+            label: context.l10n.orderCustomer,
             value: order.customerName.isEmpty ? 'Walk-in Customer' : order.customerName,
           ),
           if (order.customerPhone != null && order.customerPhone!.isNotEmpty) ...[
             const SizedBox(height: 8),
             _MetaRow(
               icon: Icons.phone_outlined,
-              label: 'Phone',
+              label: context.l10n.customerPhone,
               value: order.customerPhone!,
             ),
           ],
@@ -387,7 +388,7 @@ class _OrderMetaCard extends StatelessWidget {
             const SizedBox(height: 8),
             _MetaRow(
               icon: Icons.location_on_outlined,
-              label: 'Address',
+              label: context.l10n.customerAddress,
               value: order.customerAddress!,
             ),
           ],
@@ -494,9 +495,9 @@ class _PaymentPanel extends ConsumerWidget {
             children: [
               const Icon(Icons.payment_outlined, size: 18, color: AppColors.slate700),
               const SizedBox(width: 8),
-              const Text(
-                'Payment',
-                style: TextStyle(
+              Text(
+                context.l10n.orderPaymentStatus,
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: AppColors.slate900,
@@ -714,16 +715,16 @@ class _OrderItemsSection extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Order Summary',
-                style: TextStyle(
+              Text(
+                context.l10n.orderItems(order.items.length),
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: AppColors.slate900,
                 ),
               ),
               Text(
-                '${order.items.length} items',
+                context.l10n.orderItemCount(order.items.length),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
@@ -814,9 +815,9 @@ class _OrderItemsSection extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Subtotal',
-                style: TextStyle(
+              Text(
+                context.l10n.commonSubtotal,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: AppColors.slate600,
@@ -857,9 +858,9 @@ class _OrderItemsSection extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Total Amount',
-                style: TextStyle(
+              Text(
+                context.l10n.orderTotal,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppColors.slate600,

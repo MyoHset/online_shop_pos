@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/responsive/device_type.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -156,7 +157,7 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
       backgroundColor: AppColors.slate50,
       appBar: CustomAppBar(
         title: Text(
-          isDesktop ? 'Order Report' : 'Orders',
+          context.l10n.orderListTitle,
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
             fontSize: isDesktop ? 22 : 18,
@@ -195,7 +196,7 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                   size: 18,
                 ),
               ),
-              tooltip: 'Create Online Order',
+              tooltip: context.l10n.orderCreateNew,
               visualDensity: VisualDensity.compact,
               onPressed: () => context.pushNamed('orderNew'),
             ),
@@ -373,9 +374,9 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                         controller: _searchController,
                         onChanged: (val) => setState(
                             () => _searchQuery = val.toLowerCase().trim()),
-                        decoration: const InputDecoration(
-                          hintText: 'Search order or customer',
-                          hintStyle: TextStyle(
+                        decoration: InputDecoration(
+                          hintText: context.l10n.orderSearchPlaceholder,
+                          hintStyle: const TextStyle(
                               fontSize: 13, color: AppColors.slate400),
                           border: InputBorder.none,
                           isDense: true,
@@ -480,11 +481,11 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                         fontSize: 13,
                         color: AppColors.slate700,
                         fontWeight: FontWeight.w500),
-                    items: const [
-                      DropdownMenuItem(value: 0, child: Text('All Statuses')),
-                      DropdownMenuItem(
+                    items: [
+                      DropdownMenuItem(value: 0, child: Text(context.l10n.orderFilterAll)),
+                      const DropdownMenuItem(
                           value: 1, child: Text('Active (On Process)')),
-                      DropdownMenuItem(value: 2, child: Text('Completed')),
+                      const DropdownMenuItem(value: 2, child: Text('Completed')),
                     ],
                     onChanged: (val) {
                       if (val != null) setState(() => _selectedFilter = val);
@@ -894,7 +895,7 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                       fontWeight: FontWeight.w500,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Search order #, customer...',
+                      hintText: context.l10n.orderSearchPlaceholder,
                       hintStyle: const TextStyle(
                         fontSize: 12.5,
                         color: AppColors.slate400,
@@ -1038,7 +1039,7 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
               children: [
                 _buildFilterChip(
                   index: 0,
-                  label: 'All Orders',
+                  label: context.l10n.orderFilterAll,
                   count: allCount,
                 ),
                 const SizedBox(width: 8),
@@ -1396,26 +1397,26 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: AppDataTable(
-            columns: const [
+            columns: [
               DataColumn(
-                  label: Text('Order ID',
-                      style: TextStyle(fontWeight: FontWeight.w600))),
+                  label: Text(context.l10n.orderId('').replaceAll('#', '').trim(),
+                      style: const TextStyle(fontWeight: FontWeight.w600))),
               DataColumn(
-                  label: Text('Date & Time',
-                      style: TextStyle(fontWeight: FontWeight.w600))),
+                  label: Text(context.l10n.orderDate,
+                      style: const TextStyle(fontWeight: FontWeight.w600))),
               DataColumn(
-                  label: Text('Customer',
-                      style: TextStyle(fontWeight: FontWeight.w600))),
+                  label: Text(context.l10n.orderCustomer,
+                      style: const TextStyle(fontWeight: FontWeight.w600))),
               DataColumn(
-                  label: Text('Items',
-                      style: TextStyle(fontWeight: FontWeight.w600))),
+                  label: Text(context.l10n.orderItems(0).replaceAll(' (0)', '').trim(),
+                      style: const TextStyle(fontWeight: FontWeight.w600))),
               DataColumn(
-                  label: Text('Total',
-                      style: TextStyle(fontWeight: FontWeight.w600))),
+                  label: Text(context.l10n.orderTotal,
+                      style: const TextStyle(fontWeight: FontWeight.w600))),
               DataColumn(
-                  label: Text('Status',
-                      style: TextStyle(fontWeight: FontWeight.w600))),
-              DataColumn(
+                  label: Text(context.l10n.orderPaymentStatus,
+                      style: const TextStyle(fontWeight: FontWeight.w600))),
+              const DataColumn(
                   label: Text('Action',
                       style: TextStyle(fontWeight: FontWeight.w600))),
             ],
@@ -1436,7 +1437,7 @@ class _OrderListReportViewState extends ConsumerState<_OrderListReportView> {
                         ? 'Walk-in Customer'
                         : o.customerName,
                     style: const TextStyle(color: AppColors.slate800))),
-                DataCell(Text('$itemCount items',
+                DataCell(Text(context.l10n.orderItemCount(itemCount),
                     style: const TextStyle(color: AppColors.slate600))),
                 DataCell(Text(CurrencyFormatter.format(o.totalAmount),
                     style: const TextStyle(fontWeight: FontWeight.w600))),
@@ -1617,9 +1618,9 @@ class _EmptyOrdersView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'No orders found',
-              style: TextStyle(
+            Text(
+              context.l10n.orderEmpty,
+              style: const TextStyle(
                 color: AppColors.slate900,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -1643,7 +1644,7 @@ class _EmptyOrdersView extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onReset,
                 icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Reset filters'),
+                label: Text(context.l10n.commonClear),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.slate700,
                   side: const BorderSide(color: AppColors.slate300),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -23,9 +24,9 @@ class SaleSuccessReceipt extends ConsumerWidget {
         children: [
           const Icon(Icons.check_circle, color: AppColors.success, size: 80),
           const SizedBox(height: 24),
-          const Text(
-            'Sale Completed Successfully!',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.slate900),
+          Text(
+            context.l10n.orderInstantSaleSuccess,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.slate900),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -38,11 +39,11 @@ class SaleSuccessReceipt extends ConsumerWidget {
             ),
             child: Column(
               children: [
-                _ReceiptRow('Order ID', order.id.split('-').first.toUpperCase()),
+                _ReceiptRow(context.l10n.orderId('').replaceAll('#', '').trim(), order.id.split('-').first.toUpperCase()),
                 const SizedBox(height: 12),
-                _ReceiptRow('Customer', order.customerName),
+                _ReceiptRow(context.l10n.orderCustomer, order.customerName),
                 const SizedBox(height: 12),
-                _ReceiptRow('Payment', state.paymentMethod.toUpperCase()),
+                _ReceiptRow(context.l10n.orderPaymentStatus, state.paymentMethod.toUpperCase()),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Divider(color: AppColors.slate200),
@@ -50,10 +51,10 @@ class SaleSuccessReceipt extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Total Paid', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.slate600)),
+                    Text(context.l10n.commonTotal, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.slate600)),
                     Text(
                       CurrencyFormatter.format(order.totalAmount),
-                      style:  TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.slate900),
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.slate900),
                     ),
                   ],
                 ),
@@ -62,7 +63,7 @@ class SaleSuccessReceipt extends ConsumerWidget {
           ),
           const SizedBox(height: 48),
           AppButton(
-            label: 'Start New Sale',
+            label: context.l10n.orderCreateNew,
             onPressed: () {
               ref.read(quickSaleProvider.notifier).resetSale();
             },
