@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/validators.dart';
@@ -79,7 +80,7 @@ class _RecordRepaymentDialogState extends ConsumerState<RecordRepaymentDialog> {
     if (success) {
       AppSnackBar.showSuccess(
         context,
-        'Repayment of ${CurrencyFormatter.format(amount)} recorded successfully',
+        context.l10n.customerRepaymentSuccess,
       );
       Navigator.of(context).pop(true);
     } else {
@@ -109,9 +110,9 @@ class _RecordRepaymentDialogState extends ConsumerState<RecordRepaymentDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Record Repayment',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.customerRecordRepayment,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: AppColors.slate900,
@@ -161,9 +162,9 @@ class _RecordRepaymentDialogState extends ConsumerState<RecordRepaymentDialog> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Outstanding Debt:',
-                              style: TextStyle(
+                            Text(
+                              '${context.l10n.customerDebt}:',
+                              style: const TextStyle(
                                 fontSize: 13,
                                 color: AppColors.danger,
                                 fontWeight: FontWeight.w600,
@@ -193,11 +194,11 @@ class _RecordRepaymentDialogState extends ConsumerState<RecordRepaymentDialog> {
                           controller: _amountController,
                           keyboardType: TextInputType.number,
                           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                          decoration: const InputDecoration(
-                            labelText: 'Repayment Amount *',
+                          decoration: InputDecoration(
+                            labelText: '${context.l10n.paymentAmount} *',
                             hintText: '50000',
                             suffixText: 'MMK',
-                            prefixIcon: Icon(Icons.money_outlined),
+                            prefixIcon: const Icon(Icons.money_outlined),
                           ),
                           validator: (v) {
                             final err = Validators.required(v, fieldName: 'Amount');
@@ -226,9 +227,9 @@ class _RecordRepaymentDialogState extends ConsumerState<RecordRepaymentDialog> {
                   // Payment Method Dropdown
                   DropdownButtonFormField<String>(
                     initialValue: _selectedMethod,
-                    decoration: const InputDecoration(
-                      labelText: 'Payment Method',
-                      prefixIcon: Icon(Icons.payment_outlined),
+                    decoration: InputDecoration(
+                      labelText: context.l10n.paymentSelectMethod,
+                      prefixIcon: const Icon(Icons.payment_outlined),
                     ),
                     items: _paymentMethods.map((m) {
                       return DropdownMenuItem<String>(
@@ -251,10 +252,10 @@ class _RecordRepaymentDialogState extends ConsumerState<RecordRepaymentDialog> {
                   // Notes
                   TextFormField(
                     controller: _notesController,
-                    decoration: const InputDecoration(
-                      labelText: 'Notes (Optional)',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.commonNotes,
                       hintText: 'Receipt number or remarks...',
-                      prefixIcon: Icon(Icons.notes_outlined),
+                      prefixIcon: const Icon(Icons.notes_outlined),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -265,11 +266,11 @@ class _RecordRepaymentDialogState extends ConsumerState<RecordRepaymentDialog> {
                     children: [
                       TextButton(
                         onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
-                        child: const Text('Cancel', style: TextStyle(color: AppColors.slate600)),
+                        child: Text(context.l10n.commonCancel, style: const TextStyle(color: AppColors.slate600)),
                       ),
                       const SizedBox(width: 12),
                       AppButton(
-                        label: 'Record Repayment',
+                        label: context.l10n.customerRecordRepayment,
                         icon: const Icon(Icons.check_circle_outline),
                         isLoading: _isSaving,
                         onPressed: _submit,

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -140,13 +141,13 @@ class _CustomerOverdueSectionState extends ConsumerState<CustomerOverdueSection>
                       constraints: const BoxConstraints(minWidth: 800),
                       child: DataTable(
                         headingRowColor: WidgetStateProperty.all(AppColors.slate100),
-                        columns: const [
-                          DataColumn(label: Text('Customer', style: TextStyle(fontWeight: FontWeight.w700))),
-                          DataColumn(label: Text('Outstanding Debt', style: TextStyle(fontWeight: FontWeight.w700))),
-                          DataColumn(label: Text('Cycle', style: TextStyle(fontWeight: FontWeight.w700))),
-                          DataColumn(label: Text('Due Date', style: TextStyle(fontWeight: FontWeight.w700))),
-                          DataColumn(label: Text('Status / Aging', style: TextStyle(fontWeight: FontWeight.w700))),
-                          DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.w700))),
+                        columns: [
+                          DataColumn(label: Text(context.l10n.orderCustomer, style: const TextStyle(fontWeight: FontWeight.w700))),
+                          DataColumn(label: Text(context.l10n.customerDebt, style: const TextStyle(fontWeight: FontWeight.w700))),
+                          DataColumn(label: Text(context.l10n.customerRepaymentCycle, style: const TextStyle(fontWeight: FontWeight.w700))),
+                          const DataColumn(label: Text('Due Date', style: TextStyle(fontWeight: FontWeight.w700))),
+                          const DataColumn(label: Text('Status / Aging', style: TextStyle(fontWeight: FontWeight.w700))),
+                          DataColumn(label: Text(context.l10n.commonActions, style: const TextStyle(fontWeight: FontWeight.w700))),
                         ],
                         rows: activeList.map((item) {
                           final c = item.customer;
@@ -201,7 +202,7 @@ class _CustomerOverdueSectionState extends ConsumerState<CustomerOverdueSection>
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.payments_outlined, size: 18, color: AppColors.success),
-                                      tooltip: 'Record Repayment',
+                                      tooltip: context.l10n.customerRecordRepayment,
                                       onPressed: () => RecordRepaymentDialog.show(context, c),
                                     ),
                                     IconButton(

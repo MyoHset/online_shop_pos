@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/responsive/device_type.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -59,7 +60,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
       backgroundColor: AppColors.slate50,
       appBar: CustomAppBar(
         title: Text(
-          isDesktop ? 'Customer Management' : 'Customers',
+          context.l10n.customerListTitle,
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
             fontSize: isDesktop ? 22 : 18,
@@ -93,7 +94,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                   size: 18,
                 ),
               ),
-              tooltip: 'Add Customer',
+              tooltip: context.l10n.customerAddNew,
               visualDensity: VisualDensity.compact,
               onPressed: () => CustomerFormDialog.show(context),
             ),
@@ -306,7 +307,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                 setState(() {});
               },
               decoration: InputDecoration(
-                hintText: 'Search name or phone...',
+                hintText: context.l10n.customerSearchPlaceholder,
                 hintStyle: const TextStyle(
                   fontSize: 12.5,
                   color: AppColors.slate400,
@@ -351,19 +352,19 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                     children: [
                       _buildMobileFilterChip(
                         index: 0,
-                        label: 'All',
+                        label: context.l10n.commonAll,
                         count: totalCustomers,
                       ),
                       const SizedBox(width: 6),
                       _buildMobileFilterChip(
                         index: 1,
-                        label: 'With Debt',
+                        label: context.l10n.customerDebt,
                         count: debtCustomerCount,
                       ),
                       const SizedBox(width: 6),
                       _buildMobileFilterChip(
                         index: 2,
-                        label: 'Limit Reached',
+                        label: context.l10n.customerCreditLimit,
                         count: limitReachedCount,
                       ),
                     ],
@@ -622,7 +623,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
               // Search box (Name & Phone)
               SearchTextField(
                 value: _searchController.text,
-                hintText: 'Search by name or phone...',
+                hintText: context.l10n.customerSearchPlaceholder,
                 width: 280,
                 onChanged: (val) {
                   _searchController.text = val;
@@ -639,18 +640,18 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                 spacing: 8,
                 children: [
                   _buildFilterChip(
-                    label: 'All Customers',
+                    label: context.l10n.commonAll,
                     count: totalCustomers,
                     index: 0,
                   ),
                   _buildFilterChip(
-                    label: 'With Debt',
+                    label: context.l10n.customerDebt,
                     count: debtCustomerCount,
                     index: 1,
                     badgeHighlightColor: AppColors.danger,
                   ),
                   _buildFilterChip(
-                    label: 'Limit Reached',
+                    label: context.l10n.customerCreditLimit,
                     count: filteredList.where((c) => c.isLimitReached).length,
                     index: 2,
                     badgeHighlightColor: AppColors.warning,
@@ -660,7 +661,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
 
               // Add Customer Button
               AppButton(
-                label: 'Add Customer',
+                label: context.l10n.customerAddNew,
                 icon: const Icon(Icons.add, size: 16),
                 variant: AppButtonVariant.primary,
                 onPressed: () => CustomerFormDialog.show(context),
@@ -822,11 +823,11 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
         child: AppDataTable(
           horizontalMargin: 20,
           columnSpacing: 24,
-          columns: const [
+          columns: [
             DataColumn(
               label: Text(
-                'Customer',
-                style: TextStyle(
+                context.l10n.orderCustomer,
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                   color: AppColors.slate700,
@@ -835,8 +836,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
             ),
             DataColumn(
               label: Text(
-                'Address',
-                style: TextStyle(
+                context.l10n.customerAddress,
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                   color: AppColors.slate700,
@@ -845,8 +846,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
             ),
             DataColumn(
               label: Text(
-                'Outstanding Debt',
-                style: TextStyle(
+                context.l10n.customerDebt,
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                   color: AppColors.slate700,
@@ -855,8 +856,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
             ),
             DataColumn(
               label: Text(
-                'Credit Limit',
-                style: TextStyle(
+                context.l10n.customerCreditLimit,
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                   color: AppColors.slate700,
@@ -865,8 +866,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
             ),
             DataColumn(
               label: Text(
-                'Cycle',
-                style: TextStyle(
+                context.l10n.customerRepaymentCycle,
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                   color: AppColors.slate700,
@@ -875,8 +876,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
             ),
             DataColumn(
               label: Text(
-                'Status',
-                style: TextStyle(
+                context.l10n.commonStatus,
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                   color: AppColors.slate700,
@@ -885,8 +886,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
             ),
             DataColumn(
               label: Text(
-                'Actions',
-                style: TextStyle(
+                context.l10n.commonActions,
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                   color: AppColors.slate700,
@@ -1042,7 +1043,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                             size: 18,
                             color: AppColors.success,
                           ),
-                          tooltip: 'Record Repayment',
+                          tooltip: context.l10n.customerRecordRepayment,
                           onPressed: () =>
                               RecordRepaymentDialog.show(context, c),
                         ),
@@ -1052,7 +1053,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                           size: 18,
                           color: AppColors.slate500,
                         ),
-                        tooltip: 'Edit Customer',
+                        tooltip: context.l10n.customerEdit,
                         onPressed: () =>
                             CustomerFormDialog.show(context, customer: c),
                       ),
@@ -1450,9 +1451,9 @@ class _CustomerMobileCard extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Credit Limit',
-                                  style: TextStyle(
+                                Text(
+                                  context.l10n.customerCreditLimit,
+                                  style: const TextStyle(
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w500,
                                     color: AppColors.slate500,
@@ -1663,9 +1664,9 @@ class _EmptyCustomersView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'No customers found',
-              style: TextStyle(
+            Text(
+              context.l10n.customerEmpty,
+              style: const TextStyle(
                 color: AppColors.slate900,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -1702,7 +1703,7 @@ class _EmptyCustomersView extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onAddCustomer,
                 icon: const Icon(Icons.person_add_rounded, size: 16),
-                label: const Text('Add Customer'),
+                label: Text(context.l10n.customerAddNew),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.greenNude,
                   foregroundColor: AppColors.slate900,

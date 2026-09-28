@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/responsive/device_type.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -105,8 +106,8 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         ),
         title: Text(
           isDesktop
-              ? 'Customer Details'
-              : (customerAsync.value?.name ?? 'Customer Profile'),
+              ? context.l10n.customerDetailTitle
+              : (customerAsync.value?.name ?? context.l10n.customerDetailTitle),
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
             fontSize: isDesktop ? 22 : 17,
@@ -148,7 +149,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                   size: 17,
                 ),
               ),
-              tooltip: 'Edit Profile',
+              tooltip: context.l10n.customerEdit,
               visualDensity: VisualDensity.compact,
               onPressed: () => CustomerFormDialog.show(
                 context,
@@ -428,7 +429,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Transaction & Repayment History (Ledger)',
+              context.l10n.customerTransactionHistory,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: AppColors.slate900,
@@ -487,30 +488,30 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                 child: AppDataTable(
                   minWidth: 700,
                   headingRowColor: AppColors.slate100,
-                  columns: const [
+                  columns: [
                     DataColumn(
-                      label: Text('Date',
-                          style: TextStyle(fontWeight: FontWeight.w700)),
+                      label: Text(context.l10n.commonDate,
+                          style: const TextStyle(fontWeight: FontWeight.w700)),
                     ),
-                    DataColumn(
+                    const DataColumn(
                       label: Text('Type',
                           style: TextStyle(fontWeight: FontWeight.w700)),
                     ),
-                    DataColumn(
+                    const DataColumn(
                       label: Text('Amount',
                           style: TextStyle(fontWeight: FontWeight.w700)),
                     ),
-                    DataColumn(
+                    const DataColumn(
                       label: Text('Method',
                           style: TextStyle(fontWeight: FontWeight.w700)),
                     ),
-                    DataColumn(
+                    const DataColumn(
                       label: Text('Balance',
                           style: TextStyle(fontWeight: FontWeight.w700)),
                     ),
                     DataColumn(
-                      label: Text('Notes',
-                          style: TextStyle(fontWeight: FontWeight.w700)),
+                      label: Text(context.l10n.commonNotes,
+                          style: const TextStyle(fontWeight: FontWeight.w700)),
                     ),
                   ],
                   rows: transactions.map((t) {
@@ -788,7 +789,7 @@ class _MobileProfileCard extends StatelessWidget {
           // ── Detailed Info Rows ──
           _DetailMiniRow(
             icon: Icons.schedule_outlined,
-            label: 'Repayment Cycle',
+            label: context.l10n.customerRepaymentCycle,
             value: customer.repaymentCycle.displayLabel,
           ),
           if (customer.address != null &&
@@ -796,7 +797,7 @@ class _MobileProfileCard extends StatelessWidget {
             const SizedBox(height: 8),
             _DetailMiniRow(
               icon: Icons.location_on_outlined,
-              label: 'Address',
+              label: context.l10n.customerAddress,
               value: customer.address!,
             ),
           ],
@@ -804,7 +805,7 @@ class _MobileProfileCard extends StatelessWidget {
             const SizedBox(height: 8),
             _DetailMiniRow(
               icon: Icons.notes_rounded,
-              label: 'Notes',
+              label: context.l10n.commonNotes,
               value: customer.notes!,
             ),
           ],
@@ -1434,7 +1435,7 @@ class _CustomerProfileCard extends ConsumerWidget {
                     onPressed: () =>
                         CustomerFormDialog.show(context, customer: customer),
                     icon: const Icon(Icons.edit, size: 16),
-                    label: const Text('Edit'),
+                    label: Text(context.l10n.commonEdit),
                   ),
                 ],
               ),
@@ -1443,20 +1444,20 @@ class _CustomerProfileCard extends ConsumerWidget {
           const Divider(height: 32),
           _InfoRow(
             icon: Icons.location_on_outlined,
-            label: 'Address',
+            label: context.l10n.customerAddress,
             value: customer.address ?? '-',
           ),
           const SizedBox(height: 12),
           _InfoRow(
             icon: Icons.schedule_outlined,
-            label: 'Payment Cycle',
+            label: context.l10n.customerRepaymentCycle,
             value: customer.repaymentCycle.displayLabel,
           ),
           if (customer.notes != null && customer.notes!.isNotEmpty) ...[
             const SizedBox(height: 12),
             _InfoRow(
               icon: Icons.note_outlined,
-              label: 'Notes',
+              label: context.l10n.commonNotes,
               value: customer.notes!,
             ),
           ],
@@ -1523,8 +1524,8 @@ class _CustomerCreditCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Credit Limit:',
-                  style: TextStyle(color: AppColors.slate600, fontSize: 13)),
+              Text('${context.l10n.customerCreditLimit}:',
+                  style: const TextStyle(color: AppColors.slate600, fontSize: 13)),
               Text(
                 customer.creditLimit > 0
                     ? CurrencyFormatter.format(customer.creditLimit)
@@ -1554,7 +1555,7 @@ class _CustomerCreditCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           AppButton(
-            label: 'Record Repayment',
+            label: context.l10n.customerRecordRepayment,
             icon: const Icon(Icons.payments_outlined),
             onPressed: () => RecordRepaymentDialog.show(context, customer),
           ),

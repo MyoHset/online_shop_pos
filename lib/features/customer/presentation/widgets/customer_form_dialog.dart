@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -155,7 +156,7 @@ class _CustomerFormDialogState extends ConsumerState<CustomerFormDialog> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        isEdit ? 'Edit Customer' : 'Add New Customer',
+                        isEdit ? context.l10n.customerEdit : context.l10n.customerAddNew,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -174,10 +175,10 @@ class _CustomerFormDialogState extends ConsumerState<CustomerFormDialog> {
                   // Name
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Customer Name *',
+                    decoration: InputDecoration(
+                      labelText: '${context.l10n.customerName} *',
                       hintText: 'John Doe',
-                      prefixIcon: Icon(Icons.person_outline),
+                      prefixIcon: const Icon(Icons.person_outline),
                     ),
                     validator: (v) => Validators.required(v, fieldName: 'Name'),
                   ),
@@ -187,10 +188,10 @@ class _CustomerFormDialogState extends ConsumerState<CustomerFormDialog> {
                   TextFormField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Phone Number *',
+                    decoration: InputDecoration(
+                      labelText: '${context.l10n.customerPhone} *',
                       hintText: '09xxxxxxxxx',
-                      prefixIcon: Icon(Icons.phone_outlined),
+                      prefixIcon: const Icon(Icons.phone_outlined),
                     ),
                     validator: Validators.phoneNumber,
                   ),
@@ -199,10 +200,10 @@ class _CustomerFormDialogState extends ConsumerState<CustomerFormDialog> {
                   // Address
                   TextFormField(
                     controller: _addressController,
-                    decoration: const InputDecoration(
-                      labelText: 'Address',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.customerAddress,
                       hintText: 'No. 12, 50th Street, Yangon',
-                      prefixIcon: Icon(Icons.location_on_outlined),
+                      prefixIcon: const Icon(Icons.location_on_outlined),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -215,11 +216,11 @@ class _CustomerFormDialogState extends ConsumerState<CustomerFormDialog> {
                           controller: _creditLimitController,
                           keyboardType: TextInputType.number,
                           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                          decoration: const InputDecoration(
-                            labelText: 'Credit Limit',
+                          decoration: InputDecoration(
+                            labelText: context.l10n.customerCreditLimit,
                             hintText: '500000',
                             suffixText: 'MMK',
-                            prefixIcon: Icon(Icons.credit_card_outlined),
+                            prefixIcon: const Icon(Icons.credit_card_outlined),
                           ),
                         ),
                       ),
@@ -228,9 +229,9 @@ class _CustomerFormDialogState extends ConsumerState<CustomerFormDialog> {
                         child: DropdownButtonFormField<RepaymentCycle>(
                           initialValue: _selectedCycle,
                           isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Payment Cycle',
-                            prefixIcon: Icon(Icons.schedule_outlined),
+                          decoration: InputDecoration(
+                            labelText: context.l10n.customerRepaymentCycle,
+                            prefixIcon: const Icon(Icons.schedule_outlined),
                           ),
                           items: RepaymentCycle.values.map((cycle) {
                             return DropdownMenuItem(
@@ -270,10 +271,10 @@ class _CustomerFormDialogState extends ConsumerState<CustomerFormDialog> {
                   TextFormField(
                     controller: _notesController,
                     maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Notes',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.commonNotes,
                       hintText: 'Wholesale buyer, etc...',
-                      prefixIcon: Icon(Icons.note_alt_outlined),
+                      prefixIcon: const Icon(Icons.note_alt_outlined),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -284,11 +285,11 @@ class _CustomerFormDialogState extends ConsumerState<CustomerFormDialog> {
                     children: [
                       TextButton(
                         onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-                        child: const Text('Cancel', style: TextStyle(color: AppColors.slate600)),
+                        child: Text(context.l10n.commonCancel, style: const TextStyle(color: AppColors.slate600)),
                       ),
                       const SizedBox(width: 12),
                       AppButton(
-                        label: isEdit ? 'Save Changes' : 'Add Customer',
+                        label: isEdit ? context.l10n.commonSave : context.l10n.customerAddNew,
                         icon: const Icon(Icons.check),
                         isLoading: _isSaving,
                         onPressed: _submit,

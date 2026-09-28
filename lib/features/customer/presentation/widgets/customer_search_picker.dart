@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/entities/customer.dart';
@@ -17,7 +18,7 @@ class CustomerSearchPicker extends ConsumerStatefulWidget {
 
   final Customer? selectedCustomer;
   final ValueChanged<Customer?> onCustomerSelected;
-  final String hintText;
+  final String? hintText;
 
   @override
   ConsumerState<CustomerSearchPicker> createState() => _CustomerSearchPickerState();
@@ -196,7 +197,7 @@ class _CustomerSearchPickerState extends ConsumerState<CustomerSearchPicker> {
                                       ),
                                       subtitle: customer.hasDebt
                                           ? Text(
-                                              'Outstanding Debt: ${CurrencyFormatter.format(customer.currentDebt)}',
+                                              '${context.l10n.customerDebt}: ${CurrencyFormatter.format(customer.currentDebt)}',
                                               style: const TextStyle(
                                                 color: AppColors.danger,
                                                 fontSize: 11,
@@ -258,8 +259,8 @@ class _CustomerSearchPickerState extends ConsumerState<CustomerSearchPicker> {
                                     const SizedBox(width: 10),
                                     Text(
                                       query.isEmpty
-                                          ? '+ Add New Customer'
-                                          : '+ Add New Customer ($query)',
+                                          ? '+ ${context.l10n.customerAddNew}'
+                                          : '+ ${context.l10n.customerAddNew} ($query)',
                                       style: const TextStyle(
                                         color: AppColors.info,
                                         fontWeight: FontWeight.w600,
@@ -312,7 +313,7 @@ class _CustomerSearchPickerState extends ConsumerState<CustomerSearchPicker> {
         controller: _searchController,
         focusNode: _focusNode,
         decoration: InputDecoration(
-          hintText: widget.hintText,
+          hintText: widget.hintText ?? context.l10n.customerSearchPlaceholder,
           prefixIcon: Icon(
             Icons.search,
             color: isSelected ? AppColors.success : AppColors.slate500,
