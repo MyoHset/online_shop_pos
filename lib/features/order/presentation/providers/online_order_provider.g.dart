@@ -167,7 +167,7 @@ final class OnlineOrderProvider
   }
 }
 
-String _$onlineOrderHash() => r'0fcb5ff8719ffbd102f63b7436e228ed241268f3';
+String _$onlineOrderHash() => r'ee0f1308360e121593ea0774fc7bb8b7c5c68535';
 
 /// Manages the online order creation flow state.
 

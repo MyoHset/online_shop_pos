@@ -100,7 +100,7 @@ final class QuickSaleProvider
           argument: null,
           retry: null,
           name: r'quickSaleProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -121,7 +121,7 @@ final class QuickSaleProvider
   }
 }
 
-String _$quickSaleHash() => r'9634121e6ed6eaa4aa2751b83a8e0591b8372d48';
+String _$quickSaleHash() => r'd22f964220a4cf2200129c810eb012d67d242c74';
 
 abstract class _$QuickSale extends $Notifier<QuickSaleState> {
   QuickSaleState build();

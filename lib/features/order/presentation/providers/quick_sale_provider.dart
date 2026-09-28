@@ -122,7 +122,7 @@ class QuickSaleState {
       );
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class QuickSale extends _$QuickSale {
   @override
   QuickSaleState build() => const QuickSaleState();
