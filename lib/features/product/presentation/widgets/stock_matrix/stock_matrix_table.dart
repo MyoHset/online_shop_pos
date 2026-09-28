@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/localization/l10n_extensions.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../domain/entities/stock_matrix.dart';
 import 'stock_matrix_cell.dart';
@@ -17,11 +18,11 @@ class StockMatrixTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (matrix.colors.isEmpty || matrix.sizes.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
           padding: EdgeInsets.all(24.0),
           child: Text(
-            'No variant data available for matrix view.',
+            context.l10n.commonNoData,
             style: TextStyle(color: AppColors.slate500),
           ),
         ),

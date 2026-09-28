@@ -1,3 +1,4 @@
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/widgets/permission_gate.dart';
 import '../../../auth/domain/entities/staff_role.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -66,7 +67,7 @@ class _ProductDetailView extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: AppButton(
-                  label: 'Edit',
+                  label: context.l10n.commonEdit,
                   icon: const Icon(Icons.edit_outlined, size: 18),
                   variant: AppButtonVariant.secondary,
                   onPressed: () => context.pushNamed(
@@ -79,10 +80,10 @@ class _ProductDetailView extends ConsumerWidget {
             const SizedBox(width: 16),
           ],
           bottom: canManageProducts
-              ? const TabBar(
+              ? TabBar(
                   tabs: [
-                    Tab(text: 'Overview'),
-                    Tab(text: 'Stock Matrix'),
+                    Tab(text: context.l10n.productDetailTitle),
+                    Tab(text: context.l10n.productStockMatrix),
                   ],
                 )
               : null,
@@ -285,7 +286,7 @@ class _StockMatrixTab extends ConsumerWidget {
     final matrix = ref.watch(stockMatrixProvider(productId));
 
     if (matrix == null) {
-      return const Center(child: Text('Loading matrix...'));
+      return Center(child: Text(context.l10n.commonLoading));
     }
 
     return SingleChildScrollView(
@@ -397,7 +398,9 @@ class _StockSummaryChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        '${product.totalAvailableStock} in stock',
+        product.isOutOfStock
+            ? context.l10n.productOutOfStock
+            : context.l10n.productStockLeft(product.totalAvailableStock),
         style: TextStyle(
           color: color,
           fontSize: 12,
@@ -452,14 +455,14 @@ class _VariantsSectionHeader extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Variants',
+          context.l10n.productVariants,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: AppColors.slate800,
               ),
         ),
         AppButton(
-          label: 'Add Variant',
+          label: context.l10n.productAddVariant,
           icon: const Icon(Icons.add, size: 18),
           variant: AppButtonVariant.secondary,
           onPressed: () => context.pushNamed(
@@ -488,22 +491,16 @@ class _EmptyVariantsView extends StatelessWidget {
           style: BorderStyle.solid,
         ),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.layers_outlined, size: 40, color: AppColors.slate300),
-          SizedBox(height: 12),
+          const Icon(Icons.layers_outlined, size: 40, color: AppColors.slate300),
+          const SizedBox(height: 12),
           Text(
-            'No variants yet',
-            style: TextStyle(
+            context.l10n.commonNoData,
+            style: const TextStyle(
               color: AppColors.slate500,
               fontWeight: FontWeight.w600,
             ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            'Tap "Add Variant" to create the first variant for this product.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.slate400, fontSize: 13),
           ),
         ],
       ),

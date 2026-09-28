@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/variant_image_provider.dart';
 import 'variant_image_tile.dart';
@@ -33,19 +34,19 @@ class VariantImageManager extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Image'),
-        content: const Text('Are you sure you want to delete this image? This action cannot be undone.'),
+        title: Text(context.l10n.commonDelete),
+        content: Text(context.l10n.productDeleteConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.commonCancel),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();
               ref.read(variantImageControllerProvider.notifier).removeUploadedImage(imageId);
             },
-            child: const Text('Delete', style: TextStyle(color: AppColors.danger)),
+            child: Text(context.l10n.commonDelete, style: const TextStyle(color: AppColors.danger)),
           ),
         ],
       ),

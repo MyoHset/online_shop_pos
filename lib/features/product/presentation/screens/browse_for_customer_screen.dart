@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -35,10 +36,10 @@ class BrowseForCustomerScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.slate100,
       appBar: CustomAppBar(
-        titleText: 'Browse for Customer',
+        titleText: context.l10n.navBrowseForCustomer,
         actions: [
           IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
           ),
         ],
@@ -141,7 +142,7 @@ class BrowseForCustomerScreen extends ConsumerWidget {
                         icon: const Icon(Icons.clear,
                             size: 20, color: AppColors.danger),
                         onPressed: filterNotifier.clearFilters,
-                        tooltip: 'Clear Filters',
+                        tooltip: context.l10n.commonClear,
                       ),
                     ),
                 ],
@@ -154,8 +155,8 @@ class BrowseForCustomerScreen extends ConsumerWidget {
             child: resultsAsync.when(
               data: (items) {
                 if (items.isEmpty) {
-                  return const Center(
-                      child: Text('No items found for the selected filters.'));
+                  return Center(
+                      child: Text(context.l10n.productEmpty));
                 }
                 return BrowseResultGrid(items: items);
               },
@@ -196,7 +197,7 @@ class BrowseForCustomerScreen extends ConsumerWidget {
                   const SizedBox(width: 16),
                   Expanded(
                     child: AppButton(
-                      label: 'Present',
+                      label: context.l10n.navPresentMode,
                       onPressed: () {
                         context.push('/browse-for-customer/present');
                       },
@@ -214,7 +215,7 @@ class BrowseForCustomerScreen extends ConsumerWidget {
       BrowseFilterState filterState, BrowseFilter notifier) {
     // Ideally use a provider that caches categories. Let's assume we fetch it via a local FutureProvider.
     return _FilterChips<String>(
-      label: 'CATEGORY',
+      label: context.l10n.productCategory.toUpperCase(),
       value: filterState.category,
       provider: _categoriesProvider,
       onChanged: notifier.updateCategory,
@@ -225,7 +226,7 @@ class BrowseForCustomerScreen extends ConsumerWidget {
   Widget _buildBrandFilter(BuildContext context, WidgetRef ref,
       BrowseFilterState filterState, BrowseFilter notifier) {
     return _FilterChips<String>(
-      label: 'BRAND',
+      label: context.l10n.productBrand.toUpperCase(),
       value: filterState.brand,
       provider: _brandsProvider,
       onChanged: notifier.updateBrand,

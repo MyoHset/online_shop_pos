@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/entities/product.dart';
@@ -84,7 +85,9 @@ class ProductCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              isOutOfStock ? 'Out' : '$availableStock left',
+                              isOutOfStock
+                                  ? context.l10n.productOutOfStock
+                                  : context.l10n.productStockLeft(availableStock),
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,

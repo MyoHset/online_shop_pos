@@ -7,9 +7,12 @@ import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 import '../../features/auth/domain/entities/staff_role.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../localization/app_locale.dart';
+import '../localization/l10n_extensions.dart';
 import '../responsive/device_type.dart';
 import '../responsive/responsive_extensions.dart';
 import '../theme/app_theme.dart';
+import '../widgets/language_switcher.dart';
 
 /// Navigation destination definition for the adaptive scaffold.
 class AppNavDestination {
@@ -422,7 +425,7 @@ class _MobileDrawer extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 children: [
                   // Other / Management Section ("other use drawer in mobile")
-                  const _DrawerSectionLabel(title: 'Management'),
+                  _DrawerSectionLabel(title: context.l10n.navManagement),
                   for (int i = 0; i < otherDestinations.length; i++) ...[
                     _DrawerTile(
                       destination: otherDestinations[i],
@@ -434,10 +437,10 @@ class _MobileDrawer extends ConsumerWidget {
                     ),
                   ],
                   _DrawerTile(
-                    destination: const AppNavDestination(
-                      label: 'Browse for Customer',
-                      icon: Icon(Icons.style_outlined),
-                      selectedIcon: Icon(Icons.style),
+                    destination: AppNavDestination(
+                      label: context.l10n.navBrowseForCustomer,
+                      icon: const Icon(Icons.style_outlined),
+                      selectedIcon: const Icon(Icons.style),
                       route: '/browse-for-customer',
                     ),
                     isSelected: false,
@@ -453,7 +456,7 @@ class _MobileDrawer extends ConsumerWidget {
                   ),
 
                   // Main Navigation Section
-                  const _DrawerSectionLabel(title: 'Main Navigation'),
+                  _DrawerSectionLabel(title: context.l10n.navMainNavigation),
                   for (int i = 0; i < mainDestinations.length; i++) ...[
                     _DrawerTile(
                       destination: mainDestinations[i],
@@ -468,59 +471,113 @@ class _MobileDrawer extends ConsumerWidget {
               ),
             ),
 
-            // ── Compact Light Footer with Sign Out ─────────────────────
+            // ── Footer with Language Switcher & Sign Out ───────────────
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 border: Border(
                   top: BorderSide(color: AppColors.slate200, width: 1),
                 ),
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _confirmSignOut(context, ref, isDrawer: true),
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 8,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.logout_rounded,
-                                size: 17,
-                                color: AppColors.danger,
+                  // Language Row (Above Logout)
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => showChangeLanguageDialog(context, ref),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                        child: Row(
+                          children: [
+                            ref.watch(appLocaleProvider).languageCode == 'my'
+                                ? const MyanmarFlag(width: 22, height: 15)
+                                : const UkFlag(width: 22, height: 15),
+                            const SizedBox(width: 10),
+                            Text(
+                              context.l10n.commonLanguage,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.slate700,
                               ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Sign Out',
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.danger,
-                                ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              ref.watch(appLocaleProvider).languageCode == 'my'
+                                  ? 'မြန်မာ'
+                                  : 'English',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.slate500,
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 2),
+                            const Icon(
+                              Icons.arrow_drop_down_rounded,
+                              size: 20,
+                              color: AppColors.slate400,
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                  const Text(
-                    'v1.0.0',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.slate400,
-                    ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: Divider(color: AppColors.slate100, height: 1),
                   ),
-                  const SizedBox(width: 4),
+                  // Sign Out Button Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => _confirmSignOut(context, ref, isDrawer: true),
+                            borderRadius: const BorderRadius.all(Radius.circular(8)),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 6,
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.logout_rounded,
+                                    size: 17,
+                                    color: AppColors.danger,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    context.l10n.commonSignOut,
+                                    style: const TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.danger,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Text(
+                        'v1.0.0',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.slate400,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -539,17 +596,17 @@ Future<void> _confirmSignOut(
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Sign Out'),
-      content: const Text('Are you sure you want to sign out?'),
+      title: Text(context.l10n.commonSignOut),
+      content: Text(context.l10n.commonSignOutConfirm),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(false),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.commonCancel),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
           onPressed: () => Navigator.of(ctx).pop(true),
-          child: const Text('Sign Out'),
+          child: Text(context.l10n.commonSignOut),
         ),
       ],
     ),
@@ -777,9 +834,13 @@ class _TabletScaffold extends ConsumerWidget {
                     ),
                   ),
                   const Spacer(),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: SidebarLanguageButton(darkBackground: false),
+                  ),
                   _SidebarIconButton(
                     icon: Icons.logout_rounded,
-                    tooltip: 'Sign Out',
+                    tooltip: context.l10n.commonSignOut,
                     color: AppColors.danger,
                     onTap: () => _confirmSignOut(context, ref),
                   ),
@@ -894,10 +955,15 @@ class _DesktopScaffold extends ConsumerWidget {
 
                             const Spacer(),
 
+                            // ── Language Button (Above Logout) ──────────────
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 8),
+                              child: SidebarLanguageButton(darkBackground: true),
+                            ),
                             // ── Sign Out Button ──────────────────────────────
                             _SidebarIconButton(
                               icon: Icons.logout_rounded,
-                              tooltip: 'Sign Out',
+                              tooltip: context.l10n.commonSignOut,
                               color: AppColors.danger,
                               onTap: () => _confirmSignOut(context, ref),
                             ),

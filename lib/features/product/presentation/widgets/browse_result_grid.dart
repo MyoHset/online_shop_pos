@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/entities/variant_detail.dart';
@@ -78,7 +79,7 @@ class _BrowseResultTile extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        '${item.availableStock} left',
+                        context.l10n.productStockLeft(item.availableStock),
                         style: const TextStyle(fontSize: 10, color: AppColors.slate700, fontWeight: FontWeight.bold),
                       ),
                     ),

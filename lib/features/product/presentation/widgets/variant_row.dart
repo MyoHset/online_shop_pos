@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/entities/variant.dart';
@@ -144,10 +145,10 @@ class _StockLabel extends StatelessWidget {
             ? AppColors.warning
             : AppColors.slate500;
     final label = variant.isOutOfStock
-        ? 'Out of stock'
+        ? context.l10n.productOutOfStock
         : variant.isLowStock
-            ? 'Low: $available left'
-            : '$available in stock';
+            ? '${context.l10n.productLowStock}: ${context.l10n.productStockLeft(available)}'
+            : '$available ${context.l10n.productInStock}';
 
     return Text(
       label,
@@ -174,14 +175,14 @@ class _VariantActions extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.photo_camera_outlined,
                 size: 20, color: AppColors.slate400),
-            tooltip: 'Add image',
+            tooltip: context.l10n.productUploadImages,
             onPressed: onAddImage,
             visualDensity: VisualDensity.compact,
           ),
         IconButton(
           icon: const Icon(Icons.edit_outlined,
               size: 20, color: AppColors.slate400),
-          tooltip: 'Edit variant',
+          tooltip: context.l10n.productEditVariant,
           onPressed: onEdit,
           visualDensity: VisualDensity.compact,
         ),

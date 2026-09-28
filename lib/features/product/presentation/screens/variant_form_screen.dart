@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -196,7 +197,7 @@ class _VariantFormScreenState extends ConsumerState<VariantFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Edit Variant' : 'New Variant'),
+        title: Text(isEditing ? context.l10n.productEditVariant : context.l10n.productAddVariant),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -253,7 +254,7 @@ class _VariantFormScreenState extends ConsumerState<VariantFormScreen> {
                 const SizedBox(height: 24),
                 const _SectionTitle(title: 'Pricing & Stock'),
                 const SizedBox(height: 12),
-                const _FieldLabel(label: 'Price Override (MMK)'),
+                _FieldLabel(label: '${context.l10n.productPrice} Override (MMK)'),
                 TextFormField(
                   controller: _priceCtrl,
                   keyboardType:
@@ -267,7 +268,7 @@ class _VariantFormScreenState extends ConsumerState<VariantFormScreen> {
                       v != null && v.isNotEmpty ? Validators.positiveNumber(v) : null,
                 ),
                 const SizedBox(height: 16),
-                const _FieldLabel(label: 'Stock Quantity *'),
+                _FieldLabel(label: '${context.l10n.productStock} *'),
                 TextFormField(
                   controller: _stockCtrl,
                   keyboardType: TextInputType.number,
@@ -287,7 +288,7 @@ class _VariantFormScreenState extends ConsumerState<VariantFormScreen> {
                       v != null && v.isNotEmpty ? Validators.positiveInt(v) : null,
                 ),
                 const SizedBox(height: 24),
-                const _SectionTitle(title: 'Images'),
+                _SectionTitle(title: context.l10n.productUploadImages),
                 const SizedBox(height: 12),
                 VariantImageManager(
                   variantId: widget.variantId,
@@ -299,13 +300,13 @@ class _VariantFormScreenState extends ConsumerState<VariantFormScreen> {
                 ],
                 const SizedBox(height: 32),
                 AppButton(
-                  label: isEditing ? 'Save Changes' : 'Add Variant',
+                  label: isEditing ? context.l10n.commonSave : context.l10n.productAddVariant,
                   onPressed: _submit,
                   isLoading: _isLoading,
                 ),
                 const SizedBox(height: 12),
                 AppButton(
-                  label: 'Cancel',
+                  label: context.l10n.commonCancel,
                   variant: AppButtonVariant.ghost,
                   onPressed: () => context.pop(),
                 ),

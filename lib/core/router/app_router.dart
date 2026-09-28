@@ -24,6 +24,8 @@ import '../../features/product/presentation/screens/product_list_screen.dart';
 import '../../features/product/presentation/screens/variant_form_screen.dart';
 import '../../features/staff/presentation/screens/invite_staff_screen.dart';
 import '../../features/staff/presentation/screens/staff_list_screen.dart';
+import '../localization/app_locale.dart';
+import '../localization/l10n_extensions.dart';
 import '../network/supabase_client_provider.dart';
 import '../responsive/adaptive_scaffold.dart';
 
@@ -71,45 +73,46 @@ class _AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(appLocaleProvider);
     final roleAsync = ref.watch(currentStaffRoleProvider);
     final role = roleAsync.value ?? StaffRole.staff;
 
     final destinations = [
-      const AppNavDestination(
-        label: 'Dashboard',
-        icon: Icon(Icons.dashboard_outlined),
-        selectedIcon: Icon(Icons.dashboard),
+      AppNavDestination(
+        label: context.l10n.navDashboard,
+        icon: const Icon(Icons.dashboard_outlined),
+        selectedIcon: const Icon(Icons.dashboard),
         route: AppRoutes.dashboard,
       ),
-      const AppNavDestination(
-        label: 'Quick Sale',
-        icon: Icon(Icons.point_of_sale_outlined),
-        selectedIcon: Icon(Icons.point_of_sale),
+      AppNavDestination(
+        label: context.l10n.navQuickSale,
+        icon: const Icon(Icons.point_of_sale_outlined),
+        selectedIcon: const Icon(Icons.point_of_sale),
         route: AppRoutes.quickSale,
       ),
-      const AppNavDestination(
-        label: 'Orders',
-        icon: Icon(Icons.receipt_long_outlined),
-        selectedIcon: Icon(Icons.receipt_long),
+      AppNavDestination(
+        label: context.l10n.navOrders,
+        icon: const Icon(Icons.receipt_long_outlined),
+        selectedIcon: const Icon(Icons.receipt_long),
         route: AppRoutes.orders,
       ),
-      const AppNavDestination(
-        label: 'Products',
-        icon: Icon(Icons.inventory_2_outlined),
-        selectedIcon: Icon(Icons.inventory_2),
+      AppNavDestination(
+        label: context.l10n.navProducts,
+        icon: const Icon(Icons.inventory_2_outlined),
+        selectedIcon: const Icon(Icons.inventory_2),
         route: AppRoutes.products,
       ),
-      const AppNavDestination(
-        label: 'Customers',
-        icon: Icon(Icons.people_alt_outlined),
-        selectedIcon: Icon(Icons.people_alt),
+      AppNavDestination(
+        label: context.l10n.navCustomers,
+        icon: const Icon(Icons.people_alt_outlined),
+        selectedIcon: const Icon(Icons.people_alt),
         route: AppRoutes.customers,
       ),
       if (role.canManageStaff)
-        const AppNavDestination(
-          label: 'Staff',
-          icon: Icon(Icons.badge_outlined),
-          selectedIcon: Icon(Icons.badge),
+        AppNavDestination(
+          label: context.l10n.navStaff,
+          icon: const Icon(Icons.badge_outlined),
+          selectedIcon: const Icon(Icons.badge),
           route: AppRoutes.staff,
         ),
     ];

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../../core/localization/l10n_extensions.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/utils/currency_formatter.dart';
 import '../providers/dashboard_provider.dart';
@@ -16,7 +17,7 @@ class TodaySalesCard extends ConsumerWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColors.slate200),
+        side: const BorderSide(color: AppColors.slate200),
       ),
       child: InkWell(
         onTap: () {
@@ -30,9 +31,9 @@ class TodaySalesCard extends ConsumerWidget {
             data: (summary) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Today's Sales",
-                  style: TextStyle(
+                Text(
+                  context.l10n.dashboardTodaySales,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: AppColors.slate800,

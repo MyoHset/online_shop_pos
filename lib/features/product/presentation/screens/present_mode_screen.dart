@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -33,9 +34,9 @@ class PresentModeScreen extends ConsumerWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Customer Presentation',
-              style: TextStyle(
+            Text(
+              context.l10n.navPresentMode,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -60,14 +61,14 @@ class PresentModeScreen extends ConsumerWidget {
               onPressed: () {
                 ref.read(presentSelectedItemsProvider.notifier).clear();
               },
-              child: const Text(
-                'Clear',
-                style: TextStyle(color: Colors.white70),
+              child: Text(
+                context.l10n.commonClear,
+                style: const TextStyle(color: Colors.white70),
               ),
             ),
           IconButton(
             icon: const Icon(Icons.close),
-            tooltip: 'Exit Present Mode',
+            tooltip: context.l10n.commonClose,
             onPressed: () => context.pop(),
           ),
           const SizedBox(width: 8),
@@ -79,10 +80,10 @@ class PresentModeScreen extends ConsumerWidget {
         child: resultsAsync.when(
           data: (items) {
             if (items.isEmpty) {
-              return const Center(
+              return Center(
                 child: Text(
-                  'No items available.',
-                  style: TextStyle(color: Colors.white70),
+                  context.l10n.commonNoData,
+                  style: const TextStyle(color: Colors.white70),
                 ),
               );
             }

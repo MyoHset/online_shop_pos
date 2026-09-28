@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/responsive/responsive_extensions.dart';
@@ -138,7 +139,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(isEditing ? 'Edit Product' : 'New Product'),
+          title: Text(isEditing ? context.l10n.productEdit : context.l10n.productAddNew),
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
             child: Divider(height: 1, color: AppColors.slate200),
@@ -158,7 +159,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   // ── Basic Info ───────────────────────────────────────
                   _SectionHeader(label: 'Basic Info'),
                   _ClassicField(
-                    label: 'Product Name',
+                    label: context.l10n.productName,
                     required: true,
                     child: TextFormField(
                       controller: _nameCtrl,
@@ -172,7 +173,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     ),
                   ),
                   _ClassicField(
-                    label: 'Description',
+                    label: context.l10n.productDescription,
                     child: TextFormField(
                       controller: _descCtrl,
                       maxLines: 2,
@@ -187,7 +188,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   // ── Pricing ──────────────────────────────────────────
                   _SectionHeader(label: 'Pricing'),
                   _ClassicField(
-                    label: 'Base Price (MMK)',
+                    label: '${context.l10n.productPrice} (MMK)',
                     required: true,
                     child: TextFormField(
                       controller: _priceCtrl,
@@ -211,7 +212,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   // ── Categorisation ───────────────────────────────────
                   _SectionHeader(label: 'Categorisation'),
                   _ClassicField(
-                    label: 'Category',
+                    label: context.l10n.productCategory,
                     child: TextFormField(
                       controller: _categoryCtrl,
                       textInputAction: TextInputAction.next,
@@ -222,7 +223,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     ),
                   ),
                   _ClassicField(
-                    label: 'Brand',
+                    label: context.l10n.productBrand,
                     child: TextFormField(
                       controller: _brandCtrl,
                       textInputAction: TextInputAction.next,
@@ -233,7 +234,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     ),
                   ),
                   _ClassicField(
-                    label: 'Product Code',
+                    label: context.l10n.productSku,
                     isLast: true,
                     child: TextFormField(
                       controller: _codeCtrl,
@@ -255,7 +256,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   // ── Actions ──────────────────────────────────────────
                   const SizedBox(height: 28),
                   _SubmitButton(
-                    label: isEditing ? 'Save Changes' : 'Create Product',
+                    label: isEditing ? context.l10n.commonSave : context.l10n.productAddNew,
                     isLoading: formState.isLoading,
                     onPressed: _submit,
                   ),
@@ -263,7 +264,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     const SizedBox(height: 10),
                     TextButton(
                       onPressed: () => context.pop(),
-                      child: const Text('Cancel'),
+                      child: Text(context.l10n.commonCancel),
                     ),
                   ],
                   const SizedBox(height: 16),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../auth/domain/entities/staff_role.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -14,8 +15,8 @@ class DashboardHomeScreen extends ConsumerWidget {
     final roleAsync = ref.watch(currentStaffRoleProvider);
 
     return Scaffold(
-      appBar: const CustomAppBar(
-        titleText: 'Dashboard',
+      appBar: CustomAppBar(
+        titleText: context.l10n.dashboardTitle,
       ),
       body: roleAsync.when(
         data: (role) {
@@ -35,7 +36,7 @@ class DashboardHomeScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => ref.refresh(currentStaffRoleProvider.future),
-                child: const Text('Retry'),
+                child: Text(context.l10n.commonRetry),
               ),
             ],
           ),

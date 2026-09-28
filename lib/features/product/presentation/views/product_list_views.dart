@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/l10n_extensions.dart';
 import '../../../../core/responsive/adaptive_scaffold.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_error_widget.dart';
@@ -36,18 +37,18 @@ class ProductListMobileView extends ConsumerWidget {
           tooltip: 'Open menu',
           onPressed: () => AdaptiveScaffold.openDrawer(context),
         ),
-        title: const Text('Products'),
+        title: Text(context.l10n.productListTitle),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.storefront),
-            tooltip: 'Browse for Customer',
+            tooltip: context.l10n.navBrowseForCustomer,
             onPressed: () => context.push('/browse-for-customer'),
           ),
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Add product',
+            tooltip: context.l10n.productAddNew,
             onPressed: () => context.pushNamed('productNew'),
           ),
         ],
@@ -121,19 +122,19 @@ class ProductListTabletView extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.slate50,
       appBar: AppBar(
-        title: const Text('Products'),
+        title: Text(context.l10n.productListTitle),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
           const _SearchAction(),
           IconButton(
             icon: const Icon(Icons.storefront),
-            tooltip: 'Browse for Customer',
+            tooltip: context.l10n.navBrowseForCustomer,
             onPressed: () => context.push('/browse-for-customer'),
           ),
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Add product',
+            tooltip: context.l10n.productAddNew,
             onPressed: () => context.pushNamed('productNew'),
           ),
           const SizedBox(width: 8),
@@ -204,19 +205,19 @@ class ProductListDesktopView extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.slate50,
       appBar: AppBar(
-        title: const Text('Products'),
+        title: Text(context.l10n.productListTitle),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
           const _SearchAction(),
           IconButton(
             icon: const Icon(Icons.storefront),
-            tooltip: 'Browse for Customer',
+            tooltip: context.l10n.navBrowseForCustomer,
             onPressed: () => context.push('/browse-for-customer'),
           ),
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Add product',
+            tooltip: context.l10n.productAddNew,
             onPressed: () => context.pushNamed('productNew'),
           ),
           const SizedBox(width: 8),
@@ -313,24 +314,19 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.slate300),
-          SizedBox(height: 12),
+          const Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.slate300),
+          const SizedBox(height: 12),
           Text(
-            'No products yet',
-            style: TextStyle(
+            context.l10n.productEmpty,
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: AppColors.slate500,
             ),
-          ),
-          SizedBox(height: 6),
-          Text(
-            'Add your first product to get started.',
-            style: TextStyle(fontSize: 12, color: AppColors.slate400),
           ),
         ],
       ),
@@ -357,7 +353,7 @@ class _SearchActionState extends ConsumerState<_SearchAction> {
     if (!_expanded) {
       return IconButton(
         icon: const Icon(Icons.search),
-        tooltip: 'Search',
+        tooltip: context.l10n.commonSearch,
         onPressed: () {
           setState(() {
             _expanded = true;
@@ -380,7 +376,7 @@ class _SearchActionState extends ConsumerState<_SearchAction> {
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.close),
-            tooltip: 'Close Search',
+            tooltip: context.l10n.commonClose,
             onPressed: () {
               ref.read(productFilterProvider.notifier).setSearch('');
               setState(() {

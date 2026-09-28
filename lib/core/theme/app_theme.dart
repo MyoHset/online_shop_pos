@@ -54,6 +54,7 @@ abstract final class AppTheme {
       textTheme: GoogleFonts.interTextTheme(base.textTheme).apply(
         bodyColor: AppColors.slate700,
         displayColor: AppColors.slate900,
+        fontFamilyFallback: const ['NotoSansMyanmar'],
       ),
       scaffoldBackgroundColor: AppColors.slate50,
       dividerTheme: const DividerThemeData(

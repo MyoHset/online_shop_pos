@@ -22,6 +22,11 @@ abstract final class CurrencyFormatter {
     return format(amount);
   }
 
+  /// Formats [quantity] with Latin digits, e.g. `1,200`.
+  static String formatQuantity(num quantity) {
+    return _formatter.format(quantity);
+  }
+
   /// Parses a kyat-formatted string back to a [double].
   /// Returns `null` if parsing fails.
   static double? parse(String value) {
